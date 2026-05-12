@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/index-v2.html)",
+      "Bash(mkdir -p /Users/knight/Desktop/temperature-monitor-prototype/assets)",
+      "Bash(curl -o china.json \"https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json\")",
+      "Bash(curl *)",
+      "Bash(open *)",
+      "Bash(node *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git *)",
+      "Bash(grep -E '\\\\$\\\\{|city\\\\.|info\\\\.')",
+      "Bash(grep -E '\\\\$\\\\{city\\\\.|\\\\$\\\\{info\\\\.')",
+      "Bash(grep -n \"const UI =\\\\|return {$\" /Users/knight/Desktop/temperature-monitor-prototype/index.html)",
+      "WebSearch",
+      "Bash(awk '/^    async function generateCityData\\\\\\(city\\\\\\)/,/^    }/ {print NR\": \"$0}' /Users/knight/Desktop/temperature-monitor-prototype/js/core.js)",
+      "Bash(awk '{print $2}')"
+    ]
+  }
+}

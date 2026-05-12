@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单地图测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #141b3d 100%);
+            color: #e0e6ed;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .map-wrapper {
+            background: #1a2347;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+        }
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .map-title {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        #china-map {
+            width: 100%;
+            height: 500px;
+            background: #0a0e27;
+            border-radius: 8px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ 空调热销区域雷达 - 地图测试</h1>
+        </div>
+
+        <div id="status"></div>
+
+        <div class="map-wrapper">
+            <div class="map-header">
+                <span class="map-title">全国空调需求热力图</span>
+            </div>
+            <div id="china-map"></div>
+        </div>
+    </div>
+
+    <script src="assets/echarts.min.js"></script>
+    <script src="js/china-geo.js"></script>
+    <script src="js/core.js"></script>
+    <script>
+        const statusDiv = document.getElementById('status');
+
+        function addStatus(type, msg) {
+            statusDiv.innerHTML += `<div class="status ${type}">${msg}</div>`;
+        }
+
+        // 检查资源
+        if (typeof echarts === 'undefined') {
+            addStatus('error', '❌ ECharts 未加载');
+        } else {
+            addStatus('success', `✅ ECharts v${echarts.version} 已加载`);
+        }
+
+        if (typeof window.CHINA_GEO_DATA === 'undefined') {
+            addStatus('error', '❌ 地图数据未加载');
+        } else {
+            const featureCount = window.CHINA_GEO_DATA.features?.length || 0;
+            addStatus('success', `✅ 地图数据已加载 (${featureCount} 个区域)`);
+        }
+
+        if (typeof Core === 'undefined') {
+            addStatus('info', 'ℹ️ Core 模块未加载（使用测试数据）');
+        } else {
+            addStatus('success', '✅ Core 模块已加载');
+        }
+
+        // 生成测试数据
+        const testData = Core ? Core.generateAllCityData() : [
+            { cityName: '北京', lng: 116.46, lat: 39.92, adiScore: 85, level: 'outbreak', maxTemp: 35, nightMinTemp: 28, feelsLike: 38, humidity: 70, continuousHotNightDays: 3 },
+            { cityName: '上海', lng: 121.48, lat: 31.22, adiScore: 75, level: 'action', maxTemp: 33, nightMinTemp: 27, feelsLike: 36, humidity: 75, continuousHotNightDays: 2 },
+            { cityName: '广州', lng: 113.23, lat: 23.16, adiScore: 90, level: 'outbreak', maxTemp: 36, nightMinTemp: 30, feelsLike: 42, humidity: 80, continuousHotNightDays: 5 },
+            { cityName: '深圳', lng: 114.07, lat: 22.62, adiScore: 88, level: 'outbreak', maxTemp: 35, nightMinTemp: 29, feelsLike: 40, humidity: 78, continuousHotNightDays: 4 }
+        ];
+
+        // 初始化地图
+        if (typeof echarts !== 'undefined' && typeof window.CHINA_GEO_DATA !== 'undefined') {
+            const mapContainer = document.getElementById('china-map');
+
+            console.log('容器尺寸:', mapContainer.clientWidth, 'x', mapContainer.clientHeight);
+
+            try {
+                // 注册地图
+                echarts.registerMap('china', window.CHINA_GEO_DATA);
+
+                // 初始化图表
+                const chart = echarts.init(mapContainer);
+
+                // 配置选项
+                const option = {
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function(params) {
+                            if (params.data) {
+                                const city = params.data.cityData;
+                                return `
+                                    <div style="padding: 8px;">
+                                        <strong>${city.cityName}</strong><br/>
+                                        ADI: ${city.adiScore}<br/>
+                                        最高温: ${city.maxTemp}℃<br/>
+                                        夜间温: ${city.nightMinTemp}℃
+                                    </div>
+                                `;
+                            }
+                            return params.name;
+                        }
+                    },
+                    geo: {
+                        map: 'china',
+                        roam: true,
+                        layoutCenter: ['50%', '50%'],
+                        layoutSize: '90%',
+                        itemStyle: {
+                            areaColor: '#141b3d',
+                            borderColor: '#2a3558',
+                            borderWidth: 1
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                areaColor: '#1a2347'
+                            }
+                        },
+                        label: {
+                            show: false
+                        },
+                        regions: [{
+                            name: '南海诸岛',
+                            itemStyle: {
+                                opacity: 0
+                            }
+                        }]
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: 100,
+                        left: '20',
+                        bottom: '20',
+                        text: ['高', '低'],
+                        calculable: true,
+                        inRange: {
+                            color: ['#333355', '#4A90E2', '#F5A623', '#F57C00', '#D0021B']
+                        },
+                        textStyle: {
+                            color: '#8b9dc3'
+                        }
+                    },
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'geo',
+                        data: testData.map(city => ({
+                            name: city.cityName,
+                            value: [city.lng, city.lat, city.adiScore],
+                            cityData: city
+                        })),
+                        symbolSize: function(val) {
+                            return Math.max(val[2] * 0.3, 8);
+                        },
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(0, 212, 255, 0.5)'
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 20,
+                                shadowColor: 'rgba(0, 212, 255, 0.8)'
+                            }
+                        }
+                    }]
+                };
+
+                // 设置配置
+                chart.setOption(option);
+                addStatus('success', `✅ 地图渲染成功！显示 ${testData.length} 个城市`);
+
+                // 响应式
+                window.addEventListener('resize', () => {
+                    chart.resize();
+                });
+
+                // 点击事件
+                chart.on('click', function(params) {
+                    if (params.data) {
+                        alert(`点击了: ${params.data.cityData.cityName}\nADI: ${params.data.cityData.adiScore}`);
+                    }
+                });
+
+            } catch (error) {
+                addStatus('error', `❌ 地图初始化失败: ${error.message}`);
+                console.error('地图错误:', error);
+            }
+        }
+
+        addStatus('info', '📝 使用 HTTP 服务器访问可获得最佳体验');
+        addStatus('info', '🔗 运行: python3 -m http.server 8080');
+        addStatus('info', '🔗 然后访问: http://localhost:8080/simple-map-test.html');
+    </script>
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>空调热销区域雷达</title>
+    <style>
+        /* 内联关键样式，确保地图容器有尺寸 */
+        .content-area {
+            width: 100% !important;
+            flex: 1 !important;
+        }
+        #china-map {
+            width: 100% !important;
+            height: 500px !important;
+            min-height: 500px !important;
+            background: #0a0e27 !important;
+        }
+        .dashboard-layout {
+            display: grid !important;
+            grid-template-columns: 260px 1fr 260px !important;
+            gap: 1.5rem !important;
+            height: calc(100vh - 120px) !important;
+            width: 100% !important;
+        }
+        .main-area {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        .map-section {
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 500px !important;
+            width: 100% !important;
+        }
+    </style>
+    <script src="assets/echarts.min.js"></script>
+    <link rel="stylesheet" href="css/styles-v2.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="loading-logo">空调热销区域雷达</div>
+            <div class="loading-subtitle">Air Conditioner Demand Radar</div>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <div class="loading-status">系统初始化中...</div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>空调热销区域雷达</h1>
+                <p>Air Conditioner Demand Radar</p>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">🎯</span>
+                    <span class="nav-text">今日热销</span>
+                </div>
+                <div class="nav-item" data-page="analysis">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">热销分析</span>
+                </div>
+                <div class="nav-item" data-page="report">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">7天预测</span>
+                </div>
+                <div class="nav-item" data-page="history">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-text">历史记录</span>
+                </div>
+                <div class="nav-item" data-page="rules">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">规则设置</span>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>系统运行中</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h2 id="pageTitle">今日热销</h2>
+                </div>
+                <div class="header-right">
+                    <div class="current-time" id="currentTime">--:--:--</div>
+                    <div class="header-stats">
+                        <div class="header-stat">
+                            <div class="header-stat-label">监控城市</div>
+                            <div class="header-stat-value" id="cityCount">--</div>
+                        </div>
+                        <div class="header-stat">
+                            <div class="header-stat-label">爆发级</div>
+                            <div class="header-stat-value stat-outbreak" id="outbreakCount">--</div>
+                        </div>
+                        <div class="header-stat">
+                            <div class="header-stat-label">行动级</div>
+                            <div class="header-stat-value stat-action" id="actionCount">--</div>
+                        </div>
+                        <div class="header-stat">
+                            <div class="header-stat-label">热夜城市</div>
+                            <div class="header-stat-value stat-hotnight" id="hotNightCount">--</div>
+                        </div>
+                        <div class="header-stat">
+                            <div class="header-stat-label">更新时间</div>
+                            <div class="header-stat-value" id="updateTime">--:--</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- 今日热销 Page -->
+                <div class="page active" id="dashboard">
+                    <div class="dashboard-layout">
+                        <!-- Left: 今日摘要 -->
+                        <aside class="left-sidebar" id="todaySummary"></aside>
+
+                        <!-- Center: 地图核心 -->
+                        <div class="main-area">
+                            <div class="map-section">
+                                <div class="section-header">
+                                    <span class="section-title">全国空调需求热力图</span>
+                                    <div class="view-mode-toggle">
+                                        <button class="view-mode-btn active" data-mode="adi">ADI指数</button>
+                                        <button class="view-mode-btn" data-mode="nightTemp">夜间温度</button>
+                                        <button class="view-mode-btn" data-mode="feelsLike">体感温度</button>
+                                        <button class="view-mode-btn" data-mode="dayMax">白天最高温</button>
+                                    </div>
+                                </div>
+                                <div id="china-map"></div>
+                            </div>
+                        </div>
+
+                        <!-- Right: TOP榜单 -->
+                        <aside class="right-sidebar">
+                            <div class="top-cities-section">
+                                <div class="section-header">
+                                    <div class="top-tabs" id="topTabs">
+                                        <button class="top-tab active" data-tab="hotSales">预计热销TOP10</button>
+                                        <button class="top-tab" data-tab="nightMuggy">夜间闷热TOP10</button>
+                                        <button class="top-tab" data-tab="heatRise">未来3天升温TOP10</button>
+                                    </div>
+                                </div>
+                                <div class="top-cities-list" id="topCitiesContainer"></div>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+
+                <!-- 热销分析 Page -->
+                <div class="page" id="analysis">
+                    <div class="analysis-page">
+                        <div class="page-header">
+                            <h2>热销分析</h2>
+                            <p class="page-desc">基于ADI指数的多维度热销分析</p>
+                        </div>
+                        <div class="analysis-charts-grid">
+                            <div class="analysis-chart-card">
+                                <div class="chart-card-header">
+                                    <h3>🌙 夜间闷热排行榜</h3>
+                                    <span class="chart-subtitle">按夜间闷热指数排序</span>
+                                </div>
+                                <div class="chart-table" id="nightMuggyTable"></div>
+                            </div>
+                            <div class="analysis-chart-card">
+                                <div class="chart-card-header">
+                                    <h3>📈 未来3天热销榜</h3>
+                                    <span class="chart-subtitle">按3天ADI均值排序</span>
+                                </div>
+                                <div class="chart-table" id="future3DayTable"></div>
+                            </div>
+                            <div class="analysis-chart-card">
+                                <div class="chart-card-header">
+                                    <h3>🔥 未来7天升温榜</h3>
+                                    <span class="chart-subtitle">按ADI涨幅和升温幅度排序</span>
+                                </div>
+                                <div class="chart-table" id="future7DayTable"></div>
+                            </div>
+                        </div>
+                        <div class="analysis-grid phase2-grid">
+                            <div class="analysis-card">
+                                <div class="card-icon">🔍</div>
+                                <h3>体感温度异常发现</h3>
+                                <p>自动识别异常高温城市</p>
+                                <div class="coming-soon">二期功能</div>
+                            </div>
+                            <div class="analysis-card">
+                                <div class="card-icon">⚖️</div>
+                                <h3>双城对比工具</h3>
+                                <p>选择两个城市进行对比分析</p>
+                                <div class="coming-soon">二期功能</div>
+                            </div>
+                            <div class="analysis-card">
+                                <div class="card-icon">🎬</div>
+                                <h3>热浪移动回放</h3>
+                                <p>时间轴拖动，直观感受高温区移动路径</p>
+                                <div class="coming-soon">二期功能</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7天预测 Page -->
+                <div class="page" id="report">
+                    <div class="report-page">
+                        <div class="page-header">
+                            <h2>7天热销预测</h2>
+                            <p class="page-desc">基于ADI指数的未来7天热销趋势预测</p>
+                        </div>
+                        <div class="filter-bar" id="reportFilters">
+                            <button class="filter-btn active" data-filter="all">全部</button>
+                            <button class="filter-btn" data-filter="outbreak">爆发级</button>
+                            <button class="filter-btn" data-filter="action">行动级</button>
+                            <button class="filter-btn" data-filter="opportunity">机会级</button>
+                            <button class="filter-btn" data-filter="observe">观察级</button>
+                            <button class="filter-btn" data-filter="nightMuggy">夜间闷热</button>
+                            <button class="filter-btn" data-filter="heatRise">未来升温</button>
+                            <span class="filter-sep">|</span>
+                            <button class="filter-btn" data-filter="华东">华东</button>
+                            <button class="filter-btn" data-filter="华南">华南</button>
+                            <button class="filter-btn" data-filter="华中">华中</button>
+                            <button class="filter-btn" data-filter="西南">西南</button>
+                            <button class="filter-btn" data-filter="华北">华北</button>
+                            <button class="filter-btn" data-filter="西北">西北</button>
+                            <button class="filter-btn" data-filter="东北">东北</button>
+                        </div>
+                        <div class="data-table-wrapper">
+                            <table class="data-table" id="reportTable">
+                                <thead>
+                                    <tr>
+                                        <th>城市</th>
+                                        <th>区域</th>
+                                        <th>今日ADI</th>
+                                        <th>未来3天ADI</th>
+                                        <th>未来7天ADI</th>
+                                        <th>当前等级</th>
+                                        <th>最高等级</th>
+                                        <th>等级趋势</th>
+                                        <th>热夜天数</th>
+                                        <th>未来3天最高温</th>
+                                        <th>未来3晚最低温</th>
+                                        <th>判断原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 历史记录 Page -->
+                <div class="page" id="history">
+                    <div class="history-page">
+                        <div class="page-header">
+                            <h2>历史记录</h2>
+                            <p class="page-desc">ADI判断历史记录查询</p>
+                        </div>
+                        <div class="filter-bar" id="historyFilters">
+                            <button class="filter-btn active" data-filter="today">今天</button>
+                            <button class="filter-btn" data-filter="yesterday">昨天</button>
+                            <button class="filter-btn" data-filter="last7">最近7天</button>
+                            <button class="filter-btn" data-filter="last30">最近30天</button>
+                            <span class="filter-sep">|</span>
+                            <button class="filter-btn" data-filter="outbreak">爆发级</button>
+                            <button class="filter-btn" data-filter="action">行动级</button>
+                            <button class="filter-btn" data-filter="nightMuggy">夜间闷热</button>
+                            <button class="filter-btn" data-filter="heatRise">升温记录</button>
+                        </div>
+                        <div class="data-table-wrapper">
+                            <table class="data-table" id="historyTable">
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th>城市</th>
+                                        <th>区域</th>
+                                        <th>ADI</th>
+                                        <th>等级</th>
+                                        <th>白天最高温</th>
+                                        <th>夜间最低温</th>
+                                        <th>体感温度</th>
+                                        <th>湿度</th>
+                                        <th>连续热夜</th>
+                                        <th>判断原因</th>
+                                        <th>记录时间</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 规则设置 Page -->
+                <div class="page" id="rules">
+                    <div class="rules-page">
+                        <div class="page-header">
+                            <h2>规则设置</h2>
+                            <p class="page-desc">配置ADI指数权重、等级阈值和强制升级规则</p>
+                        </div>
+
+                        <div class="alert-guide">
+                            <h3>ADI 等级说明</h3>
+                            <div class="alert-guide-grid">
+                                <div class="guide-card guide-blue">
+                                    <div class="guide-badge">观察级</div>
+                                    <h4>ADI 55-64</h4>
+                                    <p>有升温迹象，暂不判定热销</p>
+                                </div>
+                                <div class="guide-card guide-yellow">
+                                    <div class="guide-badge">机会级</div>
+                                    <h4>ADI 65-74</h4>
+                                    <p>可能形成空调需求，进入关注池</p>
+                                </div>
+                                <div class="guide-card guide-orange">
+                                    <div class="guide-badge">行动级</div>
+                                    <h4>ADI 75-84</h4>
+                                    <p>空调需求明显增强，预计热销</p>
+                                </div>
+                                <div class="guide-card guide-red">
+                                    <div class="guide-badge">爆发级</div>
+                                    <h4>ADI ≥85</h4>
+                                    <p>高概率热销区域</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rules-sections" id="rulesSections"></div>
+
+                        <div class="settings-actions">
+                            <button class="btn btn-secondary" onclick="UI.resetRules()">恢复默认设置</button>
+                            <button class="btn btn-primary" onclick="UI.saveRules()">保存配置</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- City Detail Modal -->
+    <div class="city-detail-modal" id="cityDetailModal">
+        <div class="modal-overlay" onclick="UI.closeCityDetail()"></div>
+        <div class="modal-content" id="cityModalContent"></div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
+    <script src="js/core.js"></script>
+    <script src="js/china-geo.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

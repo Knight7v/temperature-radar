@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地图诊断测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ddd;
+        }
+        .test-item.pass { border-left-color: #4CAF50; }
+        .test-item.fail { border-left-color: #f44336; }
+        .test-item.info { border-left-color: #2196F3; }
+        .status {
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .status.pass { background: #4CAF50; color: white; }
+        .status.fail { background: #f44336; color: white; }
+        .status.info { background: #2196F3; color: white; }
+        #china-map {
+            width: 100%;
+            height: 500px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗺️ 地图组件诊断测试</h1>
+
+    <div id="test-results"></div>
+
+    <h2>地图容器</h2>
+    <div id="china-map"></div>
+
+    <script src="assets/echarts.min.js"></script>
+    <script src="js/china-geo.js"></script>
+    <script>
+        const results = document.getElementById('test-results');
+
+        function addTest(name, status, message) {
+            const div = document.createElement('div');
+            div.className = `test-item ${status}`;
+            div.innerHTML = `
+                <span class="status ${status}">${status.toUpperCase()}</span>
+                <strong>${name}</strong>
+                <br>${message}
+            `;
+            results.appendChild(div);
+        }
+
+        // 测试1: ECharts加载
+        if (typeof echarts !== 'undefined') {
+            addTest('ECharts库', 'pass', `ECharts v${echarts.version} 已加载`);
+        } else {
+            addTest('ECharts库', 'fail', 'ECharts 未加载，请检查CDN连接');
+        }
+
+        // 测试2: China Geo数据
+        if (window.CHINA_GEO_DATA) {
+            const featureCount = window.CHINA_GEO_DATA.features?.length || 0;
+            addTest('地图数据', 'pass', `CHINA_GEO_DATA 已加载，包含 ${featureCount} 个区域`);
+        } else {
+            addTest('地图数据', 'fail', 'CHINA_GEO_DATA 未定义，检查 china-geo.js 文件');
+        }
+
+        // 测试3: 地图容器
+        const mapContainer = document.getElementById('china-map');
+        if (mapContainer) {
+            addTest('地图容器', 'pass', `容器尺寸: ${mapContainer.clientWidth} x ${mapContainer.clientHeight}px`);
+        } else {
+            addTest('地图容器', 'fail', '找不到 china-map 元素');
+        }
+
+        // 测试4: 尝试初始化地图
+        if (typeof echarts !== 'undefined' && window.CHINA_GEO_DATA && mapContainer) {
+            try {
+                echarts.registerMap('china', window.CHINA_GEO_DATA);
+                const chart = echarts.init(mapContainer);
+
+                const option = {
+                    backgroundColor: '#f5f5f5',
+                    geo: {
+                        map: 'china',
+                        roam: true,
+                        itemStyle: {
+                            areaColor: '#eee',
+                            borderColor: '#999'
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                areaColor: '#4A90E2'
+                            }
+                        },
+                        label: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'geo',
+                        data: [
+                            {name: '北京', value: [116.46, 39.92, 100]},
+                            {name: '上海', value: [121.48, 31.22, 100]},
+                            {name: '广州', value: [113.23, 23.16, 100]}
+                        ],
+                        symbolSize: 20,
+                        itemStyle: {
+                            color: '#f44336'
+                        }
+                    }]
+                };
+
+                chart.setOption(option);
+                addTest('地图初始化', 'pass', '地图已成功渲染！');
+
+                window.addEventListener('resize', () => chart.resize());
+
+            } catch (error) {
+                addTest('地图初始化', 'fail', `错误: ${error.message}`);
+            }
+        }
+
+        // 测试5: 浏览器信息
+        addTest('浏览器信息', 'info', `
+            User Agent: ${navigator.userAgent}<br>
+            协议: ${window.location.protocol}<br>
+            ${window.location.protocol === 'file:' ? '<strong style="color:red">⚠️ 使用 file:// 协议可能导致跨域问题，请使用本地服务器</strong>' : '✅ 使用 HTTP 协议'}
+        `);
+
+        // 测试6: 控制台日志
+        console.log('=== 诊断信息 ===');
+        console.log('ECharts:', typeof echarts !== 'undefined' ? `v${echarts.version}` : '未加载');
+        console.log('CHINA_GEO_DATA:', window.CHINA_GEO_DATA ? `${window.CHINA_GEO_DATA.features?.length || 0} 个区域` : '未定义');
+        console.log('地图容器:', mapContainer ? `${mapContainer.clientWidth}x${mapContainer.clientHeight}` : '不存在');
+    </script>
+</body>
+</html>

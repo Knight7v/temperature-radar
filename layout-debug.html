@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>布局调试</title>
+    <link rel="stylesheet" href="css/styles-v2.css">
+</head>
+<body style="background: white;">
+    <div id="test-container" style="padding: 20px;">
+        <h2>布局尺寸调试</h2>
+        <div class="dashboard-layout" style="background: #f0f0f0; padding: 10px;">
+            <div class="left-sidebar" style="background: #ffcccc; padding: 10px;">左侧栏</div>
+            <div class="main-area" style="background: #ccffcc; padding: 10px;">
+                <div class="map-section">
+                    <div id="china-map" style="background: #ccccff;">地图容器</div>
+                </div>
+            </div>
+            <div class="right-sidebar" style="background: #ffffcc; padding: 10px;">右侧栏</div>
+        </div>
+    </div>
+    <script>
+        function checkSizes() {
+            const layout = document.querySelector('.dashboard-layout');
+            const mainArea = document.querySelector('.main-area');
+            const mapSection = document.querySelector('.map-section');
+            const chinaMap = document.getElementById('china-map');
+            
+            console.log('布局尺寸检查:');
+            console.log('  .dashboard-layout:', 
+                layout.clientWidth + ' x ' + layout.clientHeight,
+                'computed:', getComputedStyle(layout).height);
+            console.log('  .main-area:', 
+                mainArea.clientWidth + ' x ' + mainArea.clientHeight);
+            console.log('  .map-section:', 
+                mapSection.clientWidth + ' x ' + mapSection.clientHeight);
+            console.log('  #china-map:', 
+                chinaMap.clientWidth + ' x ' + chinaMap.clientHeight,
+                'computed:', getComputedStyle(chinaMap).height);
+            
+            document.getElementById('test-container').innerHTML += `
+                <div style="background: white; padding: 15px; margin-top: 20px;">
+                    <h3>尺寸检查结果：</h3>
+                    <ul>
+                        <li>.dashboard-layout: ${layout.clientWidth} x ${layout.clientHeight}</li>
+                        <li>.main-area: ${mainArea.clientWidth} x ${mainArea.clientHeight}</li>
+                        <li>.map-section: ${mapSection.clientWidth} x ${mapSection.clientHeight}</li>
+                        <li>#china-map: ${chinaMap.clientWidth} x ${chinaMap.clientHeight}</li>
+                    </ul>
+                </div>
+            `;
+        }
+        
+        window.addEventListener('load', checkSizes);
+        window.addEventListener('resize', checkSizes);
+    </script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dimension Switching</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .dimension-btn { padding: 8px 16px; margin: 0 4px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+        .dimension-btn.active { background: #007bff; color: #fff; border-color: #007bff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f5f5f5; }
+        .fixed-left { position: sticky; left: 0; background: #fff; z-index: 1; }
+        .date-header { text-align: center; }
+        .date-header-day { font-size: 0.85rem; }
+        .hot-night-indicator { position: absolute; top: 2px; right: 2px; font-size: 0.7rem; }
+        .forecast-empty-state { text-align: center; padding: 2rem; color: #999; }
+        .forecast-empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    <h1>Test Dimension Switching</h1>
+
+    <div>
+        <button class="dimension-btn active" data-dimension="temperature">温度视图</button>
+        <button class="dimension-btn" data-dimension="feelsLike">体感温度</button>
+        <button class="dimension-btn" data-dimension="adi">ADI视图</button>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <input type="text" id="reportSearchInput" placeholder="搜索城市..." style="padding: 8px; width: 200px;">
+    </div>
+
+    <div style="margin-top: 20px;">
+        <button class="filter-btn active" data-filter="all">全部</button>
+        <button class="filter-btn" data-filter="outbreak">爆发级</button>
+        <button class="filter-btn" data-filter="action">行动级</button>
+        <button class="filter-btn" data-filter="nightMuggy">热夜</button>
+        <button class="filter-btn" data-filter="华东">华东</button>
+    </div>
+
+    <table>
+        <thead id="forecastTableHead"></thead>
+        <tbody id="forecastTableBody"></tbody>
+    </table>
+
+    <script src="js/core.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        // Initialize with mock data
+        const mockCityData = [
+            {
+                cityName: '上海',
+                region: '华东',
+                province: '上海',
+                adiScore: 78,
+                level: 'action',
+                maxTemp: 35,
+                nightMinTemp: 28,
+                feelsLike: 38,
+                humidity: 75,
+                continuousHotNightDays: 3,
+                future7Days: [
+                    { dayMax: 36, nightMin: 28, adiScore: 80, level: 'action', isHotNight: true },
+                    { dayMax: 37, nightMin: 29, adiScore: 82, level: 'outbreak', isHotNight: true },
+                    { dayMax: 35, nightMin: 27, adiScore: 75, level: 'action', isHotNight: true },
+                    { dayMax: 34, nightMin: 26, adiScore: 70, level: 'opportunity', isHotNight: false },
+                    { dayMax: 33, nightMin: 25, adiScore: 65, level: 'opportunity', isHotNight: false },
+                    { dayMax: 32, nightMin: 24, adiScore: 60, level: 'observe', isHotNight: false },
+                    { dayMax: 31, nightMin: 23, adiScore: 55, level: 'observe', isHotNight: false }
+                ]
+            },
+            {
+                cityName: '北京',
+                region: '华北',
+                province: '北京',
+                adiScore: 65,
+                level: 'opportunity',
+                maxTemp: 33,
+                nightMinTemp: 24,
+                feelsLike: 35,
+                humidity: 50,
+                continuousHotNightDays: 0,
+                future7Days: [
+                    { dayMax: 34, nightMin: 25, adiScore: 68, level: 'opportunity', isHotNight: false },
+                    { dayMax: 35, nightMin: 26, adiScore: 72, level: 'action', isHotNight: false },
+                    { dayMax: 36, nightMin: 27, adiScore: 76, level: 'action', isHotNight: true },
+                    { dayMax: 35, nightMin: 26, adiScore: 73, level: 'action', isHotNight: false },
+                    { dayMax: 34, nightMin: 25, adiScore: 68, level: 'opportunity', isHotNight: false },
+                    { dayMax: 32, nightMin: 23, adiScore: 60, level: 'observe', isHotNight: false },
+                    { dayMax: 30, nightMin: 22, adiScore: 55, level: 'observe', isHotNight: false }
+                ]
+            },
+            {
+                cityName: '广州',
+                region: '华南',
+                province: '广东',
+                adiScore: 88,
+                level: 'outbreak',
+                maxTemp: 37,
+                nightMinTemp: 29,
+                feelsLike: 42,
+                humidity: 85,
+                continuousHotNightDays: 5,
+                future7Days: [
+                    { dayMax: 38, nightMin: 30, adiScore: 92, level: 'outbreak', isHotNight: true },
+                    { dayMax: 38, nightMin: 30, adiScore: 93, level: 'outbreak', isHotNight: true },
+                    { dayMax: 37, nightMin: 29, adiScore: 88, level: 'outbreak', isHotNight: true },
+                    { dayMax: 36, nightMin: 28, adiScore: 82, level: 'outbreak', isHotNight: true },
+                    { dayMax: 35, nightMin: 27, adiScore: 78, level: 'action', isHotNight: true },
+                    { dayMax: 34, nightMin: 26, adiScore: 72, level: 'action', isHotNight: false },
+                    { dayMax: 33, nightMin: 25, adiScore: 68, level: 'opportunity', isHotNight: false }
+                ]
+            }
+        ];
+
+        // Initialize UI
+        window.addEventListener('DOMContentLoaded', () => {
+            UI.init();
+            UI.renderDashboard(mockCityData);
+
+            // Add filter button handlers
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    UI.state.reportFilter = btn.dataset.filter;
+                    UI.renderReport();
+                });
+            });
+
+            // Navigate to report page
+            setTimeout(() => {
+                document.querySelector('.nav-item[data-page="report"]').click();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

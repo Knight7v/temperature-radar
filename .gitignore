@@ -1,0 +1,24 @@
+# Vercel
+.vercel
+
+# Environment variables
+.env*.local
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Test files
+test-*.html
+test-*.js
+verification-test.html
+standalone-test.html
+simple-map-test.html
+layout-debug.html
+
+# Old files
+index-old.html
+index-v2-before-sales-overview.html
