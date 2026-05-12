@@ -5,6 +5,21 @@
   "github": {
     "enabled": false
   },
+  "forceHttps": true,
+  "redirects": [
+    {
+      "source": "/:path((?!{path}).*)*",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-forwarded-proto",
+          "value": "http"
+        }
+      ],
+      "destination": "https://kongtiaoredian.cn/:path",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/",
