@@ -16,7 +16,16 @@
       "Bash(grep -n \"const UI =\\\\|return {$\" /Users/knight/Desktop/temperature-monitor-prototype/index.html)",
       "WebSearch",
       "Bash(awk '/^    async function generateCityData\\\\\\(city\\\\\\)/,/^    }/ {print NR\": \"$0}' /Users/knight/Desktop/temperature-monitor-prototype/js/core.js)",
-      "Bash(awk '{print $2}')"
+      "Bash(awk '{print $2}')",
+      "Bash(vercel *)",
+      "Bash(chmod +x /Users/knight/Desktop/temperature-monitor-prototype/prepare-gitee-deploy.sh)",
+      "Bash(bash /Users/knight/Desktop/temperature-monitor-prototype/prepare-gitee-deploy.sh)",
+      "Bash(chmod +x /Users/knight/Desktop/temperature-monitor-prototype/gitee-upload.sh)",
+      "Bash(bash /Users/knight/Desktop/temperature-monitor-prototype/gitee-upload.sh)",
+      "Bash(chmod +x *)",
+      "Bash(cp -r css oss-deploy/)",
+      "Bash(cp -r js oss-deploy/)",
+      "Bash(cp -r assets oss-deploy/)"
     ]
   }
 }
