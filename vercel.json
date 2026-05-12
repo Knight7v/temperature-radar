@@ -2,10 +2,17 @@
   "version": 2,
   "public": true,
   "cleanUrls": true,
+  "github": {
+    "enabled": false
+  },
   "rewrites": [
     {
       "source": "/",
       "destination": "/index.html"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     }
   ],
   "headers": [

@@ -1,0 +1,22 @@
+{
+  "products": [
+    {
+      "product_id": "hot_analysis",
+      "product_name": "热销分析",
+      "description": "查看热销分析功能（24小时有效）",
+      "price": 29.9,
+      "order_type": "onetime",
+      "features": ["hot_analysis", "night_muggy", "future3day", "city_group_monitor"],
+      "duration": 86400
+    },
+    {
+      "product_id": "forecast_7d",
+      "product_name": "7天预测",
+      "description": "查看7天预测功能（月度订阅）",
+      "price": 19.9,
+      "order_type": "subscription",
+      "features": ["forecast_7d", "data_export", "city_filter"],
+      "duration": 2592000
+    }
+  ]
+}

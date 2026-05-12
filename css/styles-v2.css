@@ -1808,3 +1808,477 @@ body {
     max-width: 400px;
     text-align: center;
 }
+
+/* ==================== 登录模态框样式 ==================== */
+
+.login-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-modal.active {
+    display: flex;
+}
+
+.login-modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.login-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.login-tab {
+    flex: 1;
+    padding: 10px 16px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.login-tab.active,
+.login-tab:hover {
+    background: var(--alert-blue);
+    border-color: var(--alert-blue);
+    color: white;
+}
+
+.login-form {
+    padding: 20px;
+    display: none;
+}
+
+.login-form.active {
+    display: block;
+}
+
+.login-form .form-group {
+    margin-bottom: 16px;
+}
+
+.login-form label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+.login-form input:focus {
+    outline: none;
+    border-color: var(--alert-blue);
+}
+
+.code-input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.code-input-group input {
+    flex: 1;
+}
+
+.send-code-btn {
+    padding: 10px 16px;
+    background: var(--alert-blue);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+
+.send-code-btn:hover:not(:disabled) {
+    background: #3a7bc8;
+}
+
+.send-code-btn:disabled {
+    background: var(--border-color);
+    cursor: not-allowed;
+}
+
+.wechat-qr-container {
+    text-align: center;
+    padding: 20px;
+}
+
+.wechat-qr-code {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 16px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wechat-tip {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.wechat-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 40px 20px;
+}
+
+.wechat-loading .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 212, 255, 0.2);
+    border-top-color: var(--color-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.login-tip {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.login-tip a {
+    color: var(--alert-blue);
+    text-decoration: none;
+}
+
+.login-tip a:hover {
+    text-decoration: underline;
+}
+
+/* ==================== 支付模态框样式 ==================== */
+
+.payment-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.payment-modal.active {
+    display: flex;
+}
+
+.payment-modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.payment-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    padding: 20px;
+}
+
+.payment-plan {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.payment-plan:hover {
+    border-color: var(--alert-blue);
+    transform: translateY(-2px);
+}
+
+.payment-plan.featured {
+    border-color: var(--alert-orange);
+    box-shadow: 0 0 20px rgba(245, 166, 35, 0.2);
+}
+
+.plan-badge {
+    position: absolute;
+    top: -10px;
+    right: 16px;
+    background: var(--alert-orange);
+    color: white;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.plan-header {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.plan-header h4 {
+    color: var(--text-primary);
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.plan-price {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-cyan);
+}
+
+.plan-price span {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+}
+
+.plan-features li {
+    color: var(--text-secondary);
+    font-size: 13px;
+    padding: 6px 0;
+}
+
+.payment-plan .btn {
+    width: 100%;
+}
+
+/* ==================== 广告位样式 ==================== */
+
+.ad-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 12px 20px;
+    margin: 16px 0;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+
+.ad-banner-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.ad-banner-close:hover {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.ad-banner-content {
+    flex: 1;
+    color: white;
+}
+
+.ad-banner-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.ad-banner-desc {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.ad-banner-cta {
+    background: white;
+    color: #667eea;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ad-banner-cta:hover {
+    transform: scale(1.05);
+}
+
+.ad-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.ad-card-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--bg-secondary);
+    border: none;
+    color: var(--text-secondary);
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.ad-card-close:hover {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.ad-card img {
+    width: 100%;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.ad-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.ad-card-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.ad-card-link {
+    display: block;
+    text-align: center;
+    background: var(--alert-blue);
+    color: white;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+.ad-card-link:hover {
+    background: #3a7bc8;
+}
+
+/* ==================== 用户信息栏样式 ==================== */
+
+.user-info-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--alert-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+}
+
+.user-name {
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.user-status {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-subscription {
+    padding: 4px 12px;
+    background: var(--alert-orange);
+    color: white;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.user-logout {
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.user-logout:hover {
+    color: var(--text-primary);
+}
