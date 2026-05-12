@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模拟支付测试页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .test-section {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .test-section h2 {
+            color: #444;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .product-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .product-card:hover {
+            border-color: #4A90E2;
+            transform: translateY(-2px);
+        }
+
+        .product-card.selected {
+            border-color: #4A90E2;
+            background: #f0f7ff;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            color: #4A90E2;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .payment-method {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .payment-method button {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .payment-method button:hover {
+            border-color: #4A90E2;
+        }
+
+        .payment-method button.selected {
+            border-color: #4A90E2;
+            background: #f0f7ff;
+            color: #4A90E2;
+        }
+
+        .qr-code-container {
+            text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 15px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a7bc8;
+        }
+
+        .btn-success {
+            background: #52c41a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #42b512;
+        }
+
+        .btn-danger {
+            background: #ff4d4f;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #f5222d;
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .status-info {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+
+        .status-success {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+
+        .status-error {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+
+        .order-info {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .order-info p {
+            margin: 5px 0;
+        }
+
+        .order-info strong {
+            color: #333;
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .log-entry {
+            margin: 3px 0;
+            padding: 2px 0;
+        }
+
+        .log-time {
+            color: #569cd6;
+        }
+
+        .log-info {
+            color: #4ec9b0;
+        }
+
+        .log-success {
+            color: #6a9955;
+        }
+
+        .log-error {
+            color: #f48771;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 模拟支付测试页面</h1>
+        <p class="subtitle">用于测试支付流程，不会产生真实交易</p>
+
+        <div id="statusMessage" class="status-message status-info">
+            请选择产品开始测试
+        </div>
+
+        <!-- 产品选择 -->
+        <div class="test-section">
+            <h2>1. 选择产品</h2>
+            <div class="product-list">
+                <div class="product-card" onclick="selectProduct('hot_analysis', 29.9)">
+                    <div class="product-name">热销分析</div>
+                    <div class="product-price">¥29.9<span style="font-size: 14px; color: #999; font-weight: 400;">/次</span></div>
+                    <div style="font-size: 12px; color: #999; margin-top: 5px;">24小时有效</div>
+                </div>
+                <div class="product-card" onclick="selectProduct('forecast_7d', 19.9)">
+                    <div class="product-name">7天预测</div>
+                    <div class="product-price">¥19.9<span style="font-size: 14px; color: #999; font-weight: 400;">/月</span></div>
+                    <div style="font-size: 12px; color: #999; margin-top: 5px;">月度订阅</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 支付方式 -->
+        <div class="test-section">
+            <h2>2. 选择支付方式</h2>
+            <div class="payment-method">
+                <button class="selected" onclick="selectPaymentMethod('wechat')">💚 微信支付</button>
+                <button onclick="selectPaymentMethod('alipay')">💙 支付宝</button>
+            </div>
+        </div>
+
+        <!-- 订单信息 -->
+        <div class="test-section" id="orderSection" style="display: none;">
+            <h2>3. 订单信息</h2>
+            <div class="order-info">
+                <p><strong>订单号：</strong><span id="orderId">-</span></p>
+                <p><strong>产品：</strong><span id="productName">-</span></p>
+                <p><strong>金额：</strong><span id="orderAmount">-</span></p>
+                <p><strong>支付方式：</strong><span id="paymentMethod">-</span></p>
+                <p><strong>创建时间：</strong><span id="createTime">-</span></p>
+            </div>
+
+            <!-- 模拟二维码 -->
+            <div class="qr-code-container">
+                <div class="qr-code" id="qrCode">
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px;">📱</div>
+                        <div style="color: #999; font-size: 12px;">模拟二维码</div>
+                    </div>
+                </div>
+                <p style="color: #666; font-size: 14px;">请使用手机扫描二维码完成支付（测试模式）</p>
+            </div>
+
+            <!-- 测试按钮 -->
+            <div class="test-buttons">
+                <button class="btn btn-success" onclick="simulatePaymentSuccess()">✅ 模拟支付成功</button>
+                <button class="btn btn-danger" onclick="simulatePaymentFail()">❌ 模拟支付失败</button>
+                <button class="btn btn-primary" onclick="resetTest()">🔄 重新测试</button>
+            </div>
+        </div>
+
+        <!-- 测试日志 -->
+        <div class="test-section">
+            <h2>测试日志</h2>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry"><span class="log-time">[系统]</span> 测试页面已加载，等待操作...</div>
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="test-section">
+            <h2>📖 测试说明</h2>
+            <div style="font-size: 14px; color: #666; line-height: 1.8;">
+                <p><strong>测试流程：</strong></p>
+                <ol style="margin-left: 20px;">
+                    <li>选择要购买的产品</li>
+                    <li>选择支付方式</li>
+                    <li>系统会生成模拟订单</li>
+                    <li>点击"模拟支付成功"测试成功流程</li>
+                    <li>点击"模拟支付失败"测试失败流程</li>
+                    <li>返回主页面验证权限是否正确授予</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>注意事项：</strong></p>
+                <ul style="margin-left: 20px;">
+                    <li>这是模拟测试，不会产生真实交易</li>
+                    <li>测试数据保存在本地存储中</li>
+                    <li>刷新页面会清除测试数据</li>
+                    <li>正式上线前请关闭此测试页面</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedProduct = null;
+        let selectedPrice = 0;
+        let selectedPayment = 'wechat';
+        let orderId = null;
+
+        const products = {
+            'hot_analysis': '热销分析',
+            'forecast_7d': '7天预测'
+        };
+
+        const paymentMethods = {
+            'wechat': '微信支付',
+            'alipay': '支付宝'
+        };
+
+        function selectProduct(productId, price) {
+            selectedProduct = productId;
+            selectedPrice = price;
+
+            // 更新UI
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+
+            addLog(`info`, `选择产品: ${products[productId]} (¥${price})`);
+
+            if (orderId) {
+                updateOrder();
+            } else {
+                createOrder();
+            }
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPayment = method;
+
+            // 更新UI
+            document.querySelectorAll('.payment-method button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+
+            addLog(`info`, `选择支付方式: ${paymentMethods[method]}`);
+
+            if (orderId) {
+                updateOrder();
+            }
+        }
+
+        function createOrder() {
+            if (!selectedProduct) {
+                showStatus('请先选择产品', 'error');
+                return;
+            }
+
+            orderId = 'TEST_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+
+            document.getElementById('orderSection').style.display = 'block';
+
+            updateOrder();
+            addLog('success', `订单创建成功: ${orderId}`);
+        }
+
+        function updateOrder() {
+            document.getElementById('orderId').textContent = orderId;
+            document.getElementById('productName').textContent = products[selectedProduct];
+            document.getElementById('orderAmount').textContent = `¥${selectedPrice.toFixed(2)}`;
+            document.getElementById('paymentMethod').textContent = paymentMethods[selectedPayment];
+            document.getElementById('createTime').textContent = new Date().toLocaleString('zh-CN');
+        }
+
+        function simulatePaymentSuccess() {
+            if (!orderId) {
+                showStatus('请先创建订单', 'error');
+                return;
+            }
+
+            addLog('info', '开始模拟支付流程...');
+            showStatus('正在处理支付...', 'info');
+
+            setTimeout(() => {
+                addLog('info', '连接支付平台...');
+                showStatus('正在连接支付平台...', 'info');
+            }, 500);
+
+            setTimeout(() => {
+                addLog('info', '等待用户支付...');
+                showStatus('等待用户完成支付...', 'info');
+            }, 1000);
+
+            setTimeout(() => {
+                // 模拟支付成功
+                addLog('success', '支付成功！');
+
+                // 保存到本地存储
+                const paymentData = {
+                    orderId: orderId,
+                    productId: selectedProduct,
+                    productName: products[selectedProduct],
+                    amount: selectedPrice,
+                    paymentMethod: selectedPayment,
+                    status: 'paid',
+                    paidAt: new Date().toISOString(),
+                    features: getFeaturesForProduct(selectedProduct)
+                };
+
+                localStorage.setItem('test_payment', JSON.stringify(paymentData));
+
+                addLog('success', '权限已授予');
+                addLog('success', '测试完成！请返回主页面验证权限');
+
+                showStatus('✅ 支付成功！权限已授予。请返回主页面验证。', 'success');
+            }, 2000);
+        }
+
+        function simulatePaymentFail() {
+            if (!orderId) {
+                showStatus('请先创建订单', 'error');
+                return;
+            }
+
+            addLog('error', '支付失败：用户取消支付');
+            showStatus('❌ 支付失败：用户取消支付', 'error');
+        }
+
+        function resetTest() {
+            selectedProduct = null;
+            selectedPrice = 0;
+            orderId = null;
+
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            document.getElementById('orderSection').style.display = 'none';
+            document.getElementById('statusMessage').className = 'status-message status-info';
+            document.getElementById('statusMessage').textContent = '请选择产品开始测试';
+
+            localStorage.removeItem('test_payment');
+
+            addLog('info', '测试已重置');
+        }
+
+        function getFeaturesForProduct(productId) {
+            const features = {
+                'hot_analysis': ['hot_analysis', 'night_muggy', 'future3day', 'city_group_monitor'],
+                'forecast_7d': ['forecast_7d', 'data_export', 'city_filter']
+            };
+            return features[productId] || [];
+        }
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status-message status-${type}`;
+        }
+
+        function addLog(type, message) {
+            const container = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString('zh-CN');
+            const typeClass = `log-${type}`;
+
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${typeClass}">${message}</span>`;
+
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 页面加载时检查是否有测试支付记录
+        window.addEventListener('DOMContentLoaded', () => {
+            const testPayment = localStorage.getItem('test_payment');
+            if (testPayment) {
+                const data = JSON.parse(testPayment);
+                addLog('info', `发现测试支付记录: ${data.orderId}`);
+                addLog('success', `已授予权限: ${data.features.join(', ')}`);
+                showStatus(`您有测试支付记录：${data.productName}。如需重新测试，请点击"重新测试"。`, 'success');
+            }
+        });
+
+        // 添加返回主页面的链接
+        const container = document.querySelector('.container');
+        const backLink = document.createElement('div');
+        backLink.style.textAlign = 'center';
+        backLink.style.marginTop = '20px';
+        backLink.innerHTML = '<a href="index-v2.html" style="color: #4A90E2; text-decoration: none; font-weight: 600;">← 返回主页面</a>';
+        container.appendChild(backLink);
+    </script>
+</body>
+</html>

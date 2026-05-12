@@ -13,7 +13,9 @@
 
 # Test files
 test-*.html
-test-*.js
+test-verification.js
+test-render-functions.js
+test-future7days.js
 verification-test.html
 standalone-test.html
 simple-map-test.html

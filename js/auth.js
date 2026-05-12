@@ -278,6 +278,16 @@ const Auth = (function() {
 
     // 检查权限
     async function checkPermission(feature) {
+        // 测试模式：检查本地存储的测试支付
+        const testPayment = localStorage.getItem('test_payment');
+        if (testPayment) {
+            const paymentData = JSON.parse(testPayment);
+            if (paymentData.features && paymentData.features.includes(feature)) {
+                console.log('测试模式：使用测试支付权限');
+                return true;
+            }
+        }
+
         if (!currentUser) {
             openModal();
             return false;

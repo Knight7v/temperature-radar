@@ -154,6 +154,7 @@ body {
     padding: 0 var(--spacing-xl); flex-shrink: 0;
 }
 .header-left h2 { font-size: 1rem; font-weight: 500; }
+.header-center { display: flex; align-items: center; justify-content: center; flex: 1; }
 .header-right { display: flex; align-items: center; gap: var(--spacing-xl); }
 .current-time { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--alert-blue); }
 .header-stats { display: flex; gap: var(--spacing-lg); }
@@ -2281,4 +2282,118 @@ body {
 
 .user-logout:hover {
     color: var(--text-primary);
+}
+
+/* ==================== 测试模式样式 ==================== */
+
+.test-mode-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.test-mode-link {
+    color: var(--color-blue);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 4px 8px;
+    border: 1px solid var(--color-blue);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.test-mode-link:hover {
+    background: var(--color-blue);
+    color: white;
+}
+
+.test-mode-banner {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 12px 20px;
+    margin: 16px 0;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.test-mode-banner-content {
+    flex: 1;
+}
+
+.test-mode-banner-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.test-mode-banner-desc {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.test-mode-banner-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.test-mode-banner-actions a {
+    background: white;
+    color: #f5576c;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.2s ease;
+}
+
+.test-mode-banner-actions a:hover {
+    transform: scale(1.05);
+}
+
+/* 页面顶部测试模式横幅位置 */
+.test-mode-banner-top {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+    border-radius: 0;
+    margin: 0;
+}
+
+/* 有测试模式横幅时，给页面留出空间 */
+body.has-test-banner {
+    padding-top: 60px;
+}
+
+/* 浏览器控制台样式 */
+@media (prefers-reduced-motion: no-preference) {
+    .test-mode-badge {
+        animation: pulse 2s infinite;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .test-mode-badge {
+        animation: none;
+    }
 }
