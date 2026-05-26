@@ -11,6 +11,9 @@
 .vscode/
 .idea/
 
+# Superpowers brainstorming artifacts
+.superpowers/
+
 # Test files
 test-*.html
 test-verification.js
