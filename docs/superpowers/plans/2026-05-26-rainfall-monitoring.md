@@ -1,12 +1,14 @@
-# Rainfall Monitoring Implementation Plan
+# 降水监控功能实现计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add 7-day rainfall monitoring that reminds users to buy delivery insurance on rainy days and identifies post-rain humid heat sales opportunities.
+**目标:** 在现有空调热销区域雷达中增加未来7天降水监控能力，提供降雨投保提醒和雨后湿热销售机会识别。
 
-**Architecture:** Add a focused `RainMonitor` business module that enriches each `future7Days` entry with insurance and post-rain opportunity fields. Keep ADI unchanged; `Core` parses and enriches weather data, while `UI` renders dashboard cards, top tabs, and new 7-day report dimensions.
+**架构:** 添加独立的 `RainMonitor` 业务模块，为每个 `future7Days` 条目补充投保提醒和雨后湿热机会字段。保持ADI不变；`Core` 解析和丰富天气数据，`UI` 渲染独立降水监控页（位于7天预测下方）以及降水相关维度和降雨提示内容。
 
-**Tech Stack:** Plain HTML/CSS/JavaScript, browser globals, Node.js rule tests using `node`.
+**技术栈:** 原生 HTML/CSS/JavaScript，浏览器全局对象，使用 `node` 进行Node.js规则测试。
+
+**设计文档:** 参考 `/docs/superpowers/specs/2026-05-26-rainfall-monitoring-design.md` 获取完整的数据模型、业务规则和页面设计规范。
 
 ---
 
@@ -14,14 +16,80 @@
 
 - Create `js/rain-monitor.js`: pure business rules for rainfall insurance reminders, post-rain humid heat scoring, summaries, and top lists.
 - Create `tests/rain-monitor.test.js`: Node-based tests for `RainMonitor` without browser dependencies.
-- Modify `index-v2.html`: load `js/rain-monitor.js`, add dashboard card containers, add top tabs, add report dimension buttons.
+- Modify `index-v2.html`: load `js/rain-monitor.js`, add rain monitor nav item, add report dimension buttons.
 - Modify `js/core.js`: parse QWeather rainfall fields, call `RainMonitor.enrichFuture7Days()`, attach city-level rainfall summary fields, and expose top-list helpers.
-- Modify `js/ui.js`: render dashboard rainfall cards, top tabs, report dimensions, and rainfall tooltip content.
-- Modify `css/styles-v2.css`: style dashboard cards, labels, table cells, and responsive layout for the added UI.
+- Modify `js/ui.js`: render independent rain monitor tab page with dimensions and rainfall tooltip content.
+- Modify `css/styles-v2.css`: style rain monitor page, labels, table cells, and responsive layout.
 
-## Task 1: RainMonitor Rules and Tests
+## Task 1: RainMonitor 规则与测试
 
-**Files:**
+**数据模型（来自设计规范）:**
+
+在每个 `future7Days` 日对象中扩展以下字段:
+
+```js
+{
+  weatherTextDay: string,
+  weatherTextNight: string,
+  weatherText: string,
+  precip: number,
+  rainInsuranceLevel: 'none' | 'remind' | 'strong',
+  rainInsuranceLabel: '无提醒' | '提醒投保' | '强提醒',
+  rainInsuranceReason: string,
+  postRainMuggyScore: number,
+  postRainMuggyLevel: 'none' | 'watch' | 'medium' | 'high',
+  postRainMuggyLabel: '无明显机会' | '观察' | '中机会' | '高机会',
+  postRainMuggyReason: string
+}
+```
+
+城市对象增加汇总字段:
+
+```js
+{
+  maxRainInsuranceLevel: 'none' | 'remind' | 'strong',
+  maxPostRainMuggyScore: number,
+  maxPostRainMuggyLevel: 'none' | 'watch' | 'medium' | 'high'
+}
+```
+
+**投保提醒规则（来自设计规范）:**
+
+| 等级 | 文案 | 规则 |
+| --- | --- | --- |
+| `none` | 无提醒 | 无降水信号，且 `precip <= 0` |
+| `remind` | 提醒投保 | 弱降水，或 `precip > 0` 但未达到强提醒 |
+| `strong` | 强提醒 | 中雨及以上，或降水量达到强提醒阈值 |
+
+判定优先级:
+1. 如果 `textDay` 或 `textNight` 命中强提醒关键词，返回 `strong`
+2. 如果 `precip >= 10`，返回 `strong`
+3. 如果 `textDay` 或 `textNight` 命中提醒投保关键词，返回 `remind`
+4. 如果 `precip > 0`，返回 `remind`
+5. 否则返回 `none`
+
+**雨后湿热机会评分（来自设计规范）:**
+
+评分维度（总分100，最低20分起步）:
+- 前1-2天有降水: 20分
+- 最高温较最近雨日或前日上升 >= 3℃: 20分
+- 最高温较最近雨日或前日上升 >= 5℃: 30分
+- 湿度 >= 70%: 15分
+- 湿度 >= 80%: 25分
+- 白天体感温度 >= 34℃: 15分
+- 白天体感温度较最近雨日上升 >= 3℃: 15分
+- ADI较最近雨日或当前基线上升 >= 8: 15分
+- 夜间最低温 >= 26℃ 或夜间体感 >= 30℃: 10分
+
+等级:
+| 等级 | 文案 | 分数 |
+| --- | --- | --- |
+| `high` | 高机会 | >= 70 |
+| `medium` | 中机会 | 45-69 |
+| `watch` | 观察 | 25-44 |
+| `none` | 无明显机会 | < 25 |
+
+**文件:**
 - Create: `js/rain-monitor.js`
 - Create: `tests/rain-monitor.test.js`
 
@@ -403,9 +471,12 @@ Create `js/rain-monitor.js`:
         return flattenCityDays(cityDataList)
             .filter(record => record.day.rainInsuranceLevel && record.day.rainInsuranceLevel !== 'none')
             .sort((a, b) => {
+                // 1. `strong` 优先于 `remind`
                 const levelDiff = INSURANCE_LEVEL_ORDER[b.day.rainInsuranceLevel] - INSURANCE_LEVEL_ORDER[a.day.rainInsuranceLevel];
                 if (levelDiff !== 0) return levelDiff;
+                // 2. 日期越近越靠前
                 if (a.dayIndex !== b.dayIndex) return a.dayIndex - b.dayIndex;
+                // 3. 降水量越大越靠前
                 return toNumber(b.day.precip, 0) - toNumber(a.day.precip, 0);
             })
             .slice(0, limit || 10);
@@ -415,9 +486,12 @@ Create `js/rain-monitor.js`:
         return flattenCityDays(cityDataList)
             .filter(record => record.day.postRainMuggyLevel && record.day.postRainMuggyLevel !== 'none')
             .sort((a, b) => {
+                // 1. `postRainMuggyScore` 高者优先
                 const scoreDiff = toNumber(b.day.postRainMuggyScore, 0) - toNumber(a.day.postRainMuggyScore, 0);
                 if (scoreDiff !== 0) return scoreDiff;
+                // 2. 日期越近越靠前
                 if (a.dayIndex !== b.dayIndex) return a.dayIndex - b.dayIndex;
+                // 3. ADI较当前提升更高者优先
                 return toNumber(b.day.postRainMuggyAdiRise, 0) - toNumber(a.day.postRainMuggyAdiRise, 0);
             })
             .slice(0, limit || 10);
@@ -680,12 +754,155 @@ git commit -m "feat: enrich weather data with rainfall signals"
 
 Expected: commit succeeds with core integration changes.
 
-## Task 3: Dashboard Cards and Top Tabs
+## Task 3: 独立降水监控页（核心功能）
 
-**Files:**
+**设计说明:** 新增独立TAB页面，位置在"7天预测"下方，页面标识为 `rain-monitor`。页面布局与7天预测页一致，采用相同的表格和维度切换模式。包含"投保提醒"和"雨后湿热"两个维度。
+
+**文件:**
 - Modify: `index-v2.html`
 - Modify: `js/ui.js`
 - Modify: `css/styles-v2.css`
+
+- [ ] **Step 1: Add rain monitor nav item**
+
+In `index-v2.html`, inside `.nav-menu` and after the `report` nav-item, add:
+
+```html
+<div class="nav-item" data-page="rainMonitor">
+    <span class="nav-icon">🌧️</span>
+    <span class="nav-text">降水监控</span>
+</div>
+```
+
+- [ ] **Step 2: Add rain monitor page container**
+
+After the `report-page-container` section, add:
+
+```html
+<!-- Rain Monitor Page -->
+<div class="page-container" id="rainMonitorPage" style="display: none;">
+    <div class="page-header">
+        <h2>降水监控</h2>
+        <p class="page-subtitle">降雨投保提醒与雨后湿热机会</p>
+    </div>
+    <div class="section-header">
+        <h3>未来7天降水监控</h3>
+        <div class="dimension-toggle">
+            <button class="dimension-btn active" data-dimension="rainInsurance">投保提醒</button>
+            <button class="dimension-btn" data-dimension="postRainMuggy">雨后湿热</button>
+        </div>
+    </div>
+    <div class="forecast-section">
+        <div class="forecast-table-container">
+            <table class="forecast-table" id="rainForecastTable">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+```
+
+- [ ] **Step 3: Route rain monitor page**
+
+In `js/ui.js`, add case to the page routing function (where `switch(page)` handles nav pages):
+
+```js
+case 'rainMonitor':
+    renderRainMonitorPage();
+    break;
+```
+
+- [ ] **Step 4: Implement rain monitor page renderer**
+
+Add this function near other page renderers:
+
+```js
+function renderRainMonitorPage() {
+    const tableHead = document.querySelector('#rainForecastTable thead');
+    const tableBody = document.querySelector('#rainForecastTable tbody');
+    if (!tableHead || !tableBody) return;
+
+    const currentDimension = document.querySelector('#rainMonitorPage .dimension-btn.active')?.dataset.dimension || 'rainInsurance';
+    const cities = state.cityData;
+
+    switch (currentDimension) {
+    case 'rainInsurance':
+        renderReportRainInsurance(cities, tableHead, tableBody);
+        break;
+    case 'postRainMuggy':
+        renderReportPostRainMuggy(cities, tableHead, tableBody);
+        break;
+    }
+
+    bindTooltipEvents(tableBody);
+}
+```
+
+- [ ] **Step 5: Bind dimension toggle on rain monitor page**
+
+In the dimension toggle binding section, add handling for rain monitor page:
+
+```js
+document.querySelectorAll('.dimension-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const parentPage = this.closest('.page-container');
+        if (parentPage) {
+            parentPage.querySelectorAll('.dimension-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            if (parentPage.id === 'rainMonitorPage') {
+                renderRainMonitorPage();
+            }
+        }
+    });
+});
+```
+
+- [ ] **Step 6: Verify rain monitor page**
+
+Run:
+
+```bash
+python3 -m http.server 8080
+```
+
+Open `http://localhost:8080/index-v2.html`, click "降水监控" nav item, and verify:
+- Page loads without console errors.
+- "投保提醒" dimension renders by default.
+- Clicking "雨后湿热" dimension switches table content.
+- Hovering cells shows tooltip with rainfall information.
+
+- [ ] **Step 7: Commit**
+
+Run:
+
+```bash
+git add index-v2.html js/ui.js
+git commit -m "feat: add independent rain monitor tab page"
+```
+
+Expected: commit succeeds.
+
+## Task 4: 首页右侧榜单（可选）
+
+**设计说明:** 为保持与现有UI一致，首页右侧榜单tab中可增加投保提醒和雨后湿热榜单。此功能为可选功能，不影响核心降水监控页面的使用。如无需首页榜单，可跳过此任务。
+
+**文件:**
+- Modify: `index-v2.html`
+- Modify: `js/ui.js`
+- Modify: `css/styles-v2.css`
+
+**排序规则（来自设计规范）:**
+
+投保提醒榜排序:
+1. `strong` 优先于 `remind`
+2. 日期越近越靠前
+3. 降水量越大越靠前
+
+雨后湿热榜排序:
+1. `postRainMuggyScore` 高者优先
+2. 日期越近越靠前
+3. ADI较当前提升更高者优先
 
 - [ ] **Step 1: Add dashboard card containers**
 
@@ -927,9 +1144,11 @@ git commit -m "feat: show rainfall summaries on dashboard"
 
 Expected: commit succeeds.
 
-## Task 4: 7-Day Report Dimensions and Tooltips
+## Task 5: 7天预测报表维度和提示信息
 
-**Files:**
+**设计说明:** 在现有7天预测报表中增加"投保提醒"和"雨后湿热"两个维度，并在提示信息中显示降雨相关数据。
+
+**文件:**
 - Modify: `index-v2.html`
 - Modify: `js/ui.js`
 - Modify: `css/styles-v2.css`
@@ -1156,7 +1375,7 @@ git commit -m "feat: add rainfall dimensions to forecast table"
 
 Expected: commit succeeds.
 
-## Task 5: Final Verification and Polish
+## Task 6: 最终验证与完善
 
 **Files:**
 - Modify if verification exposes issues: `css/styles-v2.css`, `js/ui.js`, `js/core.js`, `js/rain-monitor.js`
@@ -1190,7 +1409,7 @@ Open `http://localhost:8080/index-v2.html` and verify:
 - `投保提醒` top tab does not show “避雨”, “禁止送货”, or “延期”.
 - `雨后湿热` top tab lists records with score and reason when simulated data contains matching cases.
 
-- [ ] **Step 4: Browser smoke test report page**
+- [ ] **Step 4: 浏览器报表页面验证**
 
 Open `7天预测` and verify:
 
@@ -1198,7 +1417,15 @@ Open `7天预测` and verify:
 - New dimensions `投保提醒` and `雨后湿热` render.
 - Tooltip rows show weather text, precipitation, insurance reason, and humid heat reason.
 
-- [ ] **Step 5: Search for forbidden delivery wording**
+**验收标准检查（来自设计规范）:**
+- 用户能在独立降水监控页按城市和日期查看投保提醒与雨后湿热机会。
+- 用户能在首页右侧榜单（如启用）查看降水监控相关的top排行。
+- 下雨相关文案只表达"提醒投保"或"强提醒"，不表达"避雨"、"禁止送货"。
+- 现有ADI、地图、热销榜和7天预测原有维度不回归。
+
+- [ ] **Step 5: 检查禁用配送文案**
+
+根据设计规范的非目标要求，降雨相关文案只表达"提醒投保"或"强提醒"，不表达"避雨"、"禁止送货"、"延期配送"或"停止配送"。
 
 Run:
 
@@ -1206,21 +1433,23 @@ Run:
 rg -n "避雨|禁止送货|延期配送|停止配送" index-v2.html js css
 ```
 
-Expected: no matches in user-facing rainfall code. Existing spec files may contain these words in non-goal descriptions, but app code should not.
+Expected: 在面向用户的降雨功能代码中无匹配结果。现有设计规范文件可能包含这些词汇（在非目标描述中），但应用代码不应包含。
 
-- [ ] **Step 6: Commit final fixes**
+- [ ] **Step 6: 提交最终修复**
 
 If files changed during verification, run:
 
 ```bash
 git add index-v2.html js/core.js js/rain-monitor.js js/ui.js css/styles-v2.css tests/rain-monitor.test.js
-git commit -m "fix: polish rainfall monitoring experience"
+git commit -m "fix: 完善降水监控功能体验"
 ```
 
 Expected: commit succeeds only if verification required fixes. If there are no fixes, skip this commit and record that no final commit was needed.
 
-## Self-Review
+## 自我审查
 
-- Spec coverage: Tasks cover the independent RainMonitor model, QWeather field parsing, simulated fallback fields, homepage double cards, top tabs, 7-day report dimensions, tooltip rows, wording constraints, and browser verification.
-- Placeholder scan: The plan has no unresolved placeholder markers or vague implementation steps.
-- Type consistency: `rainInsuranceLevel`, `rainInsuranceLabel`, `rainInsuranceReason`, `postRainMuggyScore`, `postRainMuggyLevel`, `postRainMuggyLabel`, and `postRainMuggyReason` match the approved spec and are used consistently across tasks.
+- **设计规范覆盖:** 任务涵盖了独立 RainMonitor 模型、和风天气字段解析、模拟降级数据、首页双卡（可选）、首页榜单（可选）、7天预测报表维度、提示信息行、文案约束和浏览器验证。完整设计规范参见 `/docs/superpowers/specs/2026-05-26-rainfall-monitoring-design.md`。
+- **占位符检查:** 计划中无未解决的占位符标记或模糊实现步骤。
+- **类型一致性:** `rainInsuranceLevel`、`rainInsuranceLabel`、`rainInsuranceReason`、`postRainMuggyScore`、`postRainMuggyLevel`、`postRainMuggyLabel` 和 `postRainMuggyReason` 与批准的设计规范一致，并在所有任务中保持一致使用。
+- **非目标遵守:** 实现避免了设计规范中列出的非目标功能（物流排班日历、配送判断、仓库配置、保险购买流程、ADI等级体系变更）。
+- **文案约束:** 所有降雨相关文案只表达"提醒投保"或"强提醒"，不表达"避雨"、"禁止送货"、"延期配送"或"停止配送"。
