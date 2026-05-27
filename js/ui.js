@@ -71,6 +71,12 @@ const UI = (function() {
                 <div class="forecast-tooltip-row"><span>最高体感:</span><span style="color: ${dayData.dayFeelsLike >= 38 ? '#D0021B' : '#F5A623'}">${dayData.dayFeelsLike}℃</span></div>
                 <div class="forecast-tooltip-row"><span>最低体感:</span><span style="color: ${dayData.nightFeelsLike >= 30 ? '#D0021B' : '#00D4FF'}">${dayData.nightFeelsLike}℃</span></div>
                 <div class="forecast-tooltip-row"><span>湿度:</span><span>${dayData.humidity}%</span></div>
+                <div class="forecast-tooltip-row"><span>天气:</span><span>${escapeHtml(dayData.weatherText || '无明显降水')}</span></div>
+                <div class="forecast-tooltip-row"><span>降水量:</span><span>${escapeHtml(String(dayData.precip || 0))}mm</span></div>
+                <div class="forecast-tooltip-row"><span>投保提醒:</span><span>${escapeHtml(dayData.rainInsuranceLabel || '无提醒')}</span></div>
+                <div class="forecast-tooltip-row"><span>投保原因:</span><span style="font-size: 0.7rem;">${escapeHtml(dayData.rainInsuranceReason || '未来该日无明显降水')}</span></div>
+                <div class="forecast-tooltip-row"><span>湿热机会:</span><span>${escapeHtml(dayData.postRainMuggyLabel || '无明显机会')} ${escapeHtml(String(dayData.postRainMuggyScore || 0))}分</span></div>
+                <div class="forecast-tooltip-row"><span>湿热原因:</span><span style="font-size: 0.7rem;">${escapeHtml(dayData.postRainMuggyReason || '雨后湿热信号不足')}</span></div>
                 <div class="forecast-tooltip-row"><span>ADI:</span><span style="color: ${levelInfo.color}; font-weight: 600;">${dayData.adiScore} [${levelInfo.name}]</span></div>
                 ${dayData.isHotNight ? '<div class="forecast-tooltip-row" style="color: #D0021B;">🌙 热夜</div>' : ''}
             </div>
@@ -1048,6 +1054,12 @@ const UI = (function() {
                 break;
             case 'adi':
                 renderReportADI(cities, thead, tbody);
+                break;
+            case 'rainInsurance':
+                renderReportRainInsurance(cities, thead, tbody);
+                break;
+            case 'postRainMuggy':
+                renderReportPostRainMuggy(cities, thead, tbody);
                 break;
             default:
                 renderReportTemperature(cities, thead, tbody);
