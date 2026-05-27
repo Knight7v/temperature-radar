@@ -14,7 +14,9 @@ const UI = (function() {
         reportFilter: 'all',
         historyFilter: 'today',
         reportDimension: 'temperature',
-        reportSearch: ''
+        reportSearch: '',
+        rainFilter: 'all',
+        rainSearch: ''
     };
 
     // ==================== 工具函数 ====================
@@ -103,6 +105,7 @@ const UI = (function() {
             dashboard: '今日热销',
             analysis: '热销分析',
             report: '7天预测',
+            rainMonitor: '降水监控',
             history: '历史记录',
             rules: '规则设置'
         };
@@ -119,6 +122,7 @@ const UI = (function() {
 
                 if (page === 'analysis') renderAnalysis();
                 if (page === 'report') renderReport();
+                if (page === 'rainMonitor') renderRainMonitorPage();
                 if (page === 'history') renderHistory();
                 if (page === 'rules') renderRules();
             });
@@ -181,10 +185,17 @@ const UI = (function() {
         // Dimension toggle buttons
         document.querySelectorAll('.dimension-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.dimension-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.reportDimension = btn.dataset.dimension;
-                renderReport();
+                const parentPage = btn.closest('.page');
+                if (parentPage) {
+                    parentPage.querySelectorAll('.dimension-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    if (parentPage.id === 'report') {
+                        state.reportDimension = btn.dataset.dimension;
+                        renderReport();
+                    } else if (parentPage.id === 'rainMonitor') {
+                        renderRainMonitorPage();
+                    }
+                }
             });
         });
 
@@ -218,6 +229,44 @@ const UI = (function() {
                 }
             });
         }
+
+        // Rain monitor search input
+        const rainSearchInput = document.getElementById('rainSearchInput');
+        const rainClearSearchBtn = document.getElementById('clearRainSearchBtn');
+
+        if (rainSearchInput) {
+            const debouncedRainSearch = debounce((value) => {
+                state.rainSearch = value.toLowerCase().trim();
+                renderRainMonitorPage();
+            }, 300);
+
+            rainSearchInput.addEventListener('input', (e) => {
+                debouncedRainSearch(e.target.value);
+                if (rainClearSearchBtn) {
+                    rainClearSearchBtn.style.display = e.target.value ? 'block' : 'none';
+                }
+            });
+        }
+
+        if (rainClearSearchBtn) {
+            rainClearSearchBtn.addEventListener('click', () => {
+                if (rainSearchInput) {
+                    rainSearchInput.value = '';
+                    state.rainSearch = '';
+                    rainClearSearchBtn.style.display = 'none';
+                    renderRainMonitorPage();
+                }
+            });
+        }
+
+        document.querySelectorAll('#rainFilters .filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#rainFilters .filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.rainFilter = btn.dataset.filter;
+                renderRainMonitorPage();
+            });
+        });
 
         document.querySelectorAll('#reportFilters .filter-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1066,7 +1115,9 @@ const UI = (function() {
 
     function renderReportTemperature(cities, thead, tbody) {
         const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-        const now = new Date();
+
+        // 使用第一个城市的future7Days数据来获取实际日期，确保表头和数据对应
+        const sampleDates = cities.length > 0 && cities[0].future7Days ? cities[0].future7Days : [];
 
         // Generate date headers for 7 days
         let headerHtml = `
@@ -1082,8 +1133,8 @@ const UI = (function() {
         `;
 
         for (let i = 0; i < 7; i++) {
-            const date = new Date(now);
-            date.setDate(date.getDate() + i);
+            // 使用数据中的实际日期，而不是基于当前日期计算
+            const date = sampleDates[i] ? sampleDates[i].date : new Date();
             headerHtml += `
                 <th>
                     <div class="date-header">
@@ -1162,7 +1213,9 @@ const UI = (function() {
 
     function renderReportFeelsLike(cities, thead, tbody) {
         const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-        const now = new Date();
+
+        // 使用第一个城市的future7Days数据来获取实际日期，确保表头和数据对应
+        const sampleDates = cities.length > 0 && cities[0].future7Days ? cities[0].future7Days : [];
 
         // Generate date headers (same as temperature mode)
         let headerHtml = `
@@ -1178,8 +1231,8 @@ const UI = (function() {
         `;
 
         for (let i = 0; i < 7; i++) {
-            const date = new Date(now);
-            date.setDate(date.getDate() + i);
+            // 使用数据中的实际日期，而不是基于当前日期计算
+            const date = sampleDates[i] ? sampleDates[i].date : new Date();
             headerHtml += `
                 <th>
                     <div class="date-header">
@@ -1259,7 +1312,9 @@ const UI = (function() {
 
     function renderReportADI(cities, thead, tbody) {
         const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-        const now = new Date();
+
+        // 使用第一个城市的future7Days数据来获取实际日期，确保表头和数据对应
+        const sampleDates = cities.length > 0 && cities[0].future7Days ? cities[0].future7Days : [];
 
         // Generate date headers
         let headerHtml = `
@@ -1275,8 +1330,8 @@ const UI = (function() {
         `;
 
         for (let i = 0; i < 7; i++) {
-            const date = new Date(now);
-            date.setDate(date.getDate() + i);
+            // 使用数据中的实际日期，而不是基于当前日期计算
+            const date = sampleDates[i] ? sampleDates[i].date : new Date();
             headerHtml += `
                 <th>
                     <div class="date-header">
@@ -1358,6 +1413,169 @@ const UI = (function() {
                 `;
             });
 
+            return `<tr>${rowHtml}</tr>`;
+        }).join('');
+    }
+
+    // ==================== 降水监控页 ====================
+
+    function renderRainMonitorPage() {
+        const thead = document.getElementById('rainForecastTableHead');
+        const tbody = document.getElementById('rainForecastTableBody');
+        if (!thead || !tbody || state.cityData.length === 0) return;
+
+        // Filter out cities without future7Days data
+        let cities = state.cityData.filter(c => c.future7Days && c.future7Days.length > 0);
+        const filter = state.rainFilter || 'all';
+
+        // Apply region filters
+        if (['华东', '华南', '华中', '西南', '华北', '西北', '东北'].includes(filter)) {
+            cities = cities.filter(c => c.region === filter);
+        }
+
+        // Apply search filter
+        if (state.rainSearch) {
+            cities = cities.filter(c => c.cityName.toLowerCase().includes(state.rainSearch));
+        }
+
+        // Sort by city name for consistency
+        cities.sort((a, b) => a.cityName.localeCompare(b.cityName, 'zh-CN'));
+
+        // Route to dimension-specific renderer
+        const currentDimension = document.querySelector('#rainMonitorPage .dimension-btn.active')?.dataset.dimension || 'rainInsurance';
+        switch (currentDimension) {
+            case 'rainInsurance':
+                renderReportRainInsurance(cities, thead, tbody);
+                break;
+            case 'postRainMuggy':
+                renderReportPostRainMuggy(cities, thead, tbody);
+                break;
+        }
+
+        bindTooltipEvents(tbody);
+    }
+
+    function renderReportRainInsurance(cities, thead, tbody) {
+        const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+        const sampleDates = cities.length > 0 && cities[0].future7Days ? cities[0].future7Days : [];
+
+        let headerHtml = `
+            <th class="fixed-left">区域</th>
+            <th class="fixed-left">省份</th>
+            <th class="fixed-left">城市</th>
+            <th class="fixed-left">最高提醒</th>
+            <th class="fixed-left">提醒天数</th>
+            <th class="fixed-left">强提醒天数</th>
+            <th class="fixed-left">最近提醒</th>
+            <th class="fixed-left">动作</th>
+            <th class="fixed-left">说明</th>
+        `;
+
+        for (let i = 0; i < 7; i++) {
+            const date = sampleDates[i] ? sampleDates[i].date : new Date();
+            headerHtml += `
+                <th>
+                    <div class="date-header">
+                        <span class="date-header-day">${date.getMonth() + 1}/${date.getDate()} 周${weekDays[date.getDay()]}</span>
+                    </div>
+                </th>
+            `;
+        }
+        thead.innerHTML = headerHtml;
+
+        if (cities.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="16" class="forecast-empty-state"><div class="forecast-empty-icon">🔍</div><div>未找到匹配的城市</div></td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = cities.map(city => {
+            const remindDays = city.future7Days.filter(day => day.rainInsuranceLevel !== 'none');
+            const strongDays = city.future7Days.filter(day => day.rainInsuranceLevel === 'strong');
+            const topDay = remindDays[0];
+            let rowHtml = `
+                <td class="fixed-left">${escapeHtml(city.region)}</td>
+                <td class="fixed-left">${escapeHtml(city.province)}</td>
+                <td class="fixed-left">${escapeHtml(city.cityName)}</td>
+                <td class="fixed-left"><span class="rain-mini-badge insurance-${escapeHtml(city.maxRainInsuranceLevel || 'none')}">${escapeHtml(topDay ? topDay.rainInsuranceLabel : '无提醒')}</span></td>
+                <td class="fixed-left">${escapeHtml(String(remindDays.length))}天</td>
+                <td class="fixed-left">${escapeHtml(String(strongDays.length))}天</td>
+                <td class="fixed-left">${escapeHtml(topDay ? topDay.weatherText : '-')}</td>
+                <td class="fixed-left">配送照常</td>
+                <td class="fixed-left">下雨提醒投保</td>
+            `;
+            city.future7Days.forEach((day, idx) => {
+                rowHtml += `
+                    <td class="rain-report-cell rain-insurance-${escapeHtml(day.rainInsuranceLevel || 'none')}" data-city="${escapeHtml(city.cityName)}" data-day="${idx}">
+                        <div>
+                            <div class="rain-cell-main">${escapeHtml(day.rainInsuranceLabel || '无提醒')}</div>
+                            <div class="rain-cell-sub">${escapeHtml(day.weatherText || '无明显降水')}</div>
+                            <div class="rain-cell-sub">${escapeHtml(String(day.precip || 0))}mm</div>
+                        </div>
+                    </td>
+                `;
+            });
+            return `<tr>${rowHtml}</tr>`;
+        }).join('');
+    }
+
+    function renderReportPostRainMuggy(cities, thead, tbody) {
+        const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+        const sampleDates = cities.length > 0 && cities[0].future7Days ? cities[0].future7Days : [];
+
+        let headerHtml = `
+            <th class="fixed-left">区域</th>
+            <th class="fixed-left">省份</th>
+            <th class="fixed-left">城市</th>
+            <th class="fixed-left">最高机会</th>
+            <th class="fixed-left">最高分</th>
+            <th class="fixed-left">机会天数</th>
+            <th class="fixed-left">今日ADI</th>
+            <th class="fixed-left">动作</th>
+            <th class="fixed-left">说明</th>
+        `;
+
+        for (let i = 0; i < 7; i++) {
+            const date = sampleDates[i] ? sampleDates[i].date : new Date();
+            headerHtml += `
+                <th>
+                    <div class="date-header">
+                        <span class="date-header-day">${date.getMonth() + 1}/${date.getDate()} 周${weekDays[date.getDay()]}</span>
+                    </div>
+                </th>
+            `;
+        }
+        thead.innerHTML = headerHtml;
+
+        if (cities.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="16" class="forecast-empty-state"><div class="forecast-empty-icon">🔍</div><div>未找到匹配的城市</div></td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = cities.map(city => {
+            const opportunityDays = city.future7Days.filter(day => day.postRainMuggyLevel !== 'none');
+            const maxScore = Math.max(0, ...city.future7Days.map(day => day.postRainMuggyScore || 0));
+            let rowHtml = `
+                <td class="fixed-left">${escapeHtml(city.region)}</td>
+                <td class="fixed-left">${escapeHtml(city.province)}</td>
+                <td class="fixed-left">${escapeHtml(city.cityName)}</td>
+                <td class="fixed-left"><span class="rain-mini-badge muggy-${escapeHtml(city.maxPostRainMuggyLevel || 'none')}">${escapeHtml(opportunityDays[0] ? opportunityDays[0].postRainMuggyLabel : '无明显机会')}</span></td>
+                <td class="fixed-left">${escapeHtml(String(maxScore))}</td>
+                <td class="fixed-left">${escapeHtml(String(opportunityDays.length))}天</td>
+                <td class="fixed-left">${escapeHtml(String(city.adiScore))}</td>
+                <td class="fixed-left">销售跟进</td>
+                <td class="fixed-left">雨后升温高湿</td>
+            `;
+            city.future7Days.forEach((day, idx) => {
+                rowHtml += `
+                    <td class="rain-report-cell rain-muggy-${escapeHtml(day.postRainMuggyLevel || 'none')}" data-city="${escapeHtml(city.cityName)}" data-day="${idx}">
+                        <div>
+                            <div class="rain-cell-main">${escapeHtml(day.postRainMuggyLabel || '无明显机会')}</div>
+                            <div class="rain-cell-sub">${escapeHtml(String(day.postRainMuggyScore || 0))}分</div>
+                            <div class="rain-cell-sub">${escapeHtml(day.postRainMuggyTempRise > 0 ? '+' + day.postRainMuggyTempRise + '℃' : '-')}</div>
+                        </div>
+                    </td>
+                `;
+            });
             return `<tr>${rowHtml}</tr>`;
         }).join('');
     }

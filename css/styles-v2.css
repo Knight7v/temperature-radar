@@ -1105,7 +1105,7 @@ body {
 
 .modal-body { padding: var(--spacing-xl); }
 
-.detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-md); margin-bottom: var(--spacing-lg); }
+.detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-md); margin-bottom: var(--spacing-lg); width: 100%; box-sizing: border-box; }
 .detail-item { background: var(--bg-secondary); border-radius: 8px; padding: var(--spacing-md); text-align: center; }
 .detail-item .detail-label { font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.375rem; }
 .detail-item .detail-value { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700; }
@@ -1123,16 +1123,18 @@ body {
 }
 
 .forecast-section h3 { margin-bottom: var(--spacing-md); font-size: 0.9rem; }
-.forecast-table { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+.forecast-table { width: 100%; border: none; border-radius: 0; overflow: visible; box-sizing: border-box; background: var(--bg-secondary); border-radius: 8px; }
 .forecast-header {
-    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: var(--spacing-sm);
-    padding: var(--spacing-sm); background: var(--bg-secondary);
-    font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;
+    display: grid; grid-template-columns: 0.8fr 0.45fr 0.45fr 0.45fr 0.6fr; gap: var(--spacing-sm);
+    padding: var(--spacing-md); background: var(--bg-secondary);
+    font-size: 0.7rem; color: var(--text-secondary); font-weight: 500; box-sizing: border-box; border-radius: 8px 8px 0 0;
 }
 .forecast-row {
-    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: var(--spacing-sm);
-    padding: var(--spacing-sm); font-size: 0.75rem; border-top: 1px solid var(--border-color);
+    display: grid; grid-template-columns: 0.8fr 0.45fr 0.45fr 0.45fr 0.6fr; gap: var(--spacing-sm);
+    padding: var(--spacing-md); font-size: 0.75rem; border-top: 1px solid var(--border-color); box-sizing: border-box;
 }
+.forecast-row:last-child { border-radius: 0 0 8px 8px; }
+.forecast-row.hot { background: rgba(255, 0, 0, 0.05); }
 .forecast-row.hot { background: rgba(255, 0, 0, 0.05); }
 .forecast-date { display: flex; align-items: center; gap: var(--spacing-xs); }
 
@@ -2397,3 +2399,48 @@ body.has-test-banner {
         animation: none;
     }
 }
+
+/* ==================== 降水监控样式 ==================== */
+
+.rain-report-cell {
+    min-width: 112px;
+    text-align: center;
+}
+
+.rain-cell-main {
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.rain-cell-sub {
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.66rem;
+    line-height: 1.25;
+}
+
+.rain-mini-badge {
+    border-radius: 4px;
+    color: #fff;
+    display: inline-flex;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
+    padding: 4px 7px;
+}
+
+.rain-mini-badge.insurance-strong { background: #C2410C; }
+.rain-mini-badge.insurance-remind { background: #B45309; }
+.rain-mini-badge.insurance-none { background: rgba(255, 255, 255, 0.1); }
+.rain-mini-badge.muggy-high { background: #15803D; }
+.rain-mini-badge.muggy-medium { background: #16A34A; }
+.rain-mini-badge.muggy-watch { background: #4D7C0F; }
+.rain-mini-badge.muggy-none { background: rgba(255, 255, 255, 0.1); }
+
+.rain-insurance-strong { background: rgba(194, 65, 12, 0.24); }
+.rain-insurance-remind { background: rgba(180, 83, 9, 0.18); }
+.rain-insurance-none { background: rgba(255, 255, 255, 0.02); }
+
+.rain-muggy-high { background: rgba(21, 128, 61, 0.26); }
+.rain-muggy-medium { background: rgba(22, 163, 74, 0.18); }
+.rain-muggy-watch { background: rgba(77, 124, 15, 0.16); }
+.rain-muggy-none { background: rgba(255, 255, 255, 0.02); }

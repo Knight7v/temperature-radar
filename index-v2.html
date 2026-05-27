@@ -94,6 +94,10 @@
                     <span class="nav-icon">📊</span>
                     <span class="nav-text">7天预测</span>
                 </div>
+                <div class="nav-item" data-page="rainMonitor">
+                    <span class="nav-icon">🌧️</span>
+                    <span class="nav-text">降水监控</span>
+                </div>
                 <div class="nav-item" data-page="history" style="display: none;">
                     <span class="nav-icon">📅</span>
                     <span class="nav-text">历史记录</span>
@@ -279,6 +283,44 @@
                                     <tr id="forecastTableHead"></tr>
                                 </thead>
                                 <tbody id="forecastTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rain Monitor Page -->
+                <div class="page" id="rainMonitor">
+                    <div class="report-page">
+                        <div class="page-header">
+                            <h2>降水监控</h2>
+                            <p class="page-desc">降雨投保提醒与雨后湿热机会</p>
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="rainSearchInput" placeholder="搜索城市名称..." />
+                                <button class="clear-search-btn" id="clearRainSearchBtn" style="display: none;">✕</button>
+                            </div>
+                        </div>
+                        <div class="dimension-toggle">
+                            <button class="dimension-btn active" data-dimension="rainInsurance">投保提醒</button>
+                            <button class="dimension-btn" data-dimension="postRainMuggy">雨后湿热</button>
+                        </div>
+                        <div class="filter-bar" id="rainFilters">
+                            <button class="filter-btn active" data-filter="all">全部</button>
+                            <span class="filter-sep">|</span>
+                            <button class="filter-btn" data-filter="华东">华东</button>
+                            <button class="filter-btn" data-filter="华南">华南</button>
+                            <button class="filter-btn" data-filter="华中">华中</button>
+                            <button class="filter-btn" data-filter="西南">西南</button>
+                            <button class="filter-btn" data-filter="华北">华北</button>
+                            <button class="filter-btn" data-filter="西北">西北</button>
+                            <button class="filter-btn" data-filter="东北">东北</button>
+                        </div>
+                        <div class="forecast-table-wrapper">
+                            <table class="forecast-table" id="rainForecastTable">
+                                <thead>
+                                    <tr id="rainForecastTableHead"></tr>
+                                </thead>
+                                <tbody id="rainForecastTableBody"></tbody>
                             </table>
                         </div>
                     </div>
