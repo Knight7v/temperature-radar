@@ -110,3 +110,17 @@ run('汇总和top列表包含最强城市日记录', () => {
     assert.equal(RainMonitor.getTopInsuranceCities(cityData, 1)[0].cityName, '广州');
     assert.equal(RainMonitor.getTopPostRainMuggyCities(cityData, 1)[0].cityName, '广州');
 });
+
+run('丰富的future days暴露所有UI字段', () => {
+    const enriched = RainMonitor.enrichFuture7Days([
+        day({ weatherTextDay: '小雨', weatherTextNight: '阴', precip: '1.5' }),
+        day({ weatherTextDay: '晴', weatherTextNight: '晴', dayMax: 34, humidity: 81, dayFeelsLike: 36, adiScore: 64 })
+    ]);
+    assert.equal(enriched[0].weatherTextDay, '小雨');
+    assert.equal(enriched[0].weatherTextNight, '阴');
+    assert.equal(enriched[0].weatherText.includes('小雨'), true);
+    assert.equal(enriched[0].precip, 1.5);
+    assert.equal(enriched[0].rainInsuranceLabel, '提醒投保');
+    assert.equal(typeof enriched[1].postRainMuggyReason, 'string');
+    assert.equal(typeof enriched[1].postRainMuggyScore, 'number');
+});

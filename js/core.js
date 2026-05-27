@@ -6,11 +6,36 @@
 const Core = (function() {
     'use strict';
 
+    // 立即清理旧版本缓存
+    const CACHE_VERSION = 'v2'; // 缓存版本号，数据结构变化时更新
+
     // ==================== 工具函数 ====================
 
     function biasedRandom(power) {
         return Math.pow(Math.random(), power);
     }
+
+    // 清理旧版本的天气缓存
+    function clearOldWeatherCache() {
+        try {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('weather_cache_') && !key.includes(`_${CACHE_VERSION}_`)) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            if (keysToRemove.length > 0) {
+                console.log(`清理了 ${keysToRemove.length} 个旧版本缓存`);
+            }
+        } catch (e) {
+            console.warn('清理旧缓存失败:', e);
+        }
+    }
+
+    // 立即执行清理
+    clearOldWeatherCache();
 
     // ==================== ADI 配置 ====================
 
@@ -71,7 +96,7 @@ const Core = (function() {
      * @returns {Promise<Object|null>} 返回API数据，失败返回null
      */
     async function fetchWeatherData(city) {
-        const cacheKey = `weather_cache_${city.name}`;
+        const cacheKey = `weather_cache_${CACHE_VERSION}_${city.name}`;
         const now = Date.now();
 
         // 检查缓存
@@ -173,23 +198,22 @@ const Core = (function() {
             future3NightMinTemps.push(parseInt(apiData.daily[i].tempMin, 10));
         }
 
-        // 未来7天温度（从明天开始，用于趋势图）
+        // 未来7天温度（从今天开始，用于趋势图）
         const future7DayMaxTemps = [];
         const future7NightMinTemps = [];
-        for (let i = 1; i < Math.min(8, apiData.daily.length); i++) {  // 索引1-7，对应明天到第7天
+        for (let i = 0; i < Math.min(7, apiData.daily.length); i++) {  // 索引0-6，对应今天到第6天
             future7DayMaxTemps.push(parseInt(apiData.daily[i].tempMax, 10));
             future7NightMinTemps.push(parseInt(apiData.daily[i].tempMin, 10));
         }
 
-        // 未来7天ADI趋势（从明天开始，索引1-7，最多7天）
+        // 未来7天ADI趋势（从今天开始，索引0-6，最多7天）
         const future7AdiScores = [];
-        const maxDays = Math.min(7, apiData.daily.length - 1); // 减1是因为从索引1开始
+        const maxDays = Math.min(7, apiData.daily.length);
 
         // 未来7天完整数据（用于7天预测页面）
         const future7Days = [];
-        const baseDate = new Date();
 
-        for (let i = 1; i <= maxDays; i++) {
+        for (let i = 0; i < maxDays; i++) {
             const day = apiData.daily[i];
             const dayMax = parseInt(day.tempMax, 10);
             const dayNight = parseInt(day.tempMin, 10);
@@ -226,9 +250,8 @@ const Core = (function() {
             const adiResult = calculateADI(dayData);
             future7AdiScores.push(adiResult.adiScore);
 
-            // 创建日期对象（明天 = i+1）
-            const dayDate = new Date(baseDate);
-            dayDate.setDate(baseDate.getDate() + i);
+            // 使用API返回的fxDate字段来设置正确的日期，避免数据偏移
+            const dayDate = new Date(day.fxDate);
 
             future7Days.push({
                 date: dayDate,
@@ -239,9 +262,25 @@ const Core = (function() {
                 humidity: dayHumidity,
                 adiScore: adiResult.adiScore,
                 level: adiResult.level,
-                isHotNight: dayNight >= 28
+                isHotNight: dayNight >= 28,
+                weatherTextDay: day.textDay || '',
+                weatherTextNight: day.textNight || '',
+                weatherText: [day.textDay, day.textNight].filter(Boolean).join(' / ') || '无明显降水',
+                precip: Number.isFinite(Number(day.precip)) ? Number(day.precip) : 0
             });
         }
+
+        // 使用RainMonitor丰富降水数据
+        const enrichedFuture7Days = window.RainMonitor
+            ? window.RainMonitor.enrichFuture7Days(future7Days)
+            : future7Days;
+        const maxRainInsuranceLevel = window.RainMonitor
+            ? window.RainMonitor.getMaxRainInsuranceLevel(enrichedFuture7Days)
+            : 'none';
+        const maxPostRainMuggyLevel = window.RainMonitor
+            ? window.RainMonitor.getMaxPostRainMuggyLevel(enrichedFuture7Days)
+            : 'none';
+        const maxPostRainMuggyScore = enrichedFuture7Days.reduce((max, day) => Math.max(max, day.postRainMuggyScore || 0), 0);
 
         return {
             cityName: city.name,
@@ -259,7 +298,10 @@ const Core = (function() {
             future7DayMaxTemps,      // 新增：未来7天最高温
             future7NightMinTemps,    // 新增：未来7天最低温
             future7AdiScores,
-            future7Days,             // 新增：未来7天完整数据
+            future7Days: enrichedFuture7Days,             // 新增：未来7天完整数据
+            maxRainInsuranceLevel,   // 降水监控：最高投保提醒等级
+            maxPostRainMuggyLevel,   // 降水监控：最高湿热机会等级
+            maxPostRainMuggyScore,   // 降水监控：最高湿热机会分数
             nightMuggyScore: 0,
             updatedAt: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
         };
@@ -904,6 +946,21 @@ const Core = (function() {
         const date = new Date();
         date.setDate(date.getDate() + dayIndex);
 
+        // 模拟降水天气（确定性随机）
+        const rainRoll = Math.random();
+        let weatherTextDay = '晴';
+        let weatherTextNight = '多云';
+        let precip = 0;
+        if (rainRoll > 0.86) {
+            weatherTextDay = '中雨';
+            weatherTextNight = '小雨';
+            precip = Math.round((10 + Math.random() * 18) * 10) / 10;
+        } else if (rainRoll > 0.68) {
+            weatherTextDay = '小雨';
+            weatherTextNight = '阴';
+            precip = Math.round((0.5 + Math.random() * 5) * 10) / 10;
+        }
+
         return {
             date: date,
             dayMax: dayMax,
@@ -913,7 +970,11 @@ const Core = (function() {
             humidity: dayHumidity,
             adiScore: adiResult.adiScore,
             level: levelResult.level,
-            isHotNight: dayNight >= 28
+            isHotNight: dayNight >= 28,
+            weatherTextDay,
+            weatherTextNight,
+            weatherText: [weatherTextDay, weatherTextNight].filter(Boolean).join(' / '),
+            precip
         };
     }
 
@@ -1061,6 +1122,18 @@ const Core = (function() {
             }, i));
         }
 
+        // 使用RainMonitor丰富降水数据
+        const enrichedFuture7Days = window.RainMonitor
+            ? window.RainMonitor.enrichFuture7Days(future7Days)
+            : future7Days;
+        const maxRainInsuranceLevel = window.RainMonitor
+            ? window.RainMonitor.getMaxRainInsuranceLevel(enrichedFuture7Days)
+            : 'none';
+        const maxPostRainMuggyLevel = window.RainMonitor
+            ? window.RainMonitor.getMaxPostRainMuggyLevel(enrichedFuture7Days)
+            : 'none';
+        const maxPostRainMuggyScore = enrichedFuture7Days.reduce((max, day) => Math.max(max, day.postRainMuggyScore || 0), 0);
+
         // 返回模拟数据（API失败后的降级方案）
         return {
             ...data,
@@ -1071,7 +1144,10 @@ const Core = (function() {
             reason,
             shortReason,
             levelTrend,
-            future7Days
+            future7Days: enrichedFuture7Days,
+            maxRainInsuranceLevel,
+            maxPostRainMuggyLevel,
+            maxPostRainMuggyScore
         };
     }
 
@@ -1193,6 +1269,23 @@ const Core = (function() {
             .slice(0, n || 10);
     }
 
+    // 降水监控辅助函数
+    function getTopRainInsurance(cityDataList, n) {
+        return window.RainMonitor ? window.RainMonitor.getTopInsuranceCities(cityDataList, n || 10) : [];
+    }
+
+    function getTopPostRainMuggy(cityDataList, n) {
+        return window.RainMonitor ? window.RainMonitor.getTopPostRainMuggyCities(cityDataList, n || 10) : [];
+    }
+
+    function summarizeRainInsurance(cityDataList) {
+        return window.RainMonitor ? window.RainMonitor.summarizeRainInsurance(cityDataList) : { strongCount: 0, remindCount: 0, topRecords: [] };
+    }
+
+    function summarizePostRainMuggy(cityDataList) {
+        return window.RainMonitor ? window.RainMonitor.summarizePostRainMuggy(cityDataList) : { highCount: 0, mediumCount: 0, watchCount: 0, topRecords: [] };
+    }
+
     function getCitiesByLevel(cityDataList, level) {
         return cityDataList.filter(c => c.level === level).sort((a, b) => b.adiScore - a.adiScore);
     }
@@ -1247,6 +1340,10 @@ const Core = (function() {
         getTopByADI,
         getTopNightMuggy,
         getTopHeatRise,
+        getTopRainInsurance,
+        getTopPostRainMuggy,
+        summarizeRainInsurance,
+        summarizePostRainMuggy,
         getCitiesByLevel,
 
         getLevelInfo,
