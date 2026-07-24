@@ -77,7 +77,8 @@ test('makes primary and submenu navigation keyboard accessible', () => {
 
 test('provides a compact tablet shell and honors reduced motion', () => {
     const css = read('css/titanium-theme.css');
-    assert.match(css, /@media \(max-width: 1023px\)[\s\S]*?\.sidebar[\s\S]*?\.dashboard-layout[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/);
+    assert.match(css, /@media \(max-width: 1024px\)[\s\S]*?\.sidebar[\s\S]*?\.dashboard-layout[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/);
+    assert.match(css, /@media \(max-width: 1024px\)[\s\S]*?\.nav-item[\s\S]*?min-width: 44px[\s\S]*?min-height: 44px/);
     assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?transition: none !important/);
 });
 

@@ -179,7 +179,7 @@ body::before {
     letter-spacing: -0.02em;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1024px) {
     .app-container {
         height: auto;
         min-height: 100vh;
@@ -216,7 +216,8 @@ body::before {
     }
 
     .nav-item {
-        min-height: 40px;
+        min-width: 44px;
+        min-height: 44px;
         margin: 0;
         padding: 8px 10px;
     }
