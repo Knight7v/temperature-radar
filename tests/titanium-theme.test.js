@@ -124,6 +124,18 @@ test('keeps analysis subpages reachable from the compact navigation', () => {
     assert.match(compactCss, /\.nav-subitem\s*\{[\s\S]*?min-height:\s*44px/);
 });
 
+test('closes analysis navigation before activating another primary page', () => {
+    const ui = read('js/ui.js');
+
+    assert.match(ui, /if \(page !== 'analysis'\) \{/);
+    assert.match(ui, /analysisNavItem\?\.classList\.remove\('expanded'\);/);
+    assert.match(ui, /analysisSubmenu\?\.classList\.remove\('open'\);/);
+    assert.match(
+        ui,
+        /analysisSubmenu\?\.querySelectorAll\('\.nav-subitem'\)\.forEach\(subitem => \{[\s\S]*?subitem\.classList\.remove\('active'\);/
+    );
+});
+
 test('updates the header date from the shared current-time integration', () => {
     const ui = read('js/ui.js');
     assert.match(ui, /const headerDate = document\.getElementById\('headerDate'\);/);
@@ -546,6 +558,18 @@ test('compact navigation keeps every primary page and analysis submenu reachable
     assert.match(mobileCss, /\.nav-submenu\.open\s*\{[\s\S]*?visibility:\s*visible/);
     assert.match(mobileCss, /\.nav-menu\s*\{[\s\S]*?\n\s*height:\s*48px;[\s\S]*?flex-wrap:\s*nowrap/);
     assert.match(mobileCss, /\.nav-item\s*\{[\s\S]*?\n\s*height:\s*48px;/);
+});
+
+test('mobile primary navigation hides text inside its fixed icon targets', () => {
+    const css = read('css/titanium-theme.css');
+    const mobileCss = css.match(
+        /@media \(max-width: 767px\) \{([\s\S]*?)(?=@media \(min-width: 768px\) and \(max-width: 1024px\))/
+    )?.[1] || '';
+
+    assert.match(
+        mobileCss,
+        /\.nav-text,\s*\.nav-expand\s*\{\s*display:\s*none;\s*\}/
+    );
 });
 
 test('hides header metrics inside the mobile breakpoint', () => {

@@ -106,6 +106,8 @@ const UI = (function() {
         const navItems = document.querySelectorAll('.nav-item');
         const pages = document.querySelectorAll('.page');
         const pageTitle = document.getElementById('pageTitle');
+        const analysisNavItem = document.querySelector('.nav-item[data-page="analysis"]');
+        const analysisSubmenu = document.getElementById('analysisSubmenu');
 
         const pageTitles = {
             dashboard: '今日热销',
@@ -134,6 +136,14 @@ const UI = (function() {
                 document.getElementById(page).classList.add('active');
                 pageTitle.textContent = pageTitles[page];
                 state.currentPage = page;
+
+                if (page !== 'analysis') {
+                    analysisNavItem?.classList.remove('expanded');
+                    analysisSubmenu?.classList.remove('open');
+                    analysisSubmenu?.querySelectorAll('.nav-subitem').forEach(subitem => {
+                        subitem.classList.remove('active');
+                    });
+                }
 
                 if (page === 'analysis') renderAnalysis();
                 if (page === 'report') renderReport();

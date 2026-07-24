@@ -682,7 +682,9 @@ body::before {
     }
 
     .logo,
-    .sidebar-footer {
+    .sidebar-footer,
+    .nav-text,
+    .nav-expand {
         display: none;
     }
 
