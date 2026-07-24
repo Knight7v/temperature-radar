@@ -59,9 +59,9 @@ assert.equal(MapModule.getFeelsLikeColor(27), '#FFE082');
 assert.equal(MapModule.getFeelsLikeColor(35), '#F5A623');
 assert.equal(MapModule.getFeelsLikeColor(36), '#FFB15C');
 assert.equal(MapModule.getFeelsLikeColor(40), '#F57C00');
-assert.equal(MapModule.getFeelsLikeColor(41), '#D0021B');
-assert.equal(MapModule.getFeelsLikeColor(45), '#8B0012');
-assert.equal(MapModule.getFeelsLikeColor(46), '#8B0012');
+assert.equal(MapModule.getFeelsLikeColor(41), '#FF453A');
+assert.equal(MapModule.getFeelsLikeColor(45), '#FA4137');
+assert.equal(MapModule.getFeelsLikeColor(46), '#FA4137');
 
 const legend = MapModule.getLegendConfig('feelsLike');
 assert.deepEqual(Array.from(legend.items, item => item.label), ['≥41℃', '36-40℃', '27-35℃', '≤26℃']);

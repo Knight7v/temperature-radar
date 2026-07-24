@@ -66,7 +66,7 @@ const Payment = (function() {
             <div class="modal-content payment-qr-content">
                 <div class="modal-header">
                     <h3>扫码支付</h3>
-                    <button class="modal-close" onclick="this.closest('.payment-qr-modal').remove()">×</button>
+                    <button class="modal-close" type="button" aria-label="关闭支付二维码" onclick="this.closest('.payment-qr-modal').remove()">×</button>
                 </div>
                 <div class="modal-body">
                     <div class="payment-amount">¥${paymentData.amount.toFixed(2)}</div>

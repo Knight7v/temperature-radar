@@ -14,13 +14,8 @@
             width: 100% !important;
             height: 500px !important;
             min-height: 500px !important;
-            background: #0a0e27 !important;
         }
         .dashboard-layout {
-            display: grid !important;
-            grid-template-columns: 260px 1fr 260px !important;
-            gap: 1.5rem !important;
-            height: calc(100vh - 120px) !important;
             width: 100% !important;
         }
         .main-area {
@@ -38,9 +33,50 @@
         }
     </style>
     <script src="assets/echarts.min.js"></script>
-    <link rel="stylesheet" href="css/styles-v2.css?v=2">
+    <link rel="stylesheet" href="css/styles-v2.css?v=4">
+    <link rel="stylesheet" href="css/titanium-theme.css?v=4">
 </head>
 <body>
+    <svg class="svg-sprite" aria-hidden="true">
+        <symbol id="icon-dashboard" viewBox="0 0 24 24">
+            <path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z"/>
+        </symbol>
+        <symbol id="icon-analysis" viewBox="0 0 24 24">
+            <path d="M4 19V9m6 10V5m6 14v-7m4 7H2"/>
+        </symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24">
+            <path d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/>
+        </symbol>
+        <symbol id="icon-rain" viewBox="0 0 24 24">
+            <path d="M7 16a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a3 3 0 0 1-1 5.83M8 19l-1 2m5-2-1 2m5-2-1 2"/>
+        </symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19 13.5v-3l-2-.7-.6-1.4.9-1.9-2.1-2.1-1.9.9-1.4-.6L11.5 3h-3l-.7 2-1.4.6-1.9-.9-2.1 2.1.9 1.9-.6 1.4-2 .7v3l2 .7.6 1.4-.9 1.9 2.1 2.1 1.9-.9 1.4.6.7 2h3l.7-2 1.4-.6 1.9.9 2.1-2.1-.9-1.9.6-1.4 2-.7Z"/>
+        </symbol>
+        <symbol id="icon-chevron" viewBox="0 0 24 24">
+            <path d="m8 10 4 4 4-4"/>
+        </symbol>
+        <symbol id="icon-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="6"/>
+            <path d="m16 16 4 4"/>
+        </symbol>
+        <symbol id="icon-document" viewBox="0 0 24 24">
+            <path d="M6 3h8l4 4v14H6V3Zm8 0v5h5M9 12h6M9 16h6"/>
+        </symbol>
+        <symbol id="icon-insight" viewBox="0 0 24 24">
+            <path d="M9 18h6m-5 3h4m3-8a7 7 0 1 0-10 0c1.3 1 2 2.1 2 3h6c0-.9.7-2 2-3Z"/>
+        </symbol>
+        <symbol id="icon-moon" viewBox="0 0 24 24">
+            <path d="M20 15.5A8 8 0 0 1 8.5 4 8 8 0 1 0 20 15.5Z"/>
+        </symbol>
+        <symbol id="icon-alert" viewBox="0 0 24 24">
+            <path d="M12 3 2.8 20h18.4L12 3Zm0 6v5m0 3v.1"/>
+        </symbol>
+        <symbol id="icon-test-mode" viewBox="0 0 24 24">
+            <path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3M8 14h8"/>
+        </symbol>
+    </svg>
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-content">
@@ -66,46 +102,47 @@
     <!-- API错误提示 -->
     <div id="apiErrorMessage" style="display: none;"></div>
 
-    <div class="app-container">
+    <div class="app-container app-shell">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar titanium-sidebar">
             <div class="logo">
                 <h1>空调热销区域雷达</h1>
                 <p>基于天气数据判断空调区域销售机会</p>
             </div>
 
             <nav class="nav-menu">
-                <div class="nav-item active" data-page="dashboard">
-                    <span class="nav-icon">🎯</span>
+                <button type="button" class="nav-item active" data-page="dashboard" aria-label="销售总览">
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-dashboard"></use></svg>
                     <span class="nav-text">销售总览</span>
-                </div>
-                <div class="nav-item" data-page="analysis">
-                    <span class="nav-icon">📈</span>
+                </button>
+                <button type="button" class="nav-item" data-page="analysis" aria-label="热销分析"
+                    aria-controls="analysisSubmenu" aria-expanded="false">
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-analysis"></use></svg>
                     <span class="nav-text">热销分析</span>
-                    <span class="nav-expand">▼</span>
+                    <svg class="nav-expand" aria-hidden="true"><use href="#icon-chevron"></use></svg>
+                </button>
+                <div class="nav-submenu" id="analysisSubmenu" hidden inert aria-hidden="true">
+                    <button type="button" class="nav-subitem" data-subpage="nightMuggy" tabindex="-1">夜间闷热排行榜</button>
+                    <button type="button" class="nav-subitem" data-subpage="future3Day" tabindex="-1">未来3天热销榜</button>
+                    <button type="button" class="nav-subitem" data-subpage="future7Day" tabindex="-1">未来7天升温榜</button>
+                    <button type="button" class="nav-subitem" data-subpage="cityGroupMonitor" tabindex="-1">重点城市群监控</button>
                 </div>
-                <div class="nav-submenu" id="analysisSubmenu">
-                    <div class="nav-subitem" data-subpage="nightMuggy">夜间闷热排行榜</div>
-                    <div class="nav-subitem" data-subpage="future3Day">未来3天热销榜</div>
-                    <div class="nav-subitem" data-subpage="future7Day">未来7天升温榜</div>
-                    <div class="nav-subitem" data-subpage="cityGroupMonitor">重点城市群监控</div>
-                </div>
-                <div class="nav-item" data-page="report">
-                    <span class="nav-icon">📊</span>
+                <button type="button" class="nav-item" data-page="report" aria-label="7天预测">
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>
                     <span class="nav-text">7天预测</span>
-                </div>
-                <div class="nav-item" data-page="rainMonitor">
-                    <span class="nav-icon">🌧️</span>
+                </button>
+                <button type="button" class="nav-item" data-page="rainMonitor" aria-label="降水监控">
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-rain"></use></svg>
                     <span class="nav-text">降水监控</span>
-                </div>
-                <div class="nav-item" data-page="history" style="display: none;">
-                    <span class="nav-icon">📅</span>
+                </button>
+                <button type="button" class="nav-item" data-page="history" style="display: none;" aria-label="历史记录">
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>
                     <span class="nav-text">历史记录</span>
-                </div>
-                <div class="nav-item" data-page="rules">
-                    <span class="nav-icon">⚙️</span>
+                </button>
+                <button type="button" class="nav-item" data-page="rules" aria-label="规则设置">
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-settings"></use></svg>
                     <span class="nav-text">规则设置</span>
-                </div>
+                </button>
             </nav>
 
             <div class="sidebar-footer">
@@ -119,40 +156,42 @@
         <!-- Main Content -->
         <main class="main-content">
             <!-- Header -->
-            <header class="header">
+            <header class="header titanium-header">
                 <div class="header-left">
+                    <p class="header-date" id="headerDate">--</p>
                     <h2 id="pageTitle">今日热销</h2>
                 </div>
                 <div class="header-center">
                     <!-- 测试模式指示器 -->
                     <div id="testModeIndicator" style="display: none;" class="test-mode-badge">
-                        🧪 测试模式
+                        <svg class="inline-icon" aria-hidden="true"><use href="#icon-test-mode"></use></svg>
+                        测试模式
                     </div>
                 </div>
                 <div class="header-right">
                     <div class="current-time" id="currentTime">--:--:--</div>
                     <div class="header-stats">
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">销售机会强度</div>
                             <div class="header-stat-value" id="salesIntensity">--</div>
                         </div>
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">监控城市</div>
                             <div class="header-stat-value" id="cityCount">--</div>
                         </div>
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">爆热</div>
                             <div class="header-stat-value stat-outbreak" id="outbreakCount">--</div>
                         </div>
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">热</div>
                             <div class="header-stat-value stat-action" id="actionCount">--</div>
                         </div>
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">热夜城市</div>
                             <div class="header-stat-value stat-hotnight" id="hotNightCount">--</div>
                         </div>
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">数据更新</div>
                             <div class="header-stat-value" id="lastUpdateTime">--:--</div>
                         </div>
@@ -164,9 +203,20 @@
             <div class="content-area">
                 <!-- 今日热销 Page -->
                 <div class="page active" id="dashboard">
+                    <section class="dashboard-hero" aria-labelledby="dashboardHeroTitle">
+                        <div>
+                            <p class="dashboard-eyebrow">全国实时销售机会</p>
+                            <h2 id="dashboardHeroTitle">正在分析今日机会…</h2>
+                            <p id="dashboardHeroSummary">正在汇总重点区域与城市信号</p>
+                        </div>
+                        <div class="dashboard-live-status">
+                            <span class="status-dot" aria-hidden="true"></span>
+                            实时天气数据
+                        </div>
+                    </section>
                     <div class="dashboard-layout">
                         <!-- Left: 今日摘要 -->
-                        <aside class="left-sidebar">
+                        <aside class="left-sidebar dashboard-insights">
                             <!-- 今日判断结论 -->
                             <div class="sidebar-card" id="todayConclusion">
                                 <div class="card-header">今日判断结论</div>
@@ -193,7 +243,7 @@
                         </aside>
 
                         <!-- Center: 地图核心 -->
-                        <div class="main-area">
+                        <div class="main-area dashboard-map">
                             <div class="map-section">
                                 <div class="section-header">
                                     <span class="section-title">全国空调销售机会热力图</span>
@@ -213,7 +263,7 @@
                         </div>
 
                         <!-- Right: TOP榜单 -->
-                        <aside class="right-sidebar">
+                        <aside class="right-sidebar dashboard-ranking">
                             <div class="top-cities-section">
                                 <div class="section-header">
                                     <div class="top-tabs" id="topTabs">
@@ -224,7 +274,8 @@
                                 </div>
                                 <div class="top-cities-list" id="topCitiesContainer"></div>
                                 <button class="btn-generate-brief" id="generateBriefBtn">
-                                    📄 生成今日简报
+                                    <svg class="inline-icon" aria-hidden="true"><use href="#icon-document"></use></svg>
+                                    生成今日简报
                                 </button>
                             </div>
                         </aside>
@@ -250,37 +301,40 @@
                         <div class="page-header">
                             <h2>7天热销预测</h2>
                             <p class="page-desc">基于ADI指数的未来7天热销趋势预测</p>
-                            <div class="search-box">
-                                <span class="search-icon">🔍</span>
+                        </div>
+                        <div class="data-toolbar glass-panel">
+                            <div class="search-box data-toolbar-search">
+                                <span class="search-icon" aria-hidden="true"><svg class="inline-icon"><use href="#icon-search"></use></svg></span>
                                 <input type="text" id="reportSearchInput" placeholder="搜索城市名称..." />
-                                <button class="clear-search-btn" id="clearSearchBtn" style="display: none;">✕</button>
+                                <button class="clear-search-btn" id="clearSearchBtn" type="button"
+                                    aria-label="清除城市搜索" style="display: none;">✕</button>
+                            </div>
+                            <div class="dimension-toggle segmented-control">
+                                <button class="dimension-btn active" data-dimension="temperature">高低温度</button>
+                                <button class="dimension-btn" data-dimension="feelsLike">高低体感温度</button>
+                                <button class="dimension-btn" data-dimension="adi">ADI指数</button>
+                                <button class="dimension-btn" data-dimension="rainInsurance">投保提醒</button>
+                                <button class="dimension-btn" data-dimension="postRainMuggy">雨后湿热</button>
+                            </div>
+                            <div class="filter-bar" id="reportFilters">
+                                <button class="filter-btn filter-chip active" data-filter="all">全部</button>
+                                <button class="filter-btn filter-chip" data-filter="outbreak">爆热</button>
+                                <button class="filter-btn filter-chip" data-filter="action">热</button>
+                                <button class="filter-btn filter-chip" data-filter="opportunity">待热</button>
+                                <button class="filter-btn filter-chip" data-filter="observe">一般级</button>
+                                <button class="filter-btn filter-chip" data-filter="nightMuggy">夜间闷热</button>
+                                <button class="filter-btn filter-chip" data-filter="heatRise">未来升温</button>
+                                <span class="filter-sep">|</span>
+                                <button class="filter-btn filter-chip" data-filter="华东">华东</button>
+                                <button class="filter-btn filter-chip" data-filter="华南">华南</button>
+                                <button class="filter-btn filter-chip" data-filter="华中">华中</button>
+                                <button class="filter-btn filter-chip" data-filter="西南">西南</button>
+                                <button class="filter-btn filter-chip" data-filter="华北">华北</button>
+                                <button class="filter-btn filter-chip" data-filter="西北">西北</button>
+                                <button class="filter-btn filter-chip" data-filter="东北">东北</button>
                             </div>
                         </div>
-                        <div class="dimension-toggle">
-                            <button class="dimension-btn active" data-dimension="temperature">高低温度</button>
-                            <button class="dimension-btn" data-dimension="feelsLike">高低体感温度</button>
-                            <button class="dimension-btn" data-dimension="adi">ADI指数</button>
-                            <button class="dimension-btn" data-dimension="rainInsurance">投保提醒</button>
-                            <button class="dimension-btn" data-dimension="postRainMuggy">雨后湿热</button>
-                        </div>
-                        <div class="filter-bar" id="reportFilters">
-                            <button class="filter-btn active" data-filter="all">全部</button>
-                            <button class="filter-btn" data-filter="outbreak">爆热</button>
-                            <button class="filter-btn" data-filter="action">热</button>
-                            <button class="filter-btn" data-filter="opportunity">待热</button>
-                            <button class="filter-btn" data-filter="observe">一般级</button>
-                            <button class="filter-btn" data-filter="nightMuggy">夜间闷热</button>
-                            <button class="filter-btn" data-filter="heatRise">未来升温</button>
-                            <span class="filter-sep">|</span>
-                            <button class="filter-btn" data-filter="华东">华东</button>
-                            <button class="filter-btn" data-filter="华南">华南</button>
-                            <button class="filter-btn" data-filter="华中">华中</button>
-                            <button class="filter-btn" data-filter="西南">西南</button>
-                            <button class="filter-btn" data-filter="华北">华北</button>
-                            <button class="filter-btn" data-filter="西北">西北</button>
-                            <button class="filter-btn" data-filter="东北">东北</button>
-                        </div>
-                        <div class="forecast-table-wrapper">
+                        <div class="forecast-table-wrapper data-table-shell">
                             <table class="forecast-table" id="forecastTable">
                                 <thead>
                                     <tr id="forecastTableHead"></tr>
@@ -297,28 +351,31 @@
                         <div class="page-header">
                             <h2>降水监控</h2>
                             <p class="page-desc">降雨投保提醒与雨后湿热机会</p>
-                            <div class="search-box">
-                                <span class="search-icon">🔍</span>
+                        </div>
+                        <div class="data-toolbar glass-panel">
+                            <div class="search-box data-toolbar-search">
+                                <span class="search-icon" aria-hidden="true"><svg class="inline-icon"><use href="#icon-search"></use></svg></span>
                                 <input type="text" id="rainSearchInput" placeholder="搜索城市名称..." />
-                                <button class="clear-search-btn" id="clearRainSearchBtn" style="display: none;">✕</button>
+                                <button class="clear-search-btn" id="clearRainSearchBtn" type="button"
+                                    aria-label="清除降水城市搜索" style="display: none;">✕</button>
+                            </div>
+                            <div class="dimension-toggle segmented-control">
+                                <button class="dimension-btn active" data-dimension="rainInsurance">投保提醒</button>
+                                <button class="dimension-btn" data-dimension="postRainMuggy">雨后湿热</button>
+                            </div>
+                            <div class="filter-bar" id="rainFilters">
+                                <button class="filter-btn filter-chip active" data-filter="all">全部</button>
+                                <span class="filter-sep">|</span>
+                                <button class="filter-btn filter-chip" data-filter="华东">华东</button>
+                                <button class="filter-btn filter-chip" data-filter="华南">华南</button>
+                                <button class="filter-btn filter-chip" data-filter="华中">华中</button>
+                                <button class="filter-btn filter-chip" data-filter="西南">西南</button>
+                                <button class="filter-btn filter-chip" data-filter="华北">华北</button>
+                                <button class="filter-btn filter-chip" data-filter="西北">西北</button>
+                                <button class="filter-btn filter-chip" data-filter="东北">东北</button>
                             </div>
                         </div>
-                        <div class="dimension-toggle">
-                            <button class="dimension-btn active" data-dimension="rainInsurance">投保提醒</button>
-                            <button class="dimension-btn" data-dimension="postRainMuggy">雨后湿热</button>
-                        </div>
-                        <div class="filter-bar" id="rainFilters">
-                            <button class="filter-btn active" data-filter="all">全部</button>
-                            <span class="filter-sep">|</span>
-                            <button class="filter-btn" data-filter="华东">华东</button>
-                            <button class="filter-btn" data-filter="华南">华南</button>
-                            <button class="filter-btn" data-filter="华中">华中</button>
-                            <button class="filter-btn" data-filter="西南">西南</button>
-                            <button class="filter-btn" data-filter="华北">华北</button>
-                            <button class="filter-btn" data-filter="西北">西北</button>
-                            <button class="filter-btn" data-filter="东北">东北</button>
-                        </div>
-                        <div class="forecast-table-wrapper">
+                        <div class="forecast-table-wrapper data-table-shell">
                             <table class="forecast-table" id="rainForecastTable">
                                 <thead>
                                     <tr id="rainForecastTableHead"></tr>
@@ -413,8 +470,13 @@
                         <div class="rules-sections" id="rulesSections"></div>
 
                         <div class="settings-actions">
-                            <button class="btn btn-secondary" onclick="UI.resetRules()">恢复默认设置</button>
-                            <button class="btn btn-primary" onclick="UI.saveRules()">保存配置</button>
+                            <div class="rules-save-status" id="rulesSaveStatus" data-status="saved" role="status">
+                                已保存
+                            </div>
+                            <div class="settings-action-buttons">
+                                <button class="btn btn-secondary" type="button" onclick="UI.resetRules()">恢复默认设置</button>
+                                <button class="btn btn-primary" type="button" onclick="UI.saveRules()">保存配置</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -425,16 +487,16 @@
     <!-- City Detail Modal -->
     <div class="city-detail-modal" id="cityDetailModal">
         <div class="modal-overlay" onclick="UI.closeCityDetail()"></div>
-        <div class="modal-content" id="cityModalContent"></div>
+        <div class="modal-content modal-surface" id="cityModalContent"></div>
     </div>
 
     <!-- Daily Brief Modal -->
     <div class="daily-brief-modal" id="dailyBriefModal">
         <div class="modal-overlay" onclick="UI.closeDailyBriefModal()"></div>
-        <div class="modal-content">
+        <div class="modal-content modal-surface">
             <div class="modal-header">
                 <h3>今日销售机会简报</h3>
-                <button class="modal-close" onclick="UI.closeDailyBriefModal()">×</button>
+                <button class="modal-close" type="button" aria-label="关闭今日简报" onclick="UI.closeDailyBriefModal()">×</button>
             </div>
             <div class="modal-tabs">
                 <button class="modal-tab active" data-version="management">管理层短版</button>
@@ -451,15 +513,15 @@
     </div>
 
     <!-- Toast -->
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast feedback-toast"></div>
 
     <!-- Login Modal -->
     <div class="login-modal" id="loginModal">
         <div class="modal-overlay" onclick="Auth.closeModal()"></div>
-        <div class="modal-content login-modal-content">
+        <div class="modal-content modal-surface login-modal-content">
             <div class="modal-header">
                 <h3>登录 / 注册</h3>
-                <button class="modal-close" onclick="Auth.closeModal()">×</button>
+                <button class="modal-close" type="button" aria-label="关闭登录窗口" onclick="Auth.closeModal()">×</button>
             </div>
             <div class="modal-body">
                 <!-- Login Tabs -->
@@ -471,13 +533,15 @@
                 <!-- Phone Login Form -->
                 <div class="login-form active" id="phoneLoginForm">
                     <div class="form-group">
-                        <label>手机号</label>
-                        <input type="tel" id="loginPhone" placeholder="请输入手机号" maxlength="11">
+                        <label for="loginPhone">手机号</label>
+                        <input type="tel" id="loginPhone" class="titanium-input"
+                            placeholder="请输入手机号" maxlength="11" inputmode="numeric" autocomplete="tel">
                     </div>
                     <div class="form-group">
-                        <label>验证码</label>
+                        <label for="loginCode">验证码</label>
                         <div class="code-input-group">
-                            <input type="text" id="loginCode" placeholder="请输入验证码" maxlength="6">
+                            <input type="text" id="loginCode" class="titanium-input"
+                                placeholder="请输入验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
                             <button type="button" class="send-code-btn" id="sendCodeBtn" onclick="Auth.sendCode()">
                                 发送验证码
                             </button>
@@ -491,12 +555,11 @@
                 <!-- WeChat Login Form -->
                 <div class="login-form" id="wechatLoginForm">
                     <div class="wechat-qr-container">
-                        <div id="wechatQRCode" class="wechat-qr-code"></div>
-                        <p class="wechat-tip">请使用微信扫描二维码登录</p>
-                        <div class="wechat-loading" id="wechatLoading">
-                            <div class="spinner"></div>
-                            <p>正在生成二维码...</p>
+                        <div id="wechatQRCode" class="wechat-qr-placeholder" role="img" aria-label="微信登录二维码区域">
+                            <span>登录二维码将在服务接入后显示</span>
+                            <span id="wechatLoading" hidden></span>
                         </div>
+                        <p class="wechat-tip">请使用微信扫描二维码登录</p>
                     </div>
                 </div>
             </div>
@@ -511,14 +574,14 @@
     <!-- Payment Modal -->
     <div class="payment-modal" id="paymentModal">
         <div class="modal-overlay" onclick="Payment.closeModal()"></div>
-        <div class="modal-content payment-modal-content">
+        <div class="modal-content modal-surface payment-modal-content">
             <div class="modal-header">
                 <h3>解锁付费功能</h3>
-                <button class="modal-close" onclick="Payment.closeModal()">×</button>
+                <button class="modal-close" type="button" aria-label="关闭支付窗口" onclick="Payment.closeModal()">×</button>
             </div>
             <div class="modal-body">
                 <div class="payment-plans">
-                    <div class="payment-plan">
+                    <div class="payment-plan pricing-card">
                         <div class="plan-header">
                             <h4>热销分析</h4>
                             <div class="plan-price">¥29.9<span>/次</span></div>
@@ -533,7 +596,7 @@
                             立即购买
                         </button>
                     </div>
-                    <div class="payment-plan featured">
+                    <div class="payment-plan pricing-card featured">
                         <div class="plan-badge">推荐</div>
                         <div class="plan-header">
                             <h4>7天预测</h4>
@@ -559,12 +622,12 @@
     <script src="js/rain-monitor.js"></script>
     <script src="js/core.js"></script>
     <script src="js/china-geo.js"></script>
-    <script src="js/map.js"></script>
-    <script src="js/ui.js"></script>
+    <script src="js/map.js?v=3"></script>
+    <script src="js/ui.js?v=3"></script>
     <script src="js/auth.js"></script>
     <script src="js/payment.js"></script>
     <script src="js/ads.js"></script>
-    <script src="js/test-mode.js"></script>
+    <script src="js/test-mode.js?v=2"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

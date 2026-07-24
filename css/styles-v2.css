@@ -2,7 +2,7 @@
  * 空调热销区域雷达 样式
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Orbitron:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
 
 :root {
     --alert-blue: #4A90E2;
@@ -52,7 +52,8 @@ body {
 .loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 .loading-content { text-align: center; }
 .loading-logo {
-    font-family: 'Orbitron', sans-serif; font-size: 1.8rem; margin-bottom: 0.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-variant-numeric: tabular-nums; font-size: 1.8rem; margin-bottom: 0.5rem;
     background: linear-gradient(90deg, var(--alert-blue), var(--color-cyan));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     animation: pulse 2s ease-in-out infinite;
@@ -90,7 +91,8 @@ body {
 }
 .logo { padding: 0 var(--spacing-lg); margin-bottom: var(--spacing-xl); }
 .logo h1 {
-    font-family: 'Orbitron', sans-serif; font-size: 0.95rem;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-variant-numeric: tabular-nums; font-size: 0.95rem;
     background: linear-gradient(90deg, var(--alert-blue), var(--color-cyan));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     margin-bottom: 0.25rem;
@@ -156,11 +158,11 @@ body {
 .header-left h2 { font-size: 1rem; font-weight: 500; }
 .header-center { display: flex; align-items: center; justify-content: center; flex: 1; }
 .header-right { display: flex; align-items: center; gap: var(--spacing-xl); }
-.current-time { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--alert-blue); }
+.current-time { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--alert-blue); }
 .header-stats { display: flex; gap: var(--spacing-lg); }
 .header-stat { text-align: center; }
 .header-stat-label { font-size: 0.6rem; color: var(--text-secondary); }
-.header-stat-value { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--color-cyan); }
+.header-stat-value { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--color-cyan); }
 .stat-outbreak { color: var(--alert-red) !important; }
 .stat-action { color: var(--alert-orange) !important; }
 .stat-hotnight { color: #e84393 !important; }
@@ -343,7 +345,7 @@ body {
     width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
 .summary-level-row .level-name { flex: 1; margin-left: 0.5rem; color: var(--text-secondary); }
-.summary-level-row .level-count { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.85rem; }
+.summary-level-row .level-count { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.85rem; }
 
 .summary-stat-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
@@ -352,7 +354,8 @@ body {
     text-align: center; padding: 0.5rem; background: var(--bg-secondary); border-radius: 6px;
 }
 .summary-stat-item .stat-value {
-    font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 700; line-height: 1.2;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-variant-numeric: tabular-nums; font-size: 1.5rem; font-weight: 700; line-height: 1.2;
 }
 .summary-stat-item .stat-label { font-size: 0.6rem; color: var(--text-secondary); margin-top: 0.125rem; }
 
@@ -390,7 +393,7 @@ body {
 }
 .alert-card-info { flex: 1; }
 .alert-card-title { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.125rem; }
-.alert-card-count { font-family: 'Orbitron', sans-serif; font-size: 1.25rem; font-weight: 700; }
+.alert-card-count { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; font-size: 1.25rem; font-weight: 700; }
 .alert-card-toggle { font-size: 0.7rem; color: var(--text-secondary); transition: transform 0.3s; }
 
 .alert-card-cities { border-top: 1px solid var(--border-color); max-height: 200px; overflow-y: auto; }
@@ -402,7 +405,7 @@ body {
 .alert-city-item:hover { background: rgba(74, 144, 226, 0.1); }
 .alert-city-item:last-child { border-bottom: none; }
 .alert-city-name { flex-shrink: 0; width: 50px; }
-.alert-city-adi { font-family: 'Orbitron', sans-serif; font-weight: 600; flex-shrink: 0; width: 55px; }
+.alert-city-adi { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; flex-shrink: 0; width: 55px; }
 .alert-city-detail { font-size: 0.6rem; color: var(--text-secondary); flex: 1; text-align: right; }
 
 .map-section {
@@ -501,7 +504,8 @@ body {
 .top-city-item:hover { background: rgba(74, 144, 226, 0.1); }
 
 .top-city-rank {
-    font-family: 'Orbitron', sans-serif; font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-variant-numeric: tabular-nums; font-weight: 700;
     width: 20px; text-align: center; flex-shrink: 0;
 }
 .top-city-rank.rank-1 { color: #ffd700; }
@@ -512,7 +516,8 @@ body {
 .top-city-name { font-size: 0.8rem; font-weight: 500; }
 .top-city-meta { font-size: 0.6rem; color: var(--text-secondary); margin-top: 0.125rem; }
 .top-city-adi-badge {
-    font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-variant-numeric: tabular-nums; font-size: 0.8rem; font-weight: 600;
     flex-shrink: 0;
 }
 .top-city-level {
@@ -540,10 +545,10 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05); align-items: center;
 }
 .chart-table-row:hover { background: rgba(74, 144, 226, 0.05); }
-.chart-table-rank { font-family: 'Orbitron', sans-serif; font-weight: 600; }
+.chart-table-rank { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; }
 .chart-table-city { font-weight: 500; }
 .chart-table-details { display: flex; gap: var(--spacing-sm); flex-wrap: wrap; color: var(--text-secondary); font-size: 0.65rem; }
-.chart-table-adi { font-family: 'Orbitron', sans-serif; font-weight: 600; color: var(--alert-red); }
+.chart-table-adi { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--alert-red); }
 
 .phase2-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-lg); }
 .analysis-card {
@@ -757,7 +762,8 @@ body {
 .metric-value {
     font-size: 1.5rem;
     font-weight: 700;
-    font-family: 'Orbitron', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-variant-numeric: tabular-nums;
 }
 
 .metric-value.outbreak { color: var(--alert-red); }
@@ -872,7 +878,8 @@ body {
 }
 
 .alert-value {
-    font-family: 'Orbitron', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-variant-numeric: tabular-nums;
     font-weight: 600;
 }
 
@@ -975,7 +982,7 @@ body {
     display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px;
     font-size: 0.65rem; font-weight: 600; color: #fff;
 }
-.table-adi { font-family: 'Orbitron', sans-serif; font-weight: 600; }
+.table-adi { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; }
 .table-reason { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-temp-high { color: var(--alert-red); }
 .table-temp-low { color: var(--color-blue); }
@@ -1103,7 +1110,8 @@ body {
     font-size: 0.75rem; font-weight: 600; color: #fff;
 }
 .modal-adi-score {
-    font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-variant-numeric: tabular-nums; font-size: 0.9rem; font-weight: 700;
 }
 .modal-region { font-size: 0.75rem; color: var(--text-secondary); }
 
@@ -1112,7 +1120,7 @@ body {
 .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-md); margin-bottom: var(--spacing-lg); width: 100%; box-sizing: border-box; }
 .detail-item { background: var(--bg-secondary); border-radius: 8px; padding: var(--spacing-md); text-align: center; }
 .detail-item .detail-label { font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.375rem; }
-.detail-item .detail-value { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700; }
+.detail-item .detail-value { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; font-size: 1.1rem; font-weight: 700; }
 
 .alert-reason {
     background: rgba(245, 166, 35, 0.1); padding: var(--spacing-md);
@@ -1487,15 +1495,9 @@ body {
     background: #1a2347;
 }
 
-.forecast-table thead th.fixed-left:nth-child(1) { left: 0; min-width: 60px; }
-.forecast-table thead th.fixed-left:nth-child(2) { left: 70px; min-width: 70px; }
-.forecast-table thead th.fixed-left:nth-child(3) { left: 140px; min-width: 80px; }
-.forecast-table thead th.fixed-left:nth-child(4) { left: 220px; min-width: 80px; }
-.forecast-table thead th.fixed-left:nth-child(5) { left: 300px; min-width: 70px; }
-.forecast-table thead th.fixed-left:nth-child(6) { left: 370px; min-width: 70px; }
-.forecast-table thead th.fixed-left:nth-child(7) { left: 440px; min-width: 90px; }
-.forecast-table thead th.fixed-left:nth-child(8) { left: 530px; min-width: 70px; }
-.forecast-table thead th.fixed-left:nth-child(9) { left: 600px; min-width: 90px; }
+.forecast-table thead th.fixed-left:nth-child(1) { left: 0; width: 76px; min-width: 76px; max-width: 76px; }
+.forecast-table thead th.fixed-left:nth-child(2) { left: 76px; width: 84px; min-width: 84px; max-width: 84px; }
+.forecast-table thead th.fixed-left:nth-child(3) { left: 160px; width: 92px; min-width: 92px; max-width: 92px; }
 
 .forecast-table tbody tr:hover {
     background: rgba(255, 255, 255, 0.03);
@@ -1517,144 +1519,11 @@ body {
     z-index: 5;
 }
 
-.forecast-table tbody td.fixed-left:nth-child(1) { left: 0; min-width: 60px; }
-.forecast-table tbody td.fixed-left:nth-child(2) { left: 70px; min-width: 70px; }
-.forecast-table tbody td.fixed-left:nth-child(3) { left: 140px; min-width: 80px; }
-.forecast-table tbody td.fixed-left:nth-child(4) { left: 220px; min-width: 80px; }
-.forecast-table tbody td.fixed-left:nth-child(5) { left: 300px; min-width: 70px; }
-.forecast-table tbody td.fixed-left:nth-child(6) { left: 370px; min-width: 70px; }
-.forecast-table tbody td.fixed-left:nth-child(7) { left: 440px; min-width: 90px; }
-.forecast-table tbody td.fixed-left:nth-child(8) { left: 530px; min-width: 70px; }
-.forecast-table tbody td.fixed-left:nth-child(9) { left: 600px; min-width: 90px; }
+.forecast-table tbody td.fixed-left:nth-child(1) { left: 0; width: 76px; min-width: 76px; max-width: 76px; }
+.forecast-table tbody td.fixed-left:nth-child(2) { left: 76px; width: 84px; min-width: 84px; max-width: 84px; }
+.forecast-table tbody td.fixed-left:nth-child(3) { left: 160px; width: 92px; min-width: 92px; max-width: 92px; }
 
 .forecast-table tbody tr:hover td.fixed-left {
-    background: rgba(40, 47, 80, 0.95);
-}
-
-/* 日期列固定定位 - 第10-16列 */
-.forecast-table thead th:nth-child(10) {
-    position: sticky !important;
-    left: 690px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(11) {
-    position: sticky !important;
-    left: 760px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(12) {
-    position: sticky !important;
-    left: 830px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(13) {
-    position: sticky !important;
-    left: 900px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(14) {
-    position: sticky !important;
-    left: 970px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(15) {
-    position: sticky !important;
-    left: 1040px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(16) {
-    position: sticky !important;
-    left: 1110px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-
-.forecast-table tbody td:nth-child(10) {
-    position: sticky !important;
-    left: 690px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(11) {
-    position: sticky !important;
-    left: 760px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(12) {
-    position: sticky !important;
-    left: 830px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(13) {
-    position: sticky !important;
-    left: 900px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(14) {
-    position: sticky !important;
-    left: 970px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(15) {
-    position: sticky !important;
-    left: 1040px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(16) {
-    position: sticky !important;
-    left: 1110px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-
-/* Hover effect for sticky date columns */
-.forecast-table tbody tr:hover td:nth-child(n+10):nth-child(-n+16) {
     background: rgba(40, 47, 80, 0.95);
 }
 
