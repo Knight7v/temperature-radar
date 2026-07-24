@@ -42,7 +42,7 @@ const TestMode = (function() {
             body.classList.add('test-mode-active');
 
             // 在控制台输出提示
-            console.log('%c🧪 测试模式已启用', 'color: #f093fb; font-size: 14px; font-weight: bold;');
+            console.log('%c测试模式已启用', 'color: #f093fb; font-size: 14px; font-weight: bold;');
             console.log('%c当前使用的是模拟支付数据，不会产生真实交易', 'color: #999; font-size: 12px;');
 
         } else {
@@ -71,7 +71,10 @@ const TestMode = (function() {
         banner.className = 'test-mode-banner test-mode-banner-top';
         banner.innerHTML = `
             <div class="test-mode-banner-content">
-                <div class="test-mode-banner-title">🧪 测试模式已启用</div>
+                <div class="test-mode-banner-title">
+                    <svg class="inline-icon" aria-hidden="true" focusable="false"><use href="#icon-test-mode"></use></svg>
+                    <span>测试模式已启用</span>
+                </div>
                 <div class="test-mode-banner-desc">
                     您已购买：${productName}（模拟支付，不会产生真实交易）
                 </div>
@@ -90,7 +93,7 @@ const TestMode = (function() {
     function clear() {
         localStorage.removeItem('test_payment');
         updateTestModeUI();
-        console.log('%c✅ 测试模式已清除', 'color: #52c41a; font-size: 14px; font-weight: bold;');
+        console.log('%c测试模式已清除', 'color: #52c41a; font-size: 14px; font-weight: bold;');
     }
 
     // 获取测试支付数据

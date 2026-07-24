@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
@@ -103,18 +104,63 @@ test('city-group tabs and sortable headers expose native keyboard and sort seman
     assert.doesNotMatch(ui, /container\.querySelectorAll\('\.citygroup-table th\[data-sort\]'\)/);
 });
 
+test('city-group sorting orders Chinese names in both directions and keeps numeric sorting', () => {
+    const ui = read('js/ui.js');
+    const context = vm.createContext({
+        console,
+        document: {},
+        window: {},
+        navigator: {},
+        setInterval() {},
+        clearInterval() {},
+        setTimeout() {},
+        clearTimeout() {}
+    });
+
+    vm.runInContext(ui, context);
+    const sortCities = vm.runInContext('UI.sortCityGroupCities', context);
+    const cities = [
+        { cityName: '广州', adiScore: '80' },
+        { cityName: '北京', adiScore: '100' },
+        { cityName: '上海', adiScore: '70' },
+        { cityName: '成都', adiScore: '90' }
+    ];
+    const names = (order) => Array.from(
+        sortCities(cities, 'cityName', order),
+        (city) => city.cityName
+    );
+    const scores = (order) => Array.from(
+        sortCities(cities, 'adiScore', order),
+        (city) => Number(city.adiScore)
+    );
+
+    assert.deepEqual(names('asc'), ['北京', '成都', '广州', '上海']);
+    assert.deepEqual(names('desc'), ['上海', '广州', '成都', '北京']);
+    assert.deepEqual(names('desc'), [...names('asc')].reverse());
+    assert.deepEqual(scores('asc'), [70, 80, 90, 100]);
+    assert.deepEqual(scores('desc'), [100, 90, 80, 70]);
+    assert.match(ui, /const sortedCities = sortCityGroupCities\(cities, currentSortField, currentSortOrder\);/);
+    assert.match(
+        ui,
+        /String\(valA \?\? ''\)\.localeCompare\(String\(valB \?\? ''\), 'zh-CN'\)/
+    );
+});
+
 test('dynamic UI templates use shared numeric typography and the SVG icon system', () => {
     const html = read('index-v2.html');
     const ui = read('js/ui.js');
     const map = read('js/map.js');
+    const testMode = read('js/test-mode.js');
 
-    ['icon-search', 'icon-document', 'icon-insight', 'icon-moon', 'icon-alert']
+    ['icon-search', 'icon-document', 'icon-insight', 'icon-moon', 'icon-alert', 'icon-test-mode']
         .forEach((id) => assert.match(html, new RegExp(`id="${id}"`)));
     assert.doesNotMatch(ui, /Orbitron/);
     assert.match(ui, /class="[^"]*tabular-number[^"]*"/);
     assert.doesNotMatch(html, /🧪|📄|🔍/u);
     assert.doesNotMatch(ui, /🌙|📋|⚠️|🔍|💡|🔥/u);
     assert.doesNotMatch(map, /🌙|⚠️/u);
+    assert.doesNotMatch(testMode, /🧪|✅/u);
+    assert.match(testMode, /<use href="#icon-test-mode"><\/use>/);
     assert.match(
         read('css/titanium-theme.css'),
         /\.tabular-number\s*\{[\s\S]*?font-variant-numeric:\s*tabular-nums;/

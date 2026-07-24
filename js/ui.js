@@ -52,6 +52,27 @@ const UI = (function() {
         return `<svg class="${className}" aria-hidden="true" focusable="false"><use href="#${symbolId}"></use></svg>`;
     }
 
+    function sortCityGroupCities(cities, field, order) {
+        return [...cities].sort((a, b) => {
+            const valA = a[field];
+            const valB = b[field];
+            const numericA = typeof valA === 'number'
+                || (typeof valA === 'string' && valA.trim() !== '' && Number.isFinite(Number(valA)));
+            const numericB = typeof valB === 'number'
+                || (typeof valB === 'string' && valB.trim() !== '' && Number.isFinite(Number(valB)));
+
+            if (!numericA || !numericB) {
+                return order === 'desc'
+                    ? String(valB ?? '').localeCompare(String(valA ?? ''), 'zh-CN')
+                    : String(valA ?? '').localeCompare(String(valB ?? ''), 'zh-CN');
+            }
+
+            const numberA = Number(valA);
+            const numberB = Number(valB);
+            return order === 'desc' ? numberB - numberA : numberA - numberB;
+        });
+    }
+
     function showDayTooltip(city, dayData, dayIndex) {
         let tooltip = document.getElementById('forecastTooltip');
         if (!tooltip) {
@@ -864,19 +885,6 @@ const UI = (function() {
             });
         }
 
-        function sortCities(cities, field, order) {
-            return [...cities].sort((a, b) => {
-                let valA = a[field];
-                let valB = b[field];
-
-                // 处理数字字段
-                if (typeof valA === 'string') valA = parseFloat(valA) || 0;
-                if (typeof valB === 'string') valB = parseFloat(valB) || 0;
-
-                return order === 'desc' ? valB - valA : valA - valB;
-            });
-        }
-
         function getAriaSort(field) {
             if (currentSortField !== field) return 'none';
             return currentSortOrder === 'desc' ? 'descending' : 'ascending';
@@ -890,7 +898,7 @@ const UI = (function() {
         function render() {
             const group = cityGroups[currentGroup];
             const cities = getGroupCities(currentGroup);
-            const sortedCities = sortCities(cities, currentSortField, currentSortOrder);
+            const sortedCities = sortCityGroupCities(cities, currentSortField, currentSortOrder);
 
             // 计算指标
             const stats = {
@@ -2114,6 +2122,7 @@ const UI = (function() {
         setRulesStatus,
         showToast, state, renderTodayConclusion, renderRegionRanking, renderLongestHotNight,
         openDailyBriefModal, closeDailyBriefModal, copyDailyBrief,
-        renderReportTemperature, renderReportFeelsLike, renderReportADI
+        renderReportTemperature, renderReportFeelsLike, renderReportADI,
+        sortCityGroupCities
     };
 })();
