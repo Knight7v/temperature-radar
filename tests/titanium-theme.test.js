@@ -459,3 +459,115 @@ test('map tooltip formatter covers every view mode and the loading branch', asyn
     clickHandler({ componentType: 'series', data: { name: city.cityName } });
     assert.equal(selectedCity, city.cityName);
 });
+
+test('defines all required responsive breakpoints and reduced motion', () => {
+    const css = read('css/titanium-theme.css');
+
+    assert.match(css, /@media \(max-width: 1439px\)/);
+    assert.match(css, /@media \(max-width: 1023px\)/);
+    assert.match(css, /@media \(max-width: 767px\)/);
+    assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
+test('icon-only controls have accessible names', () => {
+    const html = read('index-v2.html');
+    const iconButtons = [
+        ...html.matchAll(/<button[^>]*class="[^"]*(?:modal-close|clear-search-btn)[^"]*"[^>]*>/g)
+    ];
+
+    assert.ok(iconButtons.length >= 4);
+    iconButtons.forEach(([button]) => assert.match(button, /aria-label=/));
+});
+
+test('theme defines minimum touch targets and visible focus styles', () => {
+    const css = read('css/titanium-theme.css');
+
+    assert.match(css, /min-height:\s*44px/);
+    assert.match(css, /:focus-visible/);
+    assert.match(
+        css,
+        /\.clear-search-btn \{[\s\S]*?min-width:\s*44px;[\s\S]*?min-height:\s*44px;/
+    );
+});
+
+test('compact navigation keeps every primary page and analysis submenu reachable', () => {
+    const html = read('index-v2.html');
+    const css = read('css/titanium-theme.css');
+    const mobileCss = css.match(
+        /@media \(max-width: 767px\) \{([\s\S]*?)(?=@media \(prefers-reduced-motion: reduce\))/
+    )?.[1] || '';
+
+    ['dashboard', 'analysis', 'report', 'rainMonitor', 'rules'].forEach((page) => {
+        assert.match(html, new RegExp(`data-page="${page}"`));
+    });
+    assert.doesNotMatch(mobileCss, /\.nav-submenu\s*\{[^}]*display:\s*none/);
+    assert.match(mobileCss, /\.nav-submenu\.open\s*\{[\s\S]*?visibility:\s*visible/);
+    assert.match(mobileCss, /\.nav-menu\s*\{[\s\S]*?flex-wrap:\s*nowrap/);
+});
+
+test('keeps the dashboard map first at the exact 1024px boundary', () => {
+    const css = read('css/titanium-theme.css');
+    const tabletCss = css.match(
+        /@media \(max-width: 1024px\) \{([\s\S]*?)(?=@media \(max-width: 1023px\))/
+    )?.[1] || '';
+
+    assert.match(tabletCss, /\.dashboard-map\s*\{[\s\S]*?grid-row:\s*1/);
+});
+
+test('keeps the compact analysis submenu above the page header', () => {
+    const css = read('css/titanium-theme.css');
+    const tabletCss = css.match(
+        /@media \(max-width: 1024px\) \{([\s\S]*?)(?=@media \(max-width: 1023px\))/
+    )?.[1] || '';
+
+    assert.match(
+        tabletCss,
+        /\.sidebar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*0;[\s\S]*?z-index:\s*100;/
+    );
+    assert.match(
+        tabletCss,
+        /\.nav-submenu\.open\s*\{[\s\S]*?visibility:\s*visible;[\s\S]*?pointer-events:\s*auto;/
+    );
+});
+
+test('titanium tooltip badge foregrounds meet WCAG AA for every severity color', () => {
+    const css = read('css/titanium-theme.css');
+    const hexToLuminance = (hex) => {
+        const channels = hex.match(/[a-f\d]{2}/gi)
+            .map((channel) => Number.parseInt(channel, 16) / 255)
+            .map((channel) => channel <= 0.04045
+                ? channel / 12.92
+                : ((channel + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    };
+    const contrast = (foreground, background) => {
+        const foregroundLuminance = hexToLuminance(foreground);
+        const backgroundLuminance = hexToLuminance(background);
+        const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+        const darker = Math.min(foregroundLuminance, backgroundLuminance);
+        return (lighter + 0.05) / (darker + 0.05);
+    };
+    const severityPairs = [
+        ['#f5f5f7', '#d0021b'],
+        ['#1d1d1f', '#f57c00'],
+        ['#1d1d1f', '#f5a623'],
+        ['#1d1d1f', '#4a90e2'],
+        ['#1d1d1f', '#888888'],
+        ['#f5f5f7', '#666666']
+    ];
+
+    assert.match(
+        css,
+        /\.titanium-map-tooltip \.tooltip-badge\[style\*="#F57C00" i\],[\s\S]*?color:\s*#1d1d1f;/
+    );
+    assert.match(
+        css,
+        /\.titanium-map-tooltip \.tooltip-badge\[style\*="#D0021B" i\],[\s\S]*?color:\s*#f5f5f7;/
+    );
+    severityPairs.forEach(([foreground, background]) => {
+        assert.ok(
+            contrast(foreground, background) >= 4.5,
+            `${foreground} on ${background} must meet WCAG AA`
+        );
+    });
+});
