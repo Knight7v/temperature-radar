@@ -86,7 +86,7 @@ function getFeelsLikeColor(temperature) {
     if (value <= 26) return interpolateColor('#00D4FF', '#4A90E2', (value - 20) / 6);
     if (value <= 35) return interpolateColor('#FFE082', '#F5A623', (value - 27) / 8);
     if (value <= 40) return interpolateColor('#FFB15C', '#F57C00', (value - 36) / 4);
-    return interpolateColor('#F05A5A', '#A80016', (value - 41) / 4);
+    return interpolateColor('#D0021B', '#8B0012', (value - 41) / 4);
 }
 ```
 
