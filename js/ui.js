@@ -95,6 +95,7 @@ const UI = (function() {
 
     function init() {
         initPageNavigation();
+        initAnalysisNavigation();
         initEventListeners();
         initTopTabs();
         initFilters();
@@ -130,6 +131,12 @@ const UI = (function() {
         navItems.forEach(item => {
             item.addEventListener('click', () => {
                 const page = item.dataset.page;
+                if (page === 'analysis' && item.classList.contains('active')) {
+                    analysisNavItem?.classList.toggle('expanded');
+                    analysisSubmenu?.classList.toggle('open');
+                    return;
+                }
+
                 navItems.forEach(n => n.classList.remove('active'));
                 item.classList.add('active');
                 pages.forEach(p => p.classList.remove('active'));
@@ -614,47 +621,38 @@ const UI = (function() {
 
     function renderAnalysis() {
         if (state.cityData.length === 0) return;
-        initAnalysisNavigation();
-        // 默认显示第一个子项
+
+        const analysisNavItem = document.querySelector('.nav-item[data-page="analysis"]');
+        const analysisSubmenu = document.getElementById('analysisSubmenu');
+        analysisNavItem?.classList.add('expanded');
+        analysisSubmenu?.classList.add('open');
+        analysisSubmenu?.querySelectorAll('.nav-subitem').forEach(item => {
+            item.classList.remove('active');
+        });
+        const firstSubitem = analysisSubmenu?.querySelector(
+            '.nav-subitem[data-subpage="nightMuggy"]'
+        );
+        firstSubitem?.classList.add('active');
+
         renderAnalysisContent('nightMuggy');
     }
 
     function initAnalysisNavigation() {
-        // 热销分析主菜单展开/收起
-        const analysisNavItem = document.querySelector('.nav-item[data-page="analysis"]');
         const analysisSubmenu = document.getElementById('analysisSubmenu');
+        if (!analysisSubmenu || analysisSubmenu.dataset.navigationBound === 'true') return;
 
-        if (analysisNavItem && analysisSubmenu) {
-            analysisNavItem.classList.add('expanded');
-            analysisSubmenu.classList.add('open');
+        analysisSubmenu.dataset.navigationBound = 'true';
+        analysisSubmenu.querySelectorAll('.nav-subitem').forEach(subitem => {
+            subitem.addEventListener('click', () => {
+                const subpage = subitem.dataset.subpage;
+                renderAnalysisContent(subpage);
 
-            analysisNavItem.addEventListener('click', (e) => {
-                if (e.target.closest('.nav-item') === analysisNavItem) {
-                    analysisNavItem.classList.toggle('expanded');
-                    analysisSubmenu.classList.toggle('open');
-                }
-            });
-
-            // 子菜单点击事件
-            analysisSubmenu.querySelectorAll('.nav-subitem').forEach(subitem => {
-                subitem.addEventListener('click', () => {
-                    const subpage = subitem.dataset.subpage;
-                    renderAnalysisContent(subpage);
-
-                    // 更新子菜单激活状态
-                    analysisSubmenu.querySelectorAll('.nav-subitem').forEach(item => {
-                        item.classList.remove('active');
-                    });
-                    subitem.classList.add('active');
+                analysisSubmenu.querySelectorAll('.nav-subitem').forEach(item => {
+                    item.classList.remove('active');
                 });
+                subitem.classList.add('active');
             });
-
-            // 默认激活第一个子项
-            const firstSubitem = analysisSubmenu.querySelector('.nav-subitem[data-subpage="nightMuggy"]');
-            if (firstSubitem) {
-                firstSubitem.classList.add('active');
-            }
-        }
+        });
     }
 
     function renderAnalysisContent(subpage) {

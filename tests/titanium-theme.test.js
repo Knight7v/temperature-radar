@@ -136,6 +136,180 @@ test('closes analysis navigation before activating another primary page', () => 
     );
 });
 
+test('analysis navigation stays open and listener counts stay stable across round trips', () => {
+    const createClassList = (...initial) => {
+        const values = new Set(initial);
+        return {
+            add(...names) { names.forEach((name) => values.add(name)); },
+            remove(...names) { names.forEach((name) => values.delete(name)); },
+            contains(name) { return values.has(name); },
+            toggle(name, force) {
+                const next = force === undefined ? !values.has(name) : Boolean(force);
+                if (next) values.add(name);
+                else values.delete(name);
+                return next;
+            }
+        };
+    };
+    const createElement = ({ id, classes = [], dataset = {} } = {}) => {
+        const listeners = new Map();
+        const element = {
+            id,
+            dataset,
+            classList: createClassList(...classes),
+            style: {},
+            textContent: '',
+            innerHTML: '',
+            addEventListener(type, listener) {
+                if (!listeners.has(type)) listeners.set(type, []);
+                listeners.get(type).push(listener);
+            },
+            click() {
+                const event = {
+                    target: element,
+                    preventDefault() {}
+                };
+                [...(listeners.get('click') || [])].forEach((listener) => listener(event));
+            },
+            closest(selector) {
+                return selector === '.nav-item' && element.classList.contains('nav-item')
+                    ? element
+                    : null;
+            },
+            listenerCount(type) {
+                return (listeners.get(type) || []).length;
+            },
+            querySelector() { return null; },
+            querySelectorAll() { return []; }
+        };
+        return element;
+    };
+
+    const dashboardNav = createElement({
+        classes: ['nav-item', 'active'],
+        dataset: { page: 'dashboard' }
+    });
+    const analysisNav = createElement({
+        classes: ['nav-item'],
+        dataset: { page: 'analysis' }
+    });
+    const reportNav = createElement({
+        classes: ['nav-item'],
+        dataset: { page: 'report' }
+    });
+    const nightSubitem = createElement({
+        classes: ['nav-subitem'],
+        dataset: { subpage: 'nightMuggy' }
+    });
+    const futureSubitem = createElement({
+        classes: ['nav-subitem'],
+        dataset: { subpage: 'future3Day' }
+    });
+    const subitems = [nightSubitem, futureSubitem];
+    const submenu = createElement({ id: 'analysisSubmenu', classes: ['nav-submenu'] });
+    submenu.querySelectorAll = (selector) => selector === '.nav-subitem' ? subitems : [];
+    submenu.querySelector = (selector) => selector === '.nav-subitem[data-subpage="nightMuggy"]'
+        ? nightSubitem
+        : null;
+
+    const pages = ['dashboard', 'analysis', 'report'].map((id) => createElement({
+        id,
+        classes: ['page', ...(id === 'dashboard' ? ['active'] : [])]
+    }));
+    const byId = new Map(pages.map((page) => [page.id, page]));
+    [
+        createElement({ id: 'pageTitle' }),
+        submenu,
+        createElement({ id: 'analysisPageTitle' }),
+        createElement({ id: 'analysisPageDesc' }),
+        createElement({ id: 'analysisContent' }),
+        createElement({ id: 'forecastTableHead' }),
+        createElement({ id: 'forecastTableBody' }),
+        createElement({ id: 'currentTime' }),
+        createElement({ id: 'headerDate' })
+    ].forEach((element) => byId.set(element.id, element));
+    byId.get('forecastTableBody').querySelectorAll = () => [];
+
+    const navItems = [dashboardNav, analysisNav, reportNav];
+    const document = {
+        body: { appendChild() {} },
+        getElementById(id) { return byId.get(id) || null; },
+        querySelector(selector) {
+            if (selector === '.nav-item[data-page="analysis"]') return analysisNav;
+            return null;
+        },
+        querySelectorAll(selector) {
+            if (selector === '.nav-item') return navItems;
+            if (selector === '.page') return pages;
+            if (selector === '.nav-item, .nav-subitem') return [...navItems, ...subitems];
+            return [];
+        },
+        addEventListener() {},
+        createElement() { return createElement(); }
+    };
+    const context = vm.createContext({
+        console: { log() {}, warn() {}, error() {} },
+        document,
+        window: {},
+        navigator: { clipboard: { writeText: () => Promise.resolve() } },
+        Core: {
+            getTopNightMuggy: () => []
+        },
+        MapModule: {},
+        setInterval: () => 1,
+        clearInterval() {},
+        setTimeout: (callback) => {
+            callback();
+            return 1;
+        },
+        clearTimeout() {}
+    });
+
+    vm.runInContext(read('js/ui.js'), context);
+    const UI = vm.runInContext('UI', context);
+    UI.state.cityData.push({});
+    UI.init();
+
+    analysisNav.click();
+    assert.equal(analysisNav.classList.contains('expanded'), true);
+    assert.equal(submenu.classList.contains('open'), true);
+    assert.equal(nightSubitem.classList.contains('active'), true);
+    const initialListenerCounts = {
+        analysis: analysisNav.listenerCount('click'),
+        night: nightSubitem.listenerCount('click'),
+        future: futureSubitem.listenerCount('click')
+    };
+
+    for (let roundTrip = 0; roundTrip < 3; roundTrip += 1) {
+        reportNav.click();
+        assert.equal(submenu.classList.contains('open'), false);
+        assert.equal(subitems.some((subitem) => subitem.classList.contains('active')), false);
+
+        analysisNav.click();
+        assert.equal(
+            analysisNav.classList.contains('expanded'),
+            true,
+            `analysis must expand after round trip ${roundTrip + 1}`
+        );
+        assert.equal(
+            submenu.classList.contains('open'),
+            true,
+            `submenu must open after round trip ${roundTrip + 1}`
+        );
+        assert.equal(nightSubitem.classList.contains('active'), true);
+        nightSubitem.click();
+        assert.equal(nightSubitem.classList.contains('active'), true);
+        assert.deepEqual(
+            {
+                analysis: analysisNav.listenerCount('click'),
+                night: nightSubitem.listenerCount('click'),
+                future: futureSubitem.listenerCount('click')
+            },
+            initialListenerCounts
+        );
+    }
+});
+
 test('updates the header date from the shared current-time integration', () => {
     const ui = read('js/ui.js');
     assert.match(ui, /const headerDate = document\.getElementById\('headerDate'\);/);
