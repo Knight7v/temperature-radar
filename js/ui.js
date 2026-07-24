@@ -116,6 +116,15 @@ const UI = (function() {
             rules: '规则设置'
         };
 
+        document.querySelectorAll('.nav-item, .nav-subitem').forEach(item => {
+            item.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    item.click();
+                }
+            });
+        });
+
         navItems.forEach(item => {
             item.addEventListener('click', () => {
                 const page = item.dataset.page;

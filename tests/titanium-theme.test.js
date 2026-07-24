@@ -55,3 +55,34 @@ test('preserves navigation and header integration IDs', () => {
         assert.match(html, new RegExp(`id="${id}"`));
     });
 });
+
+test('makes primary and submenu navigation keyboard accessible', () => {
+    const html = read('index-v2.html');
+    const ui = read('js/ui.js');
+    const nav = html.match(/<nav class="nav-menu">([\s\S]*?)<\/nav>/)[1];
+    const controls = nav.match(/<div class="nav-(?:item|subitem)[^"]*"[^>]*>/g);
+
+    assert.equal(controls.length, 10);
+    controls.forEach((control) => {
+        assert.match(control, /role="button"/);
+        assert.match(control, /tabindex="0"/);
+    });
+    nav.match(/<div class="nav-item[^"]*"[^>]*>/g).forEach((control) => {
+        assert.match(control, /aria-label="[^"]+"/);
+    });
+    assert.match(ui, /event\.key === 'Enter' \|\| event\.key === ' '/);
+    assert.match(ui, /event\.preventDefault\(\);/);
+    assert.match(ui, /item\.click\(\);/);
+});
+
+test('provides a compact tablet shell and honors reduced motion', () => {
+    const css = read('css/titanium-theme.css');
+    assert.match(css, /@media \(max-width: 1023px\)[\s\S]*?\.sidebar[\s\S]*?\.dashboard-layout[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/);
+    assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?transition: none !important/);
+});
+
+test('updates the header date from the shared current-time integration', () => {
+    const ui = read('js/ui.js');
+    assert.match(ui, /const headerDate = document\.getElementById\('headerDate'\);/);
+    assert.match(ui, /headerDate\.textContent = now\.toLocaleDateString\('zh-CN', \{[\s\S]*?weekday: 'long'/);
+});
