@@ -7,6 +7,7 @@ const mapPath = path.join(__dirname, '..', 'js', 'map.js');
 const source = fs.readFileSync(mapPath, 'utf8');
 const uiPath = path.join(__dirname, '..', 'js', 'ui.js');
 const uiSource = fs.readFileSync(uiPath, 'utf8');
+const pageSource = fs.readFileSync(path.join(__dirname, '..', 'index-v2.html'), 'utf8');
 let option;
 
 const mapContainer = {
@@ -64,7 +65,9 @@ assert.equal(MapModule.getFeelsLikeColor(46), '#8B0012');
 const legend = MapModule.getLegendConfig('feelsLike');
 assert.deepEqual(Array.from(legend.items, item => item.label), ['≥41℃', '36-40℃', '27-35℃', '≤26℃']);
 
-const mapLegend = { innerHTML: '' };
+assert.match(pageSource, /<div class="map-legend" id="mapLegend"/);
+
+const mapLegend = { innerHTML: '', hidden: true };
 const uiContext = {
     console,
     document: { getElementById: (id) => id === 'mapLegend' ? mapLegend : null },
@@ -74,10 +77,17 @@ const uiContext = {
 };
 vm.runInNewContext(`${uiSource}\nthis.__UI__ = UI;`, uiContext, { filename: uiPath });
 uiContext.__UI__.updateMapLegend('feelsLike');
+assert.equal(mapLegend.hidden, false);
+assert.equal((mapLegend.innerHTML.match(/class="legend-item"/g) || []).length, 4);
 assert.match(mapLegend.innerHTML, /≥41℃/);
 assert.match(mapLegend.innerHTML, /36-40℃/);
 assert.match(mapLegend.innerHTML, /27-35℃/);
 assert.match(mapLegend.innerHTML, /≤26℃/);
+['adi', 'nightTemp', 'dayMax'].forEach(mode => {
+    uiContext.__UI__.updateMapLegend(mode);
+    assert.equal(mapLegend.hidden, true);
+    assert.equal(mapLegend.innerHTML, '');
+});
 
 (async () => {
     await MapModule.init();

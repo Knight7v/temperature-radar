@@ -455,7 +455,15 @@ const UI = (function() {
 
     function updateMapLegend(mode) {
         const container = document.getElementById('mapLegend');
-        if (!container || !window.MapModule || !window.MapModule.getLegendConfig) return;
+        if (!container) return;
+
+        if (mode !== 'feelsLike') {
+            container.innerHTML = '';
+            container.hidden = true;
+            return;
+        }
+
+        if (!window.MapModule || !window.MapModule.getLegendConfig) return;
 
         const legend = window.MapModule.getLegendConfig(mode);
         container.innerHTML = legend.items.map(item => `
@@ -464,6 +472,7 @@ const UI = (function() {
                 <span>${escapeHtml(item.label)}</span>
             </div>
         `).join('');
+        container.hidden = false;
     }
 
     function renderMap() {
