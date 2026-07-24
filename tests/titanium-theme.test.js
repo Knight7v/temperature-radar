@@ -35,3 +35,23 @@ test('defines the complete titanium token contract', () => {
 test('removes Orbitron from the production stylesheet', () => {
     assert.doesNotMatch(read('css/styles-v2.css'), /Orbitron/);
 });
+
+test('uses SVG symbols instead of emoji in primary navigation', () => {
+    const html = read('index-v2.html');
+    const nav = html.match(/<nav class="nav-menu">([\s\S]*?)<\/nav>/)[1];
+    ['icon-dashboard', 'icon-analysis', 'icon-calendar', 'icon-rain', 'icon-settings']
+        .forEach((id) => assert.match(html, new RegExp(`id="${id}"`)));
+    assert.doesNotMatch(nav, /🎯|📈|📊|🌧️|⚙️/);
+    assert.match(nav, /<svg[^>]*aria-hidden="true"/);
+});
+
+test('preserves navigation and header integration IDs', () => {
+    const html = read('index-v2.html');
+    ['dashboard', 'analysis', 'report', 'rainMonitor', 'rules'].forEach((page) => {
+        assert.match(html, new RegExp(`data-page="${page}"`));
+    });
+    ['headerDate', 'pageTitle', 'currentTime', 'salesIntensity', 'cityCount', 'outbreakCount',
+        'actionCount', 'hotNightCount', 'lastUpdateTime'].forEach((id) => {
+        assert.match(html, new RegExp(`id="${id}"`));
+    });
+});

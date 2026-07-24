@@ -42,6 +42,27 @@
     <link rel="stylesheet" href="css/titanium-theme.css?v=1">
 </head>
 <body>
+    <svg class="svg-sprite" aria-hidden="true">
+        <symbol id="icon-dashboard" viewBox="0 0 24 24">
+            <path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z"/>
+        </symbol>
+        <symbol id="icon-analysis" viewBox="0 0 24 24">
+            <path d="M4 19V9m6 10V5m6 14v-7m4 7H2"/>
+        </symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24">
+            <path d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/>
+        </symbol>
+        <symbol id="icon-rain" viewBox="0 0 24 24">
+            <path d="M7 16a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a3 3 0 0 1-1 5.83M8 19l-1 2m5-2-1 2m5-2-1 2"/>
+        </symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19 13.5v-3l-2-.7-.6-1.4.9-1.9-2.1-2.1-1.9.9-1.4-.6L11.5 3h-3l-.7 2-1.4.6-1.9-.9-2.1 2.1.9 1.9-.6 1.4-2 .7v3l2 .7.6 1.4-.9 1.9 2.1 2.1 1.9-.9 1.4.6.7 2h3l.7-2 1.4-.6 1.9.9 2.1-2.1-.9-1.9.6-1.4 2-.7Z"/>
+        </symbol>
+        <symbol id="icon-chevron" viewBox="0 0 24 24">
+            <path d="m8 10 4 4 4-4"/>
+        </symbol>
+    </svg>
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-content">
@@ -67,9 +88,9 @@
     <!-- API错误提示 -->
     <div id="apiErrorMessage" style="display: none;"></div>
 
-    <div class="app-container">
+    <div class="app-container app-shell">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar titanium-sidebar">
             <div class="logo">
                 <h1>空调热销区域雷达</h1>
                 <p>基于天气数据判断空调区域销售机会</p>
@@ -77,13 +98,13 @@
 
             <nav class="nav-menu">
                 <div class="nav-item active" data-page="dashboard">
-                    <span class="nav-icon">🎯</span>
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-dashboard"></use></svg>
                     <span class="nav-text">销售总览</span>
                 </div>
                 <div class="nav-item" data-page="analysis">
-                    <span class="nav-icon">📈</span>
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-analysis"></use></svg>
                     <span class="nav-text">热销分析</span>
-                    <span class="nav-expand">▼</span>
+                    <svg class="nav-expand" aria-hidden="true"><use href="#icon-chevron"></use></svg>
                 </div>
                 <div class="nav-submenu" id="analysisSubmenu">
                     <div class="nav-subitem" data-subpage="nightMuggy">夜间闷热排行榜</div>
@@ -92,19 +113,19 @@
                     <div class="nav-subitem" data-subpage="cityGroupMonitor">重点城市群监控</div>
                 </div>
                 <div class="nav-item" data-page="report">
-                    <span class="nav-icon">📊</span>
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>
                     <span class="nav-text">7天预测</span>
                 </div>
                 <div class="nav-item" data-page="rainMonitor">
-                    <span class="nav-icon">🌧️</span>
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-rain"></use></svg>
                     <span class="nav-text">降水监控</span>
                 </div>
                 <div class="nav-item" data-page="history" style="display: none;">
-                    <span class="nav-icon">📅</span>
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>
                     <span class="nav-text">历史记录</span>
                 </div>
                 <div class="nav-item" data-page="rules">
-                    <span class="nav-icon">⚙️</span>
+                    <svg class="nav-icon" aria-hidden="true"><use href="#icon-settings"></use></svg>
                     <span class="nav-text">规则设置</span>
                 </div>
             </nav>
@@ -120,8 +141,9 @@
         <!-- Main Content -->
         <main class="main-content">
             <!-- Header -->
-            <header class="header">
+            <header class="header titanium-header">
                 <div class="header-left">
+                    <p class="header-date" id="headerDate">--</p>
                     <h2 id="pageTitle">今日热销</h2>
                 </div>
                 <div class="header-center">
@@ -133,27 +155,27 @@
                 <div class="header-right">
                     <div class="current-time" id="currentTime">--:--:--</div>
                     <div class="header-stats">
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">销售机会强度</div>
                             <div class="header-stat-value" id="salesIntensity">--</div>
                         </div>
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">监控城市</div>
                             <div class="header-stat-value" id="cityCount">--</div>
                         </div>
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">爆热</div>
                             <div class="header-stat-value stat-outbreak" id="outbreakCount">--</div>
                         </div>
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">热</div>
                             <div class="header-stat-value stat-action" id="actionCount">--</div>
                         </div>
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">热夜城市</div>
                             <div class="header-stat-value stat-hotnight" id="hotNightCount">--</div>
                         </div>
-                        <div class="header-stat">
+                        <div class="header-stat header-metric">
                             <div class="header-stat-label">数据更新</div>
                             <div class="header-stat-value" id="lastUpdateTime">--:--</div>
                         </div>

@@ -1928,12 +1928,21 @@ const UI = (function() {
     // ==================== 工具 ====================
 
     function updateCurrentTime() {
-        const el = document.getElementById('currentTime');
-        if (el) {
-            const now = new Date();
+        const now = new Date();
+        const currentTime = document.getElementById('currentTime');
+        if (currentTime) {
             const date = now.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
             const time = now.toLocaleTimeString('zh-CN', { hour12: false });
-            el.textContent = `${date} ${time}`;
+            currentTime.textContent = `${date} ${time}`;
+        }
+
+        const headerDate = document.getElementById('headerDate');
+        if (headerDate) {
+            headerDate.textContent = now.toLocaleDateString('zh-CN', {
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
         }
     }
 

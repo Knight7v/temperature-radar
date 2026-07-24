@@ -64,3 +64,117 @@ body::before {
     outline: 2px solid var(--titanium-accent);
     outline-offset: 3px;
 }
+
+.svg-sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.app-container {
+    background: transparent;
+}
+
+.sidebar {
+    width: 200px;
+    margin: 12px 0 12px 12px;
+    padding: 18px 10px;
+    background: rgba(20, 20, 22, 0.72);
+    border: 1px solid var(--titanium-border);
+    border-radius: var(--titanium-radius-lg);
+    backdrop-filter: var(--titanium-blur);
+    -webkit-backdrop-filter: var(--titanium-blur);
+    box-shadow: var(--titanium-shadow);
+}
+
+.logo h1 {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--titanium-text);
+    font-size: 15px;
+    letter-spacing: -0.02em;
+}
+
+.logo p,
+.sidebar-footer {
+    color: var(--titanium-text-muted);
+}
+
+.nav-item,
+.nav-subitem {
+    min-height: 44px;
+    color: var(--titanium-text-secondary);
+    border-radius: var(--titanium-radius-sm);
+    transition: color var(--titanium-ease), background var(--titanium-ease),
+        box-shadow var(--titanium-ease);
+}
+
+.nav-item:hover,
+.nav-subitem:hover {
+    color: var(--titanium-text);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-item.active,
+.nav-subitem.active {
+    color: var(--titanium-text);
+    background: rgba(255, 255, 255, 0.10);
+    border: 0;
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.nav-icon,
+.nav-expand {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.header {
+    height: 70px;
+    margin: 12px 12px 0;
+    padding: 0 22px;
+    background: rgba(20, 20, 22, 0.68);
+    border: 1px solid var(--titanium-border);
+    border-radius: var(--titanium-radius-md);
+    backdrop-filter: var(--titanium-blur);
+    -webkit-backdrop-filter: var(--titanium-blur);
+}
+
+.header-stat-label {
+    color: var(--titanium-text-muted);
+    font-size: 11px;
+}
+
+.header-stat-value,
+.current-time {
+    color: var(--titanium-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.content-area {
+    padding: 22px;
+}
+
+.page {
+    width: 100%;
+    max-width: 1600px;
+    margin-inline: auto;
+}
+
+.header-date {
+    margin: 0 0 3px;
+    color: var(--titanium-text-muted);
+    font-size: 11px;
+}
+
+.header-left h2 {
+    color: var(--titanium-text);
+    font-size: 16px;
+    letter-spacing: -0.02em;
+}
