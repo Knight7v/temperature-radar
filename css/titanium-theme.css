@@ -201,8 +201,7 @@ body::before {
 
     .logo p,
     .sidebar-footer,
-    .nav-text,
-    .nav-submenu {
+    .nav-text {
         display: none;
     }
 
@@ -212,13 +211,48 @@ body::before {
         gap: 4px;
         margin-left: auto;
         padding: 0;
-        overflow-x: auto;
+        position: relative;
+        flex-wrap: wrap;
+        justify-content: flex-end;
     }
 
     .nav-item {
         min-width: 44px;
         min-height: 44px;
         margin: 0;
+        padding: 8px 10px;
+    }
+
+    .nav-submenu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 20;
+        width: min(280px, calc(100vw - 24px));
+        max-height: none;
+        padding: 8px;
+        background: rgba(28, 28, 30, 0.96);
+        border: 1px solid var(--titanium-border-strong);
+        border-radius: var(--titanium-radius-md);
+        box-shadow: var(--titanium-shadow);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(-4px);
+    }
+
+    .nav-submenu.open {
+        max-height: none;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .nav-subitem {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
         padding: 8px 10px;
     }
 

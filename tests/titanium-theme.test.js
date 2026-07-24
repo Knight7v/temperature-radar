@@ -82,6 +82,22 @@ test('provides a compact tablet shell and honors reduced motion', () => {
     assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?transition: none !important/);
 });
 
+test('keeps analysis subpages reachable from the compact navigation', () => {
+    const html = read('index-v2.html');
+    const css = read('css/titanium-theme.css');
+    const compactCss = css.match(/@media \(max-width: 1024px\) \{([\s\S]*?)@media \(prefers-reduced-motion/)[1];
+    const subitems = html.match(/<div class="nav-subitem"[^>]*>/g);
+
+    assert.equal(subitems.length, 4);
+    subitems.forEach((subitem) => {
+        assert.match(subitem, /role="button"/);
+        assert.match(subitem, /tabindex="0"/);
+    });
+    assert.doesNotMatch(compactCss, /\.nav-submenu\s*\{[^}]*display:\s*none/);
+    assert.match(compactCss, /\.nav-submenu\.open\s*\{[\s\S]*?visibility:\s*visible[\s\S]*?pointer-events:\s*auto/);
+    assert.match(compactCss, /\.nav-subitem\s*\{[\s\S]*?min-height:\s*44px/);
+});
+
 test('updates the header date from the shared current-time integration', () => {
     const ui = read('js/ui.js');
     assert.match(ui, /const headerDate = document\.getElementById\('headerDate'\);/);
