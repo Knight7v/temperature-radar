@@ -17,6 +17,24 @@
         normal: '#555555'
     };
 
+    function interpolateColor(startHex, endHex, progress) {
+        const clamped = Math.max(0, Math.min(1, progress));
+        const start = startHex.match(/\w\w/g).map(value => parseInt(value, 16));
+        const end = endHex.match(/\w\w/g).map(value => parseInt(value, 16));
+        const channels = start.map((value, index) =>
+            Math.round(value + (end[index] - value) * clamped)
+        );
+        return `#${channels.map(value => value.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+    }
+
+    function getFeelsLikeColor(temperature) {
+        const value = Number.isFinite(Number(temperature)) ? Number(temperature) : 20;
+        if (value <= 26) return interpolateColor('#00D4FF', '#4A90E2', (value - 20) / 6);
+        if (value <= 35) return interpolateColor('#FFE082', '#F5A623', (value - 27) / 8);
+        if (value <= 40) return interpolateColor('#FFB15C', '#F57C00', (value - 36) / 4);
+        return interpolateColor('#D0021B', '#8B0012', (value - 41) / 4);
+    }
+
     // 每个模式的图例配置
     const LEGEND_CONFIG = {
         adi: {
@@ -42,11 +60,10 @@
         feelsLike: {
             title: '体感温度',
             items: [
-                { label: '≥40℃', class: 'outbreak', desc: '极闷热' },
-                { label: '37-39℃', class: 'action', desc: '闷热' },
-                { label: '34-36℃', class: 'opportunity', desc: '炎热' },
-                { label: '30-33℃', class: 'observe', desc: '较热' },
-                { label: '<30℃', class: 'normal', desc: '舒适' }
+                { label: '≥41℃', class: 'outbreak', desc: '极闷热' },
+                { label: '36-40℃', class: 'action', desc: '闷热' },
+                { label: '27-35℃', class: 'opportunity', desc: '炎热' },
+                { label: '≤26℃', class: 'observe', desc: '舒适' }
             ]
         },
         dayMax: {
@@ -235,7 +252,10 @@
             return {
                 name: city.cityName,
                 value: [geoCoordMap[city.cityName][0], geoCoordMap[city.cityName][1], value],
-                cityData: city
+                cityData: city,
+                itemStyle: viewMode === 'feelsLike'
+                    ? { color: getFeelsLikeColor(value) }
+                    : undefined
             };
         });
 
@@ -250,7 +270,7 @@
             switch (viewMode) {
                 case 'adi': return { min: 0, max: 100 };
                 case 'nightTemp': return { min: 15, max: 35 };
-                case 'feelsLike': return { min: 20, max: 50 };
+                case 'feelsLike': return { min: 20, max: 45 };
                 case 'dayMax': return { min: 20, max: 45 };
                 default: return { min: 0, max: 100 };
             }
@@ -267,8 +287,8 @@
                     // 15-35 范围映射到 0-100
                     return Math.max(0, Math.min(100, (value - 15) / 20 * 100));
                 case 'feelsLike':
-                    // 20-50 范围映射到 0-100
-                    return Math.max(0, Math.min(100, (value - 20) / 30 * 100));
+                    // 20-45 范围映射到 0-100
+                    return Math.max(0, Math.min(100, (value - 20) / 25 * 100));
                 case 'dayMax':
                     // 20-45 范围映射到 0-100
                     return Math.max(0, Math.min(100, (value - 20) / 25 * 100));
@@ -297,11 +317,10 @@
                     ];
                 case 'feelsLike':
                     return [
-                        { start: 40, end: 55, label: '≥40℃ 极闷热' },
-                        { start: 37, end: 39, label: '37-39℃ 闷热' },
-                        { start: 34, end: 36, label: '34-36℃ 炎热' },
-                        { start: 30, end: 33, label: '30-33℃ 较热' },
-                        { start: 15, end: 29, label: '<30℃ 舒适' }
+                        { start: 41, end: 45, label: '≥41℃ 极闷热' },
+                        { start: 36, end: 40, label: '36-40℃ 闷热' },
+                        { start: 27, end: 35, label: '27-35℃ 炎热' },
+                        { start: 20, end: 26, label: '≤26℃ 舒适' }
                     ];
                 case 'dayMax':
                     return [
@@ -341,7 +360,7 @@
                         switch (mode) {
                             case 'adi': return levelInfo.color;
                             case 'nightTemp': return value >= 28 ? '#D0021B' : value >= 26 ? '#F57C00' : value >= 24 ? '#F5A623' : '#00D4FF';
-                            case 'feelsLike': return value >= 40 ? '#D0021B' : value >= 37 ? '#F57C00' : value >= 34 ? '#F5A623' : '#00D4FF';
+                            case 'feelsLike': return getFeelsLikeColor(value);
                             case 'dayMax': return value >= 37 ? '#D0021B' : value >= 35 ? '#F57C00' : value >= 33 ? '#F5A623' : '#4A90E2';
                             default: return '#fff';
                         }
@@ -406,7 +425,9 @@
                 inRange: {
                     color: viewMode === 'adi'
                         ? ['#333355', '#4A90E2', '#F5A623', '#F57C00', '#D0021B']
-                        : ['#00D4FF', '#4A90E2', '#F5A623', '#F57C00', '#D0021B']
+                        : viewMode === 'feelsLike'
+                            ? Array.from({ length: 26 }, (_, index) => getFeelsLikeColor(20 + index))
+                            : ['#00D4FF', '#4A90E2', '#F5A623', '#F57C00', '#D0021B']
                 },
                 textStyle: { color: '#8b9dc3' },
                 splitList: getSplitListForMode(viewMode)
@@ -487,7 +508,8 @@
         render: render,
         highlightCity: highlightCity,
         clearHighlight: clearHighlight,
-        getLegendConfig: getLegendConfig
+        getLegendConfig: getLegendConfig,
+        getFeelsLikeColor: getFeelsLikeColor
     };
 
 })();
