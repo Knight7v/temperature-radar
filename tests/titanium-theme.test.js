@@ -245,3 +245,89 @@ test('rules groups collapse without overflowing narrow viewports', () => {
     assert.match(narrowCss, /\.rules-sections \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/);
     assert.match(narrowCss, /\.rule-field label \{[\s\S]*?flex-wrap: wrap/);
 });
+
+test('applies titanium surfaces to all product modals', () => {
+    const html = read('index-v2.html');
+    ['cityDetailModal', 'dailyBriefModal', 'loginModal', 'paymentModal'].forEach((id) => {
+        const pattern = new RegExp(`id="${id}"[\\s\\S]{0,500}modal-surface`);
+        assert.match(html, pattern);
+    });
+});
+
+test('login controls retain labels and accessible input modes', () => {
+    const html = read('index-v2.html');
+    assert.match(html, /for="loginPhone"/);
+    assert.match(html, /id="loginPhone"[^>]*class="titanium-input"[^>]*inputmode="numeric"[^>]*autocomplete="tel"/);
+    assert.match(html, /for="loginCode"/);
+    assert.match(html, /id="loginCode"[^>]*class="titanium-input"[^>]*inputmode="numeric"[^>]*autocomplete="one-time-code"/);
+});
+
+test('preserves modal IDs, form IDs, and authentication and payment handlers', () => {
+    const html = read('index-v2.html');
+
+    ['cityDetailModal', 'dailyBriefModal', 'loginModal', 'paymentModal',
+        'phoneLoginForm', 'wechatLoginForm', 'wechatQRCode', 'wechatLoading',
+        'loginPhone', 'loginCode', 'sendCodeBtn']
+        .forEach((id) => assert.match(html, new RegExp(`id="${id}"`)));
+    [
+        'UI.closeCityDetail()',
+        'UI.closeDailyBriefModal()',
+        'Auth.closeModal()',
+        'Auth.sendCode()',
+        'Auth.phoneLogin()',
+        'Payment.closeModal()',
+        "Payment.buy('hot_analysis', 'onetime')",
+        "Payment.buy('forecast_7d', 'subscription')"
+    ].forEach((handler) => assert.ok(html.includes(handler), `${handler} must remain wired`));
+});
+
+test('gives every product modal close button an accessible name', () => {
+    const html = read('index-v2.html');
+    const ui = read('js/ui.js');
+    const staticCloseButtons = html.match(/<button class="modal-close"[^>]*>/g);
+
+    assert.equal(staticCloseButtons.length, 3);
+    staticCloseButtons.forEach((button) => {
+        assert.match(button, /type="button"/);
+        assert.match(button, /aria-label="关闭[^"]*"/);
+    });
+    assert.match(
+        ui,
+        /<button class="modal-close" type="button" aria-label="关闭城市详情" onclick="UI\.closeCityDetail\(\)">/
+    );
+});
+
+test('uses titanium pricing, QR placeholder, feedback, and city detail surfaces', () => {
+    const html = read('index-v2.html');
+    const ui = read('js/ui.js');
+
+    assert.equal((html.match(/class="payment-plan pricing-card(?: featured)?"/g) || []).length, 2);
+    assert.match(html, /class="wechat-qr-placeholder"[^>]*role="img"[^>]*aria-label="微信登录二维码区域"/);
+    assert.match(html, /登录二维码将在服务接入后显示/);
+    assert.match(html, /id="toast" class="toast feedback-toast"/);
+    assert.match(ui, /content\.innerHTML = `\s*<div class="modal-header titanium-modal-header">/);
+    assert.ok((ui.match(/class="detail-item surface-raised"/g) || []).length >= 9);
+});
+
+test('modal styles provide touch targets, focus recovery, and narrow-screen containment', () => {
+    const css = read('css/titanium-theme.css');
+    const narrowStart = css.indexOf('@media (max-width: 767px)');
+    const narrowEnd = css.indexOf('@media (max-width: 1024px)');
+    const narrowCss = css.slice(narrowStart, narrowEnd);
+
+    assert.match(css, /\.modal-close \{[\s\S]*?width: 44px;[\s\S]*?height: 44px;/);
+    assert.match(css, /\.login-form input:focus-visible[\s\S]*?outline: 2px solid var\(--titanium-accent\);/);
+    assert.match(css, /\.modal-content[\s\S]*?max-width: calc\(100vw - 24px\)/);
+    assert.match(narrowCss, /\.modal-content \{[\s\S]*?width: calc\(100% - 24px\)[\s\S]*?max-height: calc\(100dvh - 24px\)/);
+    assert.match(narrowCss, /\.payment-plans \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/);
+    assert.match(narrowCss, /\.code-input-group \{[\s\S]*?flex-wrap: wrap/);
+});
+
+test('modal surface specificity overrides legacy dialog radii', () => {
+    const css = read('css/titanium-theme.css');
+
+    assert.match(
+        css,
+        /\.city-detail-modal \.modal-surface,[\s\S]*?\.daily-brief-modal \.modal-surface,[\s\S]*?\.login-modal \.modal-surface,[\s\S]*?\.payment-modal \.modal-surface \{[\s\S]*?border-radius: var\(--titanium-radius-lg\);/
+    );
+});

@@ -1882,8 +1882,8 @@ const UI = (function() {
         if (!modal || !content) return;
 
         content.innerHTML = `
-            <button class="modal-close" onclick="UI.closeCityDetail()">✕</button>
-            <div class="modal-header" style="border-left: 4px solid ${escapeHtml(info.color)}">
+            <div class="modal-header titanium-modal-header">
+                <button class="modal-close" type="button" aria-label="关闭城市详情" onclick="UI.closeCityDetail()">✕</button>
                 <h2>${escapeHtml(city.cityName)}</h2>
                 <div class="modal-meta">
                     <span class="modal-level-badge" style="background: ${escapeHtml(info.color)}">${escapeHtml(info.name)}</span>
@@ -1899,39 +1899,39 @@ const UI = (function() {
                 </div>
 
                 <div class="detail-grid">
-                    <div class="detail-item">
+                    <div class="detail-item surface-raised">
                         <div class="detail-label">ADI 指数</div>
                         <div class="detail-value" style="color: ${escapeHtml(info.color)}">${escapeHtml(city.adiScore.toString())}</div>
                     </div>
-                    <div class="detail-item">
+                    <div class="detail-item surface-raised">
                         <div class="detail-label">白天最高温</div>
                         <div class="detail-value" style="color: #F57C00">${escapeHtml(city.maxTemp.toString())}℃</div>
                     </div>
-                    <div class="detail-item">
+                    <div class="detail-item surface-raised">
                         <div class="detail-label">夜间最低温</div>
                         <div class="detail-value" style="color: ${city.nightMinTemp >= 28 ? '#D0021B' : '#00D4FF'}">${escapeHtml(city.nightMinTemp.toString())}℃</div>
                     </div>
-                    <div class="detail-item">
+                    <div class="detail-item surface-raised">
                         <div class="detail-label">体感温度</div>
                         <div class="detail-value" style="color: ${city.feelsLike >= 38 ? '#D0021B' : '#F5A623'}">${escapeHtml(city.feelsLike.toString())}℃</div>
                     </div>
-                    <div class="detail-item">
+                    <div class="detail-item surface-raised">
                         <div class="detail-label">湿度</div>
                         <div class="detail-value">${escapeHtml(city.humidity.toString())}%</div>
                     </div>
-                    <div class="detail-item">
+                    <div class="detail-item surface-raised">
                         <div class="detail-label">连续热夜</div>
                         <div class="detail-value">${city.continuousHotNightDays > 0 ? '🔥 ' + escapeHtml(city.continuousHotNightDays.toString()) + '天' : '无'}</div>
                     </div>
-                    <div class="detail-item">
+                    <div class="detail-item surface-raised">
                         <div class="detail-label">未来3天最高温</div>
                         <div class="detail-value" style="font-size: 0.85rem">${city.future3DayMaxTemps.map(t => escapeHtml(t.toString()) + '℃').join(' / ')}</div>
                     </div>
-                    <div class="detail-item">
+                    <div class="detail-item surface-raised">
                         <div class="detail-label">未来3晚最低温</div>
                         <div class="detail-value" style="font-size: 0.85rem">${city.future3NightMinTemps.map(t => escapeHtml(t.toString()) + '℃').join(' / ')}</div>
                     </div>
-                    <div class="detail-item">
+                    <div class="detail-item surface-raised">
                         <div class="detail-label">夜间闷热指数</div>
                         <div class="detail-value">${escapeHtml(city.nightMuggyScore.toString())}</div>
                     </div>
