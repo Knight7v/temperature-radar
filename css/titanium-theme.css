@@ -760,6 +760,10 @@ body::before {
         display: none;
     }
 
+    .header-stats {
+        display: none;
+    }
+
     .content-area {
         padding: 10px;
         overflow: visible;

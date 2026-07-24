@@ -548,6 +548,18 @@ test('compact navigation keeps every primary page and analysis submenu reachable
     assert.match(mobileCss, /\.nav-item\s*\{[\s\S]*?\n\s*height:\s*48px;/);
 });
 
+test('hides header metrics inside the mobile breakpoint', () => {
+    const css = read('css/titanium-theme.css');
+    const mobileCss = css.match(
+        /@media \(max-width: 767px\) \{([\s\S]*?)(?=@media \(min-width: 768px\) and \(max-width: 1024px\))/
+    )?.[1] || '';
+
+    assert.match(
+        mobileCss,
+        /\.header-stats\s*\{\s*display:\s*none;\s*\}/
+    );
+});
+
 test('keeps the exact 1024px dashboard in the two-column desktop layout', () => {
     const css = read('css/titanium-theme.css');
     const desktopCompactCss = css.slice(
