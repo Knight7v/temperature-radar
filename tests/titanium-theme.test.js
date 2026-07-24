@@ -78,15 +78,40 @@ test('makes primary and submenu navigation keyboard accessible', () => {
 
 test('provides a compact tablet shell and honors reduced motion', () => {
     const css = read('css/titanium-theme.css');
-    assert.match(css, /@media \(max-width: 1024px\)[\s\S]*?\.sidebar[\s\S]*?\.dashboard-layout[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/);
-    assert.match(css, /@media \(max-width: 1024px\)[\s\S]*?\.nav-item[\s\S]*?min-width: 44px[\s\S]*?min-height: 44px/);
+    const tabletCss = css.slice(
+        css.indexOf('@media (min-width: 768px) and (max-width: 1024px)'),
+        css.indexOf('@media (max-width: 1023px)')
+    );
+    const compactCss = css.slice(
+        css.indexOf('@media (max-width: 1023px)'),
+        css.indexOf('@media (prefers-reduced-motion: reduce)')
+    );
+
+    assert.match(tabletCss, /\.app-container \{[\s\S]*?flex-direction: row/);
+    assert.match(tabletCss, /\.sidebar \{[\s\S]*?width: 78px[\s\S]*?flex-direction: column/);
+    assert.match(tabletCss, /\.nav-item \{[\s\S]*?min-width: 44px[\s\S]*?min-height: 44px/);
+    assert.doesNotMatch(
+        tabletCss,
+        /\.dashboard-layout \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/
+    );
+    assert.match(
+        compactCss,
+        /\.dashboard-layout,[\s\S]*?\.rules-sections \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/
+    );
+    assert.match(
+        compactCss,
+        /\.dashboard-layout \{[\s\S]*?height: auto !important/
+    );
     assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?transition: none !important/);
 });
 
 test('keeps analysis subpages reachable from the compact navigation', () => {
     const html = read('index-v2.html');
     const css = read('css/titanium-theme.css');
-    const compactCss = css.match(/@media \(max-width: 1024px\) \{([\s\S]*?)@media \(prefers-reduced-motion/)[1];
+    const compactCss = css.slice(
+        css.indexOf('@media (min-width: 768px) and (max-width: 1024px)'),
+        css.indexOf('@media (max-width: 1023px)')
+    );
     const subitems = html.match(/<div class="nav-subitem"[^>]*>/g);
 
     assert.equal(subitems.length, 4);
@@ -133,11 +158,12 @@ test('keeps titanium segmented controls at accessible touch-target sizes', () =>
 test('keeps the dashboard hero and map controls reachable on narrow screens', () => {
     const css = read('css/titanium-theme.css');
     const narrowStart = css.indexOf('@media (max-width: 767px)');
-    const narrowEnd = css.indexOf('@media (max-width: 1024px)');
+    const narrowEnd = css.indexOf('@media (min-width: 768px) and (max-width: 1024px)');
     const narrowCss = css.slice(narrowStart, narrowEnd);
 
     assert.ok(narrowStart >= 0 && narrowEnd > narrowStart);
     assert.match(narrowCss, /\.dashboard-hero \{[\s\S]*?flex-direction: column/);
+    assert.match(narrowCss, /\.dashboard-layout \{[\s\S]*?height: auto/);
     assert.match(narrowCss, /\.map-section \.section-header \{[\s\S]*?flex-wrap: wrap/);
     assert.match(narrowCss, /\.view-mode-toggle \{[\s\S]*?flex-wrap: wrap/);
     assert.match(narrowCss, /\.view-mode-btn \{[\s\S]*?flex: 1 1 calc\(50% - 3px\)/);
@@ -159,7 +185,7 @@ test('rain monitor resolves its active dimension and tooltip binder', () => {
 test('wraps data workspace dimensions within narrow viewports', () => {
     const css = read('css/titanium-theme.css');
     const narrowStart = css.indexOf('@media (max-width: 767px)');
-    const narrowEnd = css.indexOf('@media (max-width: 1024px)');
+    const narrowEnd = css.indexOf('@media (min-width: 768px) and (max-width: 1024px)');
     const narrowCss = css.slice(narrowStart, narrowEnd);
 
     assert.ok(narrowStart >= 0 && narrowEnd > narrowStart);
@@ -227,7 +253,7 @@ test('rules number inputs override the legacy focus reset with a titanium ring',
 test('rules sticky actions stay within narrow viewports', () => {
     const css = read('css/titanium-theme.css');
     const narrowStart = css.indexOf('@media (max-width: 767px)');
-    const narrowEnd = css.indexOf('@media (max-width: 1024px)');
+    const narrowEnd = css.indexOf('@media (min-width: 768px) and (max-width: 1024px)');
     const narrowCss = css.slice(narrowStart, narrowEnd);
 
     assert.ok(narrowStart >= 0 && narrowEnd > narrowStart);
@@ -239,7 +265,7 @@ test('rules sticky actions stay within narrow viewports', () => {
 test('rules groups collapse without overflowing narrow viewports', () => {
     const css = read('css/titanium-theme.css');
     const narrowStart = css.indexOf('@media (max-width: 767px)');
-    const narrowEnd = css.indexOf('@media (max-width: 1024px)');
+    const narrowEnd = css.indexOf('@media (min-width: 768px) and (max-width: 1024px)');
     const narrowCss = css.slice(narrowStart, narrowEnd);
 
     assert.match(narrowCss, /\.alert-guide-grid \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
@@ -298,6 +324,21 @@ test('gives every product modal close button an accessible name', () => {
     );
 });
 
+test('gives the dynamically rendered payment QR close button a precise accessible name', () => {
+    const payment = read('js/payment.js');
+    const qrCloseButtons = [
+        ...payment.matchAll(/<button[^>]*class="modal-close"[^>]*>/g)
+    ].map((match) => match[0]);
+
+    assert.equal(qrCloseButtons.length, 1);
+    assert.match(qrCloseButtons[0], /type="button"/);
+    assert.match(qrCloseButtons[0], /aria-label="关闭支付二维码"/);
+    assert.match(
+        qrCloseButtons[0],
+        /onclick="this\.closest\('\.payment-qr-modal'\)\.remove\(\)"/
+    );
+});
+
 test('uses titanium pricing, QR placeholder, feedback, and city detail surfaces', () => {
     const html = read('index-v2.html');
     const ui = read('js/ui.js');
@@ -313,7 +354,7 @@ test('uses titanium pricing, QR placeholder, feedback, and city detail surfaces'
 test('modal styles provide touch targets, focus recovery, and narrow-screen containment', () => {
     const css = read('css/titanium-theme.css');
     const narrowStart = css.indexOf('@media (max-width: 767px)');
-    const narrowEnd = css.indexOf('@media (max-width: 1024px)');
+    const narrowEnd = css.indexOf('@media (min-width: 768px) and (max-width: 1024px)');
     const narrowCss = css.slice(narrowStart, narrowEnd);
 
     assert.match(css, /\.modal-close \{[\s\S]*?width: 44px;[\s\S]*?height: 44px;/);
@@ -464,6 +505,7 @@ test('defines all required responsive breakpoints and reduced motion', () => {
     const css = read('css/titanium-theme.css');
 
     assert.match(css, /@media \(max-width: 1439px\)/);
+    assert.match(css, /@media \(min-width: 768px\) and \(max-width: 1024px\)/);
     assert.match(css, /@media \(max-width: 1023px\)/);
     assert.match(css, /@media \(max-width: 767px\)/);
     assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
@@ -494,7 +536,7 @@ test('compact navigation keeps every primary page and analysis submenu reachable
     const html = read('index-v2.html');
     const css = read('css/titanium-theme.css');
     const mobileCss = css.match(
-        /@media \(max-width: 767px\) \{([\s\S]*?)(?=@media \(prefers-reduced-motion: reduce\))/
+        /@media \(max-width: 767px\) \{([\s\S]*?)(?=@media \(min-width: 768px\) and \(max-width: 1024px\))/
     )?.[1] || '';
 
     ['dashboard', 'analysis', 'report', 'rainMonitor', 'rules'].forEach((page) => {
@@ -502,31 +544,65 @@ test('compact navigation keeps every primary page and analysis submenu reachable
     });
     assert.doesNotMatch(mobileCss, /\.nav-submenu\s*\{[^}]*display:\s*none/);
     assert.match(mobileCss, /\.nav-submenu\.open\s*\{[\s\S]*?visibility:\s*visible/);
-    assert.match(mobileCss, /\.nav-menu\s*\{[\s\S]*?flex-wrap:\s*nowrap/);
+    assert.match(mobileCss, /\.nav-menu\s*\{[\s\S]*?\n\s*height:\s*48px;[\s\S]*?flex-wrap:\s*nowrap/);
+    assert.match(mobileCss, /\.nav-item\s*\{[\s\S]*?\n\s*height:\s*48px;/);
 });
 
-test('keeps the dashboard map first at the exact 1024px boundary', () => {
+test('keeps the exact 1024px dashboard in the two-column desktop layout', () => {
     const css = read('css/titanium-theme.css');
+    const desktopCompactCss = css.slice(
+        css.indexOf('@media (max-width: 1439px)'),
+        css.indexOf('@media (max-width: 767px)')
+    );
     const tabletCss = css.match(
-        /@media \(max-width: 1024px\) \{([\s\S]*?)(?=@media \(max-width: 1023px\))/
+        /@media \(min-width: 768px\) and \(max-width: 1024px\) \{([\s\S]*?)(?=@media \(max-width: 1023px\))/
     )?.[1] || '';
 
-    assert.match(tabletCss, /\.dashboard-map\s*\{[\s\S]*?grid-row:\s*1/);
+    assert.match(
+        desktopCompactCss,
+        /\.dashboard-layout \{[\s\S]*?grid-template-columns: minmax\(220px, 0\.8fr\) minmax\(520px, 1\.8fr\)/
+    );
+    assert.doesNotMatch(tabletCss, /\.dashboard-layout\s*\{/);
+    assert.doesNotMatch(tabletCss, /\.dashboard-map\s*\{[\s\S]*?grid-row:\s*1/);
 });
 
-test('keeps the compact analysis submenu above the page header', () => {
+test('keeps the tablet analysis submenu beside the icon sidebar and above content', () => {
     const css = read('css/titanium-theme.css');
     const tabletCss = css.match(
-        /@media \(max-width: 1024px\) \{([\s\S]*?)(?=@media \(max-width: 1023px\))/
+        /@media \(min-width: 768px\) and \(max-width: 1024px\) \{([\s\S]*?)(?=@media \(max-width: 1023px\))/
     )?.[1] || '';
 
     assert.match(
         tabletCss,
-        /\.sidebar\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*0;[\s\S]*?z-index:\s*100;/
+        /\.sidebar\s*\{[\s\S]*?z-index:\s*100;[\s\S]*?width:\s*78px;/
+    );
+    assert.match(
+        tabletCss,
+        /\.nav-submenu\s*\{[\s\S]*?inset-inline-start:\s*calc\(100% \+ 8px\);/
     );
     assert.match(
         tabletCss,
         /\.nav-submenu\.open\s*\{[\s\S]*?visibility:\s*visible;[\s\S]*?pointer-events:\s*auto;/
+    );
+});
+
+test('keeps long tablet pages reachable through an explicit content scroll container', () => {
+    const css = read('css/titanium-theme.css');
+    const tabletCss = css.match(
+        /@media \(min-width: 768px\) and \(max-width: 1024px\) \{([\s\S]*?)(?=@media \(max-width: 1023px\))/
+    )?.[1] || '';
+
+    assert.match(
+        tabletCss,
+        /\.main-content\s*\{[\s\S]*?height:\s*100vh;[\s\S]*?min-height:\s*0;[\s\S]*?overflow:\s*hidden;/
+    );
+    assert.match(
+        tabletCss,
+        /\.content-area\s*\{[\s\S]*?min-height:\s*0;[\s\S]*?overflow-y:\s*auto;[\s\S]*?overflow-x:\s*hidden;/
+    );
+    assert.doesNotMatch(
+        tabletCss,
+        /\.main-content,\s*\.content-area\s*\{[\s\S]*?overflow:\s*visible;/
     );
 });
 
