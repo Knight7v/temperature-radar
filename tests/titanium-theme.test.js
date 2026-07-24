@@ -119,3 +119,25 @@ test('renders the dashboard hero from current sales intensity', () => {
     assert.match(ui, /dashboardHeroSummary/);
     assert.match(ui, /renderDashboardHero\(\);/);
 });
+
+test('keeps titanium segmented controls at accessible touch-target sizes', () => {
+    const css = read('css/titanium-theme.css');
+    const controls = css.match(/\.view-mode-btn,[\s\S]*?\.dimension-btn \{([\s\S]*?)\n\}/)[1];
+
+    assert.match(controls, /min-width: 44px/);
+    assert.match(controls, /min-height: 44px/);
+    assert.match(controls, /padding: 8px 10px/);
+});
+
+test('keeps the dashboard hero and map controls reachable on narrow screens', () => {
+    const css = read('css/titanium-theme.css');
+    const narrowStart = css.indexOf('@media (max-width: 767px)');
+    const narrowEnd = css.indexOf('@media (max-width: 1024px)');
+    const narrowCss = css.slice(narrowStart, narrowEnd);
+
+    assert.ok(narrowStart >= 0 && narrowEnd > narrowStart);
+    assert.match(narrowCss, /\.dashboard-hero \{[\s\S]*?flex-direction: column/);
+    assert.match(narrowCss, /\.map-section \.section-header \{[\s\S]*?flex-wrap: wrap/);
+    assert.match(narrowCss, /\.view-mode-toggle \{[\s\S]*?flex-wrap: wrap/);
+    assert.match(narrowCss, /\.view-mode-btn \{[\s\S]*?flex: 1 1 calc\(50% - 3px\)/);
+});
