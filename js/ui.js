@@ -454,7 +454,16 @@ const UI = (function() {
     }
 
     function updateMapLegend(mode) {
-        // 图例已移除，此函数保留以避免调用错误
+        const container = document.getElementById('mapLegend');
+        if (!container || !window.MapModule || !window.MapModule.getLegendConfig) return;
+
+        const legend = window.MapModule.getLegendConfig(mode);
+        container.innerHTML = legend.items.map(item => `
+            <div class="legend-item" title="${escapeHtml(item.desc)}">
+                <span class="legend-dot ${escapeHtml(item.class)}"></span>
+                <span>${escapeHtml(item.label)}</span>
+            </div>
+        `).join('');
     }
 
     function renderMap() {
@@ -1991,6 +2000,6 @@ const UI = (function() {
         selectCity, closeCityDetail, showCityDetail, saveRules, resetRules, updateWeightTotal,
         showToast, state, renderTodayConclusion, renderRegionRanking, renderLongestHotNight,
         openDailyBriefModal, closeDailyBriefModal, copyDailyBrief,
-        renderReportTemperature, renderReportFeelsLike, renderReportADI
+        renderReportTemperature, renderReportFeelsLike, renderReportADI, updateMapLegend
     };
 })();

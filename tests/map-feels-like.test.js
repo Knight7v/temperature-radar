@@ -5,6 +5,8 @@ const vm = require('node:vm');
 
 const mapPath = path.join(__dirname, '..', 'js', 'map.js');
 const source = fs.readFileSync(mapPath, 'utf8');
+const uiPath = path.join(__dirname, '..', 'js', 'ui.js');
+const uiSource = fs.readFileSync(uiPath, 'utf8');
 let option;
 
 const mapContainer = {
@@ -48,16 +50,34 @@ vm.runInNewContext(source, context, { filename: mapPath });
 
 const { MapModule } = context.window;
 
+assert.equal(MapModule.getFeelsLikeColor(19), '#00D4FF');
+assert.equal(MapModule.getFeelsLikeColor(20), '#00D4FF');
 assert.equal(MapModule.getFeelsLikeColor(26), '#4A90E2');
-assert.match(MapModule.getFeelsLikeColor(27), /^#F[0-9A-F]{5}$/);
-assert.notEqual(MapModule.getFeelsLikeColor(27), MapModule.getFeelsLikeColor(35));
-assert.match(MapModule.getFeelsLikeColor(36), /^#F[0-9A-F]{5}$/);
-assert.notEqual(MapModule.getFeelsLikeColor(36), MapModule.getFeelsLikeColor(40));
-assert.match(MapModule.getFeelsLikeColor(41), /^#[CD][0-9A-F]{5}$/);
-assert.equal(MapModule.getFeelsLikeColor(46), MapModule.getFeelsLikeColor(45));
+assert.equal(MapModule.getFeelsLikeColor(27), '#FFE082');
+assert.equal(MapModule.getFeelsLikeColor(35), '#F5A623');
+assert.equal(MapModule.getFeelsLikeColor(36), '#FFB15C');
+assert.equal(MapModule.getFeelsLikeColor(40), '#F57C00');
+assert.equal(MapModule.getFeelsLikeColor(41), '#D0021B');
+assert.equal(MapModule.getFeelsLikeColor(45), '#8B0012');
+assert.equal(MapModule.getFeelsLikeColor(46), '#8B0012');
 
 const legend = MapModule.getLegendConfig('feelsLike');
 assert.deepEqual(Array.from(legend.items, item => item.label), ['≥41℃', '36-40℃', '27-35℃', '≤26℃']);
+
+const mapLegend = { innerHTML: '' };
+const uiContext = {
+    console,
+    document: { getElementById: (id) => id === 'mapLegend' ? mapLegend : null },
+    window: { MapModule },
+    MapModule,
+    Core: {}
+};
+vm.runInNewContext(`${uiSource}\nthis.__UI__ = UI;`, uiContext, { filename: uiPath });
+uiContext.__UI__.updateMapLegend('feelsLike');
+assert.match(mapLegend.innerHTML, /≥41℃/);
+assert.match(mapLegend.innerHTML, /36-40℃/);
+assert.match(mapLegend.innerHTML, /27-35℃/);
+assert.match(mapLegend.innerHTML, /≤26℃/);
 
 (async () => {
     await MapModule.init();
@@ -69,6 +89,7 @@ assert.deepEqual(Array.from(legend.items, item => item.label), ['≥41℃', '36-
 
     assert.equal(option.visualMap.min, 20);
     assert.equal(option.visualMap.max, 45);
+    assert.deepEqual(Array.from(option.visualMap.inRange.color), Array.from({ length: 26 }, (_, index) => MapModule.getFeelsLikeColor(20 + index)));
     assert.equal(option.series[0].symbolSize([0, 0, 45]), 20);
     assert.equal(option.series[0].data[0].itemStyle.color, MapModule.getFeelsLikeColor(41));
     assert.match(option.tooltip.formatter({ data: option.series[0].data[0] }), /体感温度/);
