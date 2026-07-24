@@ -831,3 +831,29 @@ body::before {
         transition: none !important;
     }
 }
+
+#china-map {
+    border-radius: calc(var(--titanium-radius-md) - 1px);
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 68% 68%, rgba(255, 69, 58, 0.10), transparent 18%),
+        radial-gradient(circle at 62% 42%, rgba(255, 159, 10, 0.08), transparent 20%),
+        #111113;
+}
+
+.titanium-map-tooltip {
+    min-width: 220px;
+    color: var(--titanium-text);
+    background: rgba(35, 35, 38, 0.94);
+    border-top: 1px solid var(--titanium-border-strong);
+    border-right: 1px solid var(--titanium-border-strong);
+    border-bottom: 1px solid var(--titanium-border-strong);
+    border-radius: var(--titanium-radius-sm);
+    box-shadow: var(--titanium-shadow);
+    backdrop-filter: var(--titanium-blur);
+}
+
+.titanium-map-tooltip .tooltip-reason,
+.titanium-map-tooltip .tooltip-mode-badge {
+    color: var(--titanium-text-secondary);
+}

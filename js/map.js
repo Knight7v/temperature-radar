@@ -9,6 +9,15 @@
     let mapChart = null;
     let chinaJson = null;
 
+    const TITANIUM_MAP_THEME = {
+        area: '#242426',
+        areaEmphasis: '#343438',
+        border: 'rgba(255, 255, 255, 0.16)',
+        shadow: 'rgba(0, 0, 0, 0.35)',
+        text: '#f5f5f7',
+        textSecondary: '#a1a1a6'
+    };
+
     const COLORS = {
         outbreak: '#D0021B',
         action: '#F57C00',
@@ -332,7 +341,7 @@
 
                     if (!levelInfo) {
                         console.warn('未找到 level 信息:', city.level, '城市:', city.cityName);
-                        return `<div class="map-tooltip" style="border-left: 3px solid #666; padding: 8px;"><strong>${city.cityName}</strong><br/>数据加载中</div>`;
+                        return `<div class="map-tooltip titanium-map-tooltip titanium-map-tooltip-loading"><strong>${city.cityName}</strong><br/>数据加载中</div>`;
                     }
 
                     const nightFeels = Math.round(city.nightMinTemp + (city.humidity - 50) * 0.08);
@@ -361,7 +370,7 @@
                     const legendConfig = getLegendConfig(viewMode);
 
                     return `
-                        <div class="map-tooltip" style="border-left: 3px solid ${levelInfo.color}">
+                        <div class="map-tooltip titanium-map-tooltip" style="border-left: 3px solid ${levelInfo.color}">
                             <div class="tooltip-header">
                                 <strong>${city.cityName}</strong>
                                 <span class="tooltip-badge" style="background: ${levelInfo.color}">${levelInfo.name}</span>
@@ -393,8 +402,18 @@
             geo: {
                 map: 'china', roam: true,
                 layoutCenter: ['50%', '45%'], layoutSize: '90%',
-                itemStyle: { areaColor: '#141b3d', borderColor: '#2a3558' },
-                emphasis: { itemStyle: { areaColor: '#1a2347' } },
+                itemStyle: {
+                    areaColor: TITANIUM_MAP_THEME.area,
+                    borderColor: TITANIUM_MAP_THEME.border,
+                    borderWidth: 0.8,
+                    shadowColor: TITANIUM_MAP_THEME.shadow,
+                    shadowBlur: 8
+                },
+                emphasis: {
+                    itemStyle: {
+                        areaColor: TITANIUM_MAP_THEME.areaEmphasis
+                    }
+                },
                 label: { show: false },
                 regions: [{ name: '南海诸岛', itemStyle: { opacity: 0 } }]
             },

@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
@@ -330,4 +331,131 @@ test('modal surface specificity overrides legacy dialog radii', () => {
         css,
         /\.city-detail-modal \.modal-surface,[\s\S]*?\.daily-brief-modal \.modal-surface,[\s\S]*?\.login-modal \.modal-surface,[\s\S]*?\.payment-modal \.modal-surface \{[\s\S]*?border-radius: var\(--titanium-radius-lg\);/
     );
+});
+
+test('map module defines and uses the titanium map theme', () => {
+    const map = read('js/map.js');
+    assert.match(map, /const TITANIUM_MAP_THEME = \{/);
+    assert.match(map, /areaColor: TITANIUM_MAP_THEME\.area/);
+    assert.match(map, /borderColor: TITANIUM_MAP_THEME\.border/);
+    assert.match(map, /class="map-tooltip titanium-map-tooltip"/);
+
+    const tooltipRoots = [...map.matchAll(/<div class="(map-tooltip[^"]*)"/g)]
+        .map((match) => match[1])
+        .sort();
+    assert.deepEqual(tooltipRoots, [
+        'map-tooltip titanium-map-tooltip',
+        'map-tooltip titanium-map-tooltip titanium-map-tooltip-loading'
+    ].sort());
+});
+
+test('titanium stylesheet presents the map and tooltip as restrained dark surfaces', () => {
+    const html = read('index-v2.html');
+    const css = read('css/titanium-theme.css');
+    const criticalMapStyle = html.match(/#china-map\s*\{([^}]*)\}/)[1];
+
+    assert.doesNotMatch(criticalMapStyle, /background\s*:/);
+    assert.match(
+        css,
+        /#china-map \{[\s\S]*?border-radius: calc\(var\(--titanium-radius-md\) - 1px\);[\s\S]*?overflow: hidden;[\s\S]*?#111113;/
+    );
+    assert.match(
+        css,
+        /\.titanium-map-tooltip \{[\s\S]*?background: rgba\(35, 35, 38, 0\.94\);[\s\S]*?border-radius: var\(--titanium-radius-sm\);[\s\S]*?backdrop-filter: var\(--titanium-blur\);/
+    );
+    assert.match(
+        css,
+        /\.titanium-map-tooltip \.tooltip-reason,[\s\S]*?\.titanium-map-tooltip \.tooltip-mode-badge \{[\s\S]*?color: var\(--titanium-text-secondary\);/
+    );
+});
+
+test('map tooltip formatter covers every view mode and the loading branch', async () => {
+    let option;
+    let clickHandler;
+    let selectedCity;
+    const mapContainer = {
+        clientWidth: 640,
+        clientHeight: 500,
+        parentElement: { clientWidth: 640 },
+        style: {},
+        querySelector: () => null
+    };
+    const mapViewDesc = { textContent: '' };
+    const chart = {
+        resize() {},
+        setOption(value) { option = value; },
+        off() {},
+        on(event, handler) {
+            if (event === 'click') clickHandler = handler;
+        }
+    };
+    const UI = {
+        state: { cityData: [], mapViewMode: 'adi' },
+        selectCity(name) { selectedCity = name; }
+    };
+    const context = vm.createContext({
+        console: { log() {}, warn() {}, error() {} },
+        document: {
+            getElementById(id) {
+                if (id === 'china-map') return mapContainer;
+                if (id === 'mapViewDesc') return mapViewDesc;
+                return null;
+            }
+        },
+        echarts: {
+            registerMap() {},
+            init: () => chart
+        },
+        Core: {
+            getLevelInfo: () => ({ name: '热', color: '#ff9f0a' })
+        },
+        UI,
+        window: {
+            CHINA_GEO_DATA: { type: 'FeatureCollection', features: [] },
+            UI,
+            innerWidth: 1440,
+            addEventListener() {}
+        }
+    });
+
+    vm.runInContext(read('js/map.js'), context);
+    await context.window.MapModule.init();
+
+    const city = {
+        cityName: '测试城市',
+        lng: 121.47,
+        lat: 31.23,
+        level: 'action',
+        adiScore: 83,
+        nightMinTemp: 27,
+        feelsLike: 38,
+        maxTemp: 36,
+        humidity: 70,
+        continuousHotNightDays: 0,
+        triggeredRules: ['测试规则']
+    };
+    const expectations = {
+        adi: 'ADI: 83',
+        nightTemp: '夜间最低温: 27℃',
+        feelsLike: '体感温度: 38℃',
+        dayMax: '白天最高温: 36℃'
+    };
+
+    Object.entries(expectations).forEach(([mode, expectedText]) => {
+        context.window.MapModule.render([city], mode);
+        const tooltip = option.tooltip.formatter({ data: { cityData: city } });
+        const tooltipText = tooltip.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        assert.match(tooltip, /class="map-tooltip titanium-map-tooltip"/);
+        assert.match(tooltipText, new RegExp(expectedText));
+    });
+
+    context.Core.getLevelInfo = () => null;
+    const loadingTooltip = option.tooltip.formatter({ data: { cityData: city } });
+    assert.match(
+        loadingTooltip,
+        /class="map-tooltip titanium-map-tooltip titanium-map-tooltip-loading"/
+    );
+
+    clickHandler({ componentType: 'series', data: { name: city.cityName } });
+    assert.equal(selectedCity, city.cityName);
 });
