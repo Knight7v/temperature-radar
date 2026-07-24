@@ -447,8 +447,13 @@
                         <div class="rules-sections" id="rulesSections"></div>
 
                         <div class="settings-actions">
-                            <button class="btn btn-secondary" onclick="UI.resetRules()">恢复默认设置</button>
-                            <button class="btn btn-primary" onclick="UI.saveRules()">保存配置</button>
+                            <div class="rules-save-status" id="rulesSaveStatus" data-status="saved" role="status">
+                                已保存
+                            </div>
+                            <div class="settings-action-buttons">
+                                <button class="btn btn-secondary" type="button" onclick="UI.resetRules()">恢复默认设置</button>
+                                <button class="btn btn-primary" type="button" onclick="UI.saveRules()">保存配置</button>
+                            </div>
                         </div>
                     </div>
                 </div>

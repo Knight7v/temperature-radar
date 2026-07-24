@@ -357,6 +357,73 @@ body::before {
     backdrop-filter: var(--titanium-blur);
 }
 
+.alert-guide,
+.rules-section {
+    background: var(--titanium-surface);
+    border: 1px solid var(--titanium-border);
+    border-radius: var(--titanium-radius-md);
+}
+
+.alert-guide-grid {
+    gap: 8px;
+}
+
+.guide-card {
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid var(--titanium-border);
+    border-left-width: 3px;
+    border-radius: var(--titanium-radius-sm);
+}
+
+.rule-field input[type="number"] {
+    min-height: 44px;
+    color: var(--titanium-text);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--titanium-border);
+    border-radius: var(--titanium-radius-sm);
+}
+
+.settings-actions {
+    position: sticky;
+    bottom: 12px;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(28, 28, 30, 0.90);
+    border: 1px solid var(--titanium-border-strong);
+    border-radius: var(--titanium-radius-md);
+    box-shadow: var(--titanium-shadow);
+    backdrop-filter: var(--titanium-blur);
+}
+
+.rules-save-status {
+    min-width: 0;
+    color: var(--titanium-success);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.rules-save-status[data-status="dirty"] {
+    color: var(--titanium-warning);
+}
+
+.settings-action-buttons {
+    display: flex;
+    min-width: 0;
+    gap: 10px;
+}
+
+.settings-action-buttons .btn {
+    min-width: 44px;
+    min-height: 44px;
+}
+
 @media (max-width: 767px) {
     .dashboard-hero {
         align-items: flex-start;
@@ -385,6 +452,41 @@ body::before {
         width: 100%;
         max-width: 100%;
         flex-wrap: wrap;
+    }
+
+    .alert-guide-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rules-sections {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rules-section,
+    .rule-item-left {
+        min-width: 0;
+    }
+
+    .rule-field label {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .settings-actions {
+        align-items: stretch;
+        flex-direction: column;
+        bottom: 8px;
+    }
+
+    .settings-action-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .settings-action-buttons .btn {
+        min-width: 0;
+        white-space: normal;
     }
 }
 

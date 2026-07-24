@@ -181,3 +181,58 @@ test('clamps tooltip position using its rendered width and viewport margins', ()
     assert.match(ui, /const maxLeft = Math\.max\(12, window\.innerWidth - tooltipWidth - 12\);/);
     assert.match(ui, /Math\.max\(12, Math\.min\(rect\.left, maxLeft\)\)/);
 });
+
+test('rules page exposes saved and dirty visual status', () => {
+    const html = read('index-v2.html');
+    const ui = read('js/ui.js');
+    assert.match(html, /id="rulesSaveStatus"/);
+    assert.match(ui, /function setRulesStatus\(status\)/);
+    assert.match(ui, /setRulesStatus\('dirty'\)/);
+    assert.match(ui, /setRulesStatus\('saved'\)/);
+});
+
+test('rules render binds dirty feedback only to the newly rendered inputs', () => {
+    const ui = read('js/ui.js');
+    const binding = "input.addEventListener('input', () => setRulesStatus('dirty'))";
+
+    assert.equal(ui.split(binding).length - 1, 1);
+    assert.match(
+        ui,
+        /container\.innerHTML = `[\s\S]*?container\.querySelectorAll\('input'\)\.forEach\(\(input\) => \{[\s\S]*?setRulesStatus\('saved'\);/
+    );
+});
+
+test('rules action buttons meet touch-target and focus requirements', () => {
+    const html = read('index-v2.html');
+    const css = read('css/titanium-theme.css');
+    const actions = html.match(/<div class="settings-actions">([\s\S]*?)<\/div>\s*<\/div>/)[1];
+    const buttons = actions.match(/<button[^>]*>/g);
+
+    assert.equal(buttons.length, 2);
+    buttons.forEach((button) => assert.match(button, /type="button"/));
+    assert.match(css, /\.settings-action-buttons \.btn \{[\s\S]*?min-width: 44px[\s\S]*?min-height: 44px/);
+    assert.match(css, /:where\(button, input, select, textarea, \[tabindex\]\):focus-visible/);
+});
+
+test('rules sticky actions stay within narrow viewports', () => {
+    const css = read('css/titanium-theme.css');
+    const narrowStart = css.indexOf('@media (max-width: 767px)');
+    const narrowEnd = css.indexOf('@media (max-width: 1024px)');
+    const narrowCss = css.slice(narrowStart, narrowEnd);
+
+    assert.ok(narrowStart >= 0 && narrowEnd > narrowStart);
+    assert.match(narrowCss, /\.settings-actions \{[\s\S]*?flex-direction: column/);
+    assert.match(narrowCss, /\.settings-action-buttons \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+    assert.match(narrowCss, /\.settings-action-buttons \.btn \{[\s\S]*?min-width: 0/);
+});
+
+test('rules groups collapse without overflowing narrow viewports', () => {
+    const css = read('css/titanium-theme.css');
+    const narrowStart = css.indexOf('@media (max-width: 767px)');
+    const narrowEnd = css.indexOf('@media (max-width: 1024px)');
+    const narrowCss = css.slice(narrowStart, narrowEnd);
+
+    assert.match(narrowCss, /\.alert-guide-grid \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+    assert.match(narrowCss, /\.rules-sections \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/);
+    assert.match(narrowCss, /\.rule-field label \{[\s\S]*?flex-wrap: wrap/);
+});

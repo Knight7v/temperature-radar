@@ -1732,6 +1732,13 @@ const UI = (function() {
 
     // ==================== 规则设置页 ====================
 
+    function setRulesStatus(status) {
+        const target = document.getElementById('rulesSaveStatus');
+        if (!target) return;
+        target.dataset.status = status;
+        target.textContent = status === 'dirty' ? '存在未保存修改' : '已保存';
+    }
+
     function renderRules() {
         const container = document.getElementById('rulesSections');
         if (!container) return;
@@ -1824,6 +1831,11 @@ const UI = (function() {
                 </div>
             </div>
         `;
+
+        container.querySelectorAll('input').forEach((input) => {
+            input.addEventListener('input', () => setRulesStatus('dirty'));
+        });
+        setRulesStatus('saved');
     }
 
     function updateWeightTotal() {
@@ -1839,10 +1851,17 @@ const UI = (function() {
         }
     }
 
-    function saveRules() { showToast('规则配置已保存'); }
+    function saveRules() {
+        setRulesStatus('saved');
+        showToast('规则配置已保存');
+    }
 
     function resetRules() {
-        if (confirm('确定要恢复默认设置吗？')) { renderRules(); showToast('已恢复默认设置'); }
+        if (confirm('确定要恢复默认设置吗？')) {
+            renderRules();
+            setRulesStatus('dirty');
+            showToast('已恢复默认设置');
+        }
     }
 
     // ==================== 城市详情弹窗 ====================
@@ -2059,6 +2078,7 @@ const UI = (function() {
     return {
         init, renderDashboard, renderAnalysis, renderReport, renderHistory, renderRules,
         selectCity, closeCityDetail, showCityDetail, saveRules, resetRules, updateWeightTotal,
+        setRulesStatus,
         showToast, state, renderTodayConclusion, renderRegionRanking, renderLongestHotNight,
         openDailyBriefModal, closeDailyBriefModal, copyDailyBrief,
         renderReportTemperature, renderReportFeelsLike, renderReportADI
