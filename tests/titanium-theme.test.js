@@ -214,6 +214,15 @@ test('rules action buttons meet touch-target and focus requirements', () => {
     assert.match(css, /:where\(button, input, select, textarea, \[tabindex\]\):focus-visible/);
 });
 
+test('rules number inputs override the legacy focus reset with a titanium ring', () => {
+    const css = read('css/titanium-theme.css');
+
+    assert.match(
+        css,
+        /\.rule-field input\[type="number"\]:focus-visible \{[\s\S]*?outline: 2px solid var\(--titanium-accent\);[\s\S]*?outline-offset: 3px;/
+    );
+});
+
 test('rules sticky actions stay within narrow viewports', () => {
     const css = read('css/titanium-theme.css');
     const narrowStart = css.indexOf('@media (max-width: 767px)');
