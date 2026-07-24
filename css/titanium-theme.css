@@ -293,7 +293,8 @@ body::before {
 
 .filter-chip,
 .filter-btn {
-    min-height: 36px;
+    min-width: 44px;
+    min-height: 44px;
     color: var(--titanium-text-secondary);
     background: transparent;
     border: 1px solid transparent;
@@ -378,6 +379,12 @@ body::before {
 
     .view-mode-btn {
         flex: 1 1 calc(50% - 3px);
+    }
+
+    .data-toolbar .segmented-control {
+        width: 100%;
+        max-width: 100%;
+        flex-wrap: wrap;
     }
 }
 

@@ -1477,7 +1477,9 @@ const UI = (function() {
 
             const tooltip = showDayTooltip(city, dayData, dayIndex);
             const rect = cell.getBoundingClientRect();
-            tooltip.style.left = `${Math.min(rect.left, window.innerWidth - 340)}px`;
+            const tooltipWidth = tooltip.getBoundingClientRect().width;
+            const maxLeft = Math.max(12, window.innerWidth - tooltipWidth - 12);
+            tooltip.style.left = `${Math.max(12, Math.min(rect.left, maxLeft))}px`;
             tooltip.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 320)}px`;
             tooltip.classList.add('show');
         });

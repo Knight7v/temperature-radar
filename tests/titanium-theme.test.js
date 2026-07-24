@@ -154,3 +154,30 @@ test('rain monitor resolves its active dimension and tooltip binder', () => {
     assert.match(ui, /#rainMonitor \.dimension-btn\.active/);
     assert.match(ui, /function bindTooltipEvents\(container\)/);
 });
+
+test('wraps data workspace dimensions within narrow viewports', () => {
+    const css = read('css/titanium-theme.css');
+    const narrowStart = css.indexOf('@media (max-width: 767px)');
+    const narrowEnd = css.indexOf('@media (max-width: 1024px)');
+    const narrowCss = css.slice(narrowStart, narrowEnd);
+
+    assert.ok(narrowStart >= 0 && narrowEnd > narrowStart);
+    assert.match(narrowCss, /\.data-toolbar \.segmented-control \{[\s\S]*?max-width: 100%[\s\S]*?flex-wrap: wrap/);
+});
+
+test('keeps filter chips at accessible touch-target sizes', () => {
+    const css = read('css/titanium-theme.css');
+    const filters = css.match(/\.filter-chip,\s*\.filter-btn \{([\s\S]*?)\n\}/)[1];
+
+    assert.match(filters, /min-width: 44px/);
+    assert.match(filters, /min-height: 44px/);
+});
+
+test('clamps tooltip position using its rendered width and viewport margins', () => {
+    const ui = read('js/ui.js');
+
+    assert.doesNotMatch(ui, /window\.innerWidth - 340/);
+    assert.match(ui, /const tooltipWidth = tooltip\.getBoundingClientRect\(\)\.width;/);
+    assert.match(ui, /const maxLeft = Math\.max\(12, window\.innerWidth - tooltipWidth - 12\);/);
+    assert.match(ui, /Math\.max\(12, Math\.min\(rect\.left, maxLeft\)\)/);
+});
