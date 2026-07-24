@@ -8,6 +8,7 @@ const source = fs.readFileSync(mapPath, 'utf8');
 const uiPath = path.join(__dirname, '..', 'js', 'ui.js');
 const uiSource = fs.readFileSync(uiPath, 'utf8');
 const pageSource = fs.readFileSync(path.join(__dirname, '..', 'index-v2.html'), 'utf8');
+const stylesheetSource = fs.readFileSync(path.join(__dirname, '..', 'css', 'styles-v2.css'), 'utf8');
 let option;
 
 const mapContainer = {
@@ -65,7 +66,12 @@ assert.equal(MapModule.getFeelsLikeColor(46), '#8B0012');
 const legend = MapModule.getLegendConfig('feelsLike');
 assert.deepEqual(Array.from(legend.items, item => item.label), ['≥41℃', '36-40℃', '27-35℃', '≤26℃']);
 
-assert.match(pageSource, /<div class="map-legend" id="mapLegend"/);
+assert.match(pageSource, /<div\s+id="mapLegend"\s+class="map-legend"\s+hidden(?:\s|>)/);
+const baseLegendRule = stylesheetSource.indexOf('.map-legend {');
+const hiddenLegendRule = stylesheetSource.indexOf('.map-legend[hidden] {');
+assert.ok(baseLegendRule >= 0);
+assert.ok(hiddenLegendRule > baseLegendRule);
+assert.match(stylesheetSource.slice(hiddenLegendRule), /\.map-legend\[hidden\]\s*\{\s*display:\s*none;/);
 
 const mapLegend = { innerHTML: '', hidden: true };
 const uiContext = {

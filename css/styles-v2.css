@@ -433,6 +433,10 @@ body {
     margin-bottom: 12px;
 }
 
+.map-legend[hidden] {
+    display: none;
+}
+
 .legend-item {
     display: flex;
     align-items: center;
