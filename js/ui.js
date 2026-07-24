@@ -685,7 +685,7 @@ const UI = (function() {
         const cities = Core.getTopNightMuggy(state.cityData, 50);
 
         container.innerHTML = `
-            <div class="subpage-table-wrapper">
+            <div class="subpage-table-wrapper data-table-shell">
                 <table class="subpage-table">
                     <thead>
                         <tr>
@@ -730,7 +730,7 @@ const UI = (function() {
             .sort((a, b) => b.maxAdi3 - a.maxAdi3);
 
         container.innerHTML = `
-            <div class="subpage-table-wrapper">
+            <div class="subpage-table-wrapper data-table-shell">
                 <table class="subpage-table">
                     <thead>
                         <tr>
@@ -785,7 +785,7 @@ const UI = (function() {
             .sort((a, b) => (b.adiChange + (b.futureMax7 - b.maxTemp) * 0.5) - (a.adiChange + (a.futureMax7 - a.maxTemp) * 0.5));
 
         container.innerHTML = `
-            <div class="subpage-table-wrapper">
+            <div class="subpage-table-wrapper data-table-shell">
                 <table class="subpage-table">
                     <thead>
                         <tr>
@@ -968,7 +968,7 @@ const UI = (function() {
                             </div>
                         </div>
 
-                        <div class="citygroup-table-wrapper">
+                        <div class="citygroup-table-wrapper data-table-shell">
                             <table class="citygroup-table">
                                 <thead>
                                     <tr>
@@ -1463,6 +1463,33 @@ const UI = (function() {
 
     // ==================== 降水监控页 ====================
 
+    function bindTooltipEvents(container) {
+        if (!container || container.dataset.tooltipBound === 'true') return;
+        container.dataset.tooltipBound = 'true';
+
+        container.addEventListener('mouseover', (event) => {
+            const cell = event.target.closest('td[data-city][data-day]');
+            if (!cell || !container.contains(cell)) return;
+            const city = state.cityData.find((item) => item.cityName === cell.dataset.city);
+            const dayIndex = Number(cell.dataset.day);
+            const dayData = city?.future7Days?.[dayIndex];
+            if (!city || !dayData) return;
+
+            const tooltip = showDayTooltip(city, dayData, dayIndex);
+            const rect = cell.getBoundingClientRect();
+            tooltip.style.left = `${Math.min(rect.left, window.innerWidth - 340)}px`;
+            tooltip.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 320)}px`;
+            tooltip.classList.add('show');
+        });
+
+        container.addEventListener('mouseout', (event) => {
+            const cell = event.target.closest('td[data-city][data-day]');
+            if (!cell || !container.contains(cell)) return;
+            if (cell.contains(event.relatedTarget)) return;
+            hideDayTooltip();
+        });
+    }
+
     function renderRainMonitorPage() {
         const thead = document.getElementById('rainForecastTableHead');
         const tbody = document.getElementById('rainForecastTableBody');
@@ -1486,7 +1513,7 @@ const UI = (function() {
         cities.sort((a, b) => a.cityName.localeCompare(b.cityName, 'zh-CN'));
 
         // Route to dimension-specific renderer
-        const currentDimension = document.querySelector('#rainMonitorPage .dimension-btn.active')?.dataset.dimension || 'rainInsurance';
+        const currentDimension = document.querySelector('#rainMonitor .dimension-btn.active')?.dataset.dimension || 'rainInsurance';
         switch (currentDimension) {
             case 'rainInsurance':
                 renderReportRainInsurance(cities, thead, tbody);

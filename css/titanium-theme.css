@@ -260,6 +260,102 @@ body::before {
     box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
 }
 
+.data-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding: 12px;
+}
+
+.data-toolbar-search {
+    flex: 1 1 240px;
+    min-width: 220px;
+    margin: 0;
+}
+
+.data-toolbar input {
+    min-height: 44px;
+    color: var(--titanium-text);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--titanium-border);
+    border-radius: var(--titanium-radius-sm);
+}
+
+.filter-bar {
+    gap: 6px;
+    margin: 0;
+}
+
+.filter-chip,
+.filter-btn {
+    min-height: 36px;
+    color: var(--titanium-text-secondary);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+}
+
+.filter-chip:hover,
+.filter-btn:hover {
+    color: var(--titanium-text);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--titanium-border);
+}
+
+.filter-chip.active,
+.filter-btn.active {
+    color: var(--titanium-text);
+    background: rgba(94, 141, 255, 0.18);
+    border-color: rgba(94, 141, 255, 0.42);
+}
+
+.data-table-shell,
+.forecast-table-wrapper,
+.subpage-table-wrapper,
+.citygroup-table-wrapper {
+    background: rgba(20, 20, 22, 0.68);
+    border: 1px solid var(--titanium-border);
+    border-radius: var(--titanium-radius-md);
+    box-shadow: var(--titanium-shadow);
+}
+
+.forecast-table thead th,
+.subpage-table thead th,
+.citygroup-table thead th {
+    background: rgba(28, 28, 30, 0.92);
+    color: var(--titanium-text-secondary);
+    border-color: var(--titanium-border);
+    backdrop-filter: blur(18px);
+}
+
+.forecast-table tbody td,
+.subpage-table tbody td,
+.citygroup-table tbody td {
+    color: var(--titanium-text);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+.forecast-table tbody tr:hover,
+.subpage-table tbody tr:hover,
+.citygroup-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.forecast-tooltip {
+    width: min(320px, calc(100vw - 24px));
+    color: var(--titanium-text);
+    background: rgba(35, 35, 38, 0.92);
+    border: 1px solid var(--titanium-border-strong);
+    border-radius: var(--titanium-radius-md);
+    box-shadow: var(--titanium-shadow);
+    backdrop-filter: var(--titanium-blur);
+}
+
 @media (max-width: 767px) {
     .dashboard-hero {
         align-items: flex-start;

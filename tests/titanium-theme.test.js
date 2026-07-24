@@ -141,3 +141,16 @@ test('keeps the dashboard hero and map controls reachable on narrow screens', ()
     assert.match(narrowCss, /\.view-mode-toggle \{[\s\S]*?flex-wrap: wrap/);
     assert.match(narrowCss, /\.view-mode-btn \{[\s\S]*?flex: 1 1 calc\(50% - 3px\)/);
 });
+
+test('uses shared data workspace classes on report and rain pages', () => {
+    const html = read('index-v2.html');
+    assert.ok((html.match(/class="[^"]*data-toolbar[^"]*"/g) || []).length >= 2);
+    assert.ok((html.match(/class="[^"]*data-table-shell[^"]*"/g) || []).length >= 2);
+});
+
+test('rain monitor resolves its active dimension and tooltip binder', () => {
+    const ui = read('js/ui.js');
+    assert.doesNotMatch(ui, /#rainMonitorPage/);
+    assert.match(ui, /#rainMonitor \.dimension-btn\.active/);
+    assert.match(ui, /function bindTooltipEvents\(container\)/);
+});
