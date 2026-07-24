@@ -103,3 +103,19 @@ test('updates the header date from the shared current-time integration', () => {
     assert.match(ui, /const headerDate = document\.getElementById\('headerDate'\);/);
     assert.match(ui, /headerDate\.textContent = now\.toLocaleDateString\('zh-CN', \{[\s\S]*?weekday: 'long'/);
 });
+
+test('defines the dashboard hero and preserves dynamic dashboard targets', () => {
+    const html = read('index-v2.html');
+    ['dashboardHeroTitle', 'dashboardHeroSummary', 'todayConclusion', 'regionRanking',
+        'longestHotNight', 'china-map', 'topCitiesContainer', 'generateBriefBtn']
+        .forEach((id) => assert.match(html, new RegExp(`id="${id}"`)));
+    assert.match(html, /class="dashboard-hero"/);
+});
+
+test('renders the dashboard hero from current sales intensity', () => {
+    const ui = read('js/ui.js');
+    assert.match(ui, /function renderDashboardHero\(\)/);
+    assert.match(ui, /dashboardHeroTitle/);
+    assert.match(ui, /dashboardHeroSummary/);
+    assert.match(ui, /renderDashboardHero\(\);/);
+});

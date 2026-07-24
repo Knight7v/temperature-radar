@@ -303,8 +303,31 @@ const UI = (function() {
 
     // ==================== 今日热销页 ====================
 
+    function renderDashboardHero() {
+        const title = document.getElementById('dashboardHeroTitle');
+        const summary = document.getElementById('dashboardHeroSummary');
+        if (!title || !summary || state.cityData.length === 0) return;
+
+        const intensity = Core.calculateSalesIntensity(state.cityData);
+        const regionStats = Core.calculateRegionStats(state.cityData);
+        const regions = Object.entries(regionStats)
+            .sort((a, b) => {
+                const scoreA = a[1].explosiveCount * 2 + a[1].actionCount;
+                const scoreB = b[1].explosiveCount * 2 + b[1].actionCount;
+                return scoreB - scoreA;
+            })
+            .slice(0, 3)
+            .map(([name]) => name);
+
+        title.textContent = `今天，机会${intensity === '中' ? '正在增强' : intensity + '。'}`;
+        summary.textContent = regions.length
+            ? `${regions.join('、')}出现当前最集中的销售信号`
+            : '当前未发现明显集中的区域销售信号';
+    }
+
     function renderDashboard(cityData) {
         state.cityData = cityData;
+        renderDashboardHero();
         updateHeaderStats();
         renderTodayConclusion();
         renderRegionRanking();

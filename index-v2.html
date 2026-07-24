@@ -17,9 +17,6 @@
             background: #0a0e27 !important;
         }
         .dashboard-layout {
-            display: grid !important;
-            grid-template-columns: 260px 1fr 260px !important;
-            gap: 1.5rem !important;
             height: calc(100vh - 120px) !important;
             width: 100% !important;
         }
@@ -187,9 +184,20 @@
             <div class="content-area">
                 <!-- 今日热销 Page -->
                 <div class="page active" id="dashboard">
+                    <section class="dashboard-hero" aria-labelledby="dashboardHeroTitle">
+                        <div>
+                            <p class="dashboard-eyebrow">全国实时销售机会</p>
+                            <h2 id="dashboardHeroTitle">正在分析今日机会…</h2>
+                            <p id="dashboardHeroSummary">正在汇总重点区域与城市信号</p>
+                        </div>
+                        <div class="dashboard-live-status">
+                            <span class="status-dot" aria-hidden="true"></span>
+                            实时天气数据
+                        </div>
+                    </section>
                     <div class="dashboard-layout">
                         <!-- Left: 今日摘要 -->
-                        <aside class="left-sidebar">
+                        <aside class="left-sidebar dashboard-insights">
                             <!-- 今日判断结论 -->
                             <div class="sidebar-card" id="todayConclusion">
                                 <div class="card-header">今日判断结论</div>
@@ -216,7 +224,7 @@
                         </aside>
 
                         <!-- Center: 地图核心 -->
-                        <div class="main-area">
+                        <div class="main-area dashboard-map">
                             <div class="map-section">
                                 <div class="section-header">
                                     <span class="section-title">全国空调销售机会热力图</span>
@@ -235,7 +243,7 @@
                         </div>
 
                         <!-- Right: TOP榜单 -->
-                        <aside class="right-sidebar">
+                        <aside class="right-sidebar dashboard-ranking">
                             <div class="top-cities-section">
                                 <div class="section-header">
                                     <div class="top-tabs" id="topTabs">
