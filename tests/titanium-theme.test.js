@@ -59,21 +59,18 @@ test('preserves navigation and header integration IDs', () => {
 
 test('makes primary and submenu navigation keyboard accessible', () => {
     const html = read('index-v2.html');
-    const ui = read('js/ui.js');
     const nav = html.match(/<nav class="nav-menu">([\s\S]*?)<\/nav>/)[1];
-    const controls = nav.match(/<div class="nav-(?:item|subitem)[^"]*"[^>]*>/g);
+    const controls = nav.match(/<button[^>]*class="nav-(?:item|subitem)[^"]*"[^>]*>/g);
 
     assert.equal(controls.length, 10);
     controls.forEach((control) => {
-        assert.match(control, /role="button"/);
-        assert.match(control, /tabindex="0"/);
+        assert.match(control, /type="button"/);
     });
-    nav.match(/<div class="nav-item[^"]*"[^>]*>/g).forEach((control) => {
+    nav.match(/<button[^>]*class="nav-item[^"]*"[^>]*>/g).forEach((control) => {
         assert.match(control, /aria-label="[^"]+"/);
     });
-    assert.match(ui, /event\.key === 'Enter' \|\| event\.key === ' '/);
-    assert.match(ui, /event\.preventDefault\(\);/);
-    assert.match(ui, /item\.click\(\);/);
+    const subitems = nav.match(/<button[^>]*class="nav-subitem"[^>]*>/g);
+    subitems.forEach((control) => assert.match(control, /tabindex="-1"/));
 });
 
 test('provides a compact tablet shell and honors reduced motion', () => {
@@ -112,12 +109,12 @@ test('keeps analysis subpages reachable from the compact navigation', () => {
         css.indexOf('@media (min-width: 768px) and (max-width: 1024px)'),
         css.indexOf('@media (max-width: 1023px)')
     );
-    const subitems = html.match(/<div class="nav-subitem"[^>]*>/g);
+    const subitems = html.match(/<button[^>]*class="nav-subitem"[^>]*>/g);
 
     assert.equal(subitems.length, 4);
     subitems.forEach((subitem) => {
-        assert.match(subitem, /role="button"/);
-        assert.match(subitem, /tabindex="0"/);
+        assert.match(subitem, /type="button"/);
+        assert.match(subitem, /tabindex="-1"/);
     });
     assert.doesNotMatch(compactCss, /\.nav-submenu\s*\{[^}]*display:\s*none/);
     assert.match(compactCss, /\.nav-submenu\.open\s*\{[\s\S]*?visibility:\s*visible[\s\S]*?pointer-events:\s*auto/);
@@ -128,11 +125,10 @@ test('closes analysis navigation before activating another primary page', () => 
     const ui = read('js/ui.js');
 
     assert.match(ui, /if \(page !== 'analysis'\) \{/);
-    assert.match(ui, /analysisNavItem\?\.classList\.remove\('expanded'\);/);
-    assert.match(ui, /analysisSubmenu\?\.classList\.remove\('open'\);/);
+    assert.match(ui, /setAnalysisMenuExpanded\(false\);/);
     assert.match(
         ui,
-        /analysisSubmenu\?\.querySelectorAll\('\.nav-subitem'\)\.forEach\(subitem => \{[\s\S]*?subitem\.classList\.remove\('active'\);/
+        /document\.getElementById\('analysisSubmenu'\)\?\.querySelectorAll\('\.nav-subitem'\)\.forEach\(subitem => \{[\s\S]*?subitem\.classList\.remove\('active'\);/
     );
 });
 
@@ -153,6 +149,7 @@ test('analysis navigation stays open and listener counts stay stable across roun
     };
     const createElement = ({ id, classes = [], dataset = {} } = {}) => {
         const listeners = new Map();
+        const attributes = new Map();
         const element = {
             id,
             dataset,
@@ -160,6 +157,17 @@ test('analysis navigation stays open and listener counts stay stable across roun
             style: {},
             textContent: '',
             innerHTML: '',
+            hidden: false,
+            tabIndex: 0,
+            setAttribute(name, value) {
+                attributes.set(name, String(value));
+            },
+            getAttribute(name) {
+                return attributes.has(name) ? attributes.get(name) : null;
+            },
+            removeAttribute(name) {
+                attributes.delete(name);
+            },
             addEventListener(type, listener) {
                 if (!listeners.has(type)) listeners.set(type, []);
                 listeners.get(type).push(listener);
@@ -272,7 +280,10 @@ test('analysis navigation stays open and listener counts stay stable across roun
 
     analysisNav.click();
     assert.equal(analysisNav.classList.contains('expanded'), true);
+    assert.equal(analysisNav.getAttribute('aria-expanded'), 'true');
     assert.equal(submenu.classList.contains('open'), true);
+    assert.equal(submenu.hidden, false);
+    assert.equal(nightSubitem.tabIndex, 0);
     assert.equal(nightSubitem.classList.contains('active'), true);
     const initialListenerCounts = {
         analysis: analysisNav.listenerCount('click'),
@@ -283,6 +294,8 @@ test('analysis navigation stays open and listener counts stay stable across roun
     for (let roundTrip = 0; roundTrip < 3; roundTrip += 1) {
         reportNav.click();
         assert.equal(submenu.classList.contains('open'), false);
+        assert.equal(submenu.hidden, true);
+        assert.equal(nightSubitem.tabIndex, -1);
         assert.equal(subitems.some((subitem) => subitem.classList.contains('active')), false);
 
         analysisNav.click();

@@ -16,7 +16,6 @@
             min-height: 500px !important;
         }
         .dashboard-layout {
-            height: calc(100vh - 120px) !important;
             width: 100% !important;
         }
         .main-area {
@@ -34,8 +33,8 @@
         }
     </style>
     <script src="assets/echarts.min.js"></script>
-    <link rel="stylesheet" href="css/styles-v2.css?v=3">
-    <link rel="stylesheet" href="css/titanium-theme.css?v=1">
+    <link rel="stylesheet" href="css/styles-v2.css?v=4">
+    <link rel="stylesheet" href="css/titanium-theme.css?v=4">
 </head>
 <body>
     <svg class="svg-sprite" aria-hidden="true">
@@ -57,6 +56,22 @@
         </symbol>
         <symbol id="icon-chevron" viewBox="0 0 24 24">
             <path d="m8 10 4 4 4-4"/>
+        </symbol>
+        <symbol id="icon-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="6"/>
+            <path d="m16 16 4 4"/>
+        </symbol>
+        <symbol id="icon-document" viewBox="0 0 24 24">
+            <path d="M6 3h8l4 4v14H6V3Zm8 0v5h5M9 12h6M9 16h6"/>
+        </symbol>
+        <symbol id="icon-insight" viewBox="0 0 24 24">
+            <path d="M9 18h6m-5 3h4m3-8a7 7 0 1 0-10 0c1.3 1 2 2.1 2 3h6c0-.9.7-2 2-3Z"/>
+        </symbol>
+        <symbol id="icon-moon" viewBox="0 0 24 24">
+            <path d="M20 15.5A8 8 0 0 1 8.5 4 8 8 0 1 0 20 15.5Z"/>
+        </symbol>
+        <symbol id="icon-alert" viewBox="0 0 24 24">
+            <path d="M12 3 2.8 20h18.4L12 3Zm0 6v5m0 3v.1"/>
         </symbol>
     </svg>
     <!-- Loading Screen -->
@@ -93,37 +108,38 @@
             </div>
 
             <nav class="nav-menu">
-                <div class="nav-item active" data-page="dashboard" role="button" tabindex="0" aria-label="销售总览">
+                <button type="button" class="nav-item active" data-page="dashboard" aria-label="销售总览">
                     <svg class="nav-icon" aria-hidden="true"><use href="#icon-dashboard"></use></svg>
                     <span class="nav-text">销售总览</span>
-                </div>
-                <div class="nav-item" data-page="analysis" role="button" tabindex="0" aria-label="热销分析">
+                </button>
+                <button type="button" class="nav-item" data-page="analysis" aria-label="热销分析"
+                    aria-controls="analysisSubmenu" aria-expanded="false">
                     <svg class="nav-icon" aria-hidden="true"><use href="#icon-analysis"></use></svg>
                     <span class="nav-text">热销分析</span>
                     <svg class="nav-expand" aria-hidden="true"><use href="#icon-chevron"></use></svg>
+                </button>
+                <div class="nav-submenu" id="analysisSubmenu" hidden inert aria-hidden="true">
+                    <button type="button" class="nav-subitem" data-subpage="nightMuggy" tabindex="-1">夜间闷热排行榜</button>
+                    <button type="button" class="nav-subitem" data-subpage="future3Day" tabindex="-1">未来3天热销榜</button>
+                    <button type="button" class="nav-subitem" data-subpage="future7Day" tabindex="-1">未来7天升温榜</button>
+                    <button type="button" class="nav-subitem" data-subpage="cityGroupMonitor" tabindex="-1">重点城市群监控</button>
                 </div>
-                <div class="nav-submenu" id="analysisSubmenu">
-                    <div class="nav-subitem" data-subpage="nightMuggy" role="button" tabindex="0">夜间闷热排行榜</div>
-                    <div class="nav-subitem" data-subpage="future3Day" role="button" tabindex="0">未来3天热销榜</div>
-                    <div class="nav-subitem" data-subpage="future7Day" role="button" tabindex="0">未来7天升温榜</div>
-                    <div class="nav-subitem" data-subpage="cityGroupMonitor" role="button" tabindex="0">重点城市群监控</div>
-                </div>
-                <div class="nav-item" data-page="report" role="button" tabindex="0" aria-label="7天预测">
+                <button type="button" class="nav-item" data-page="report" aria-label="7天预测">
                     <svg class="nav-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>
                     <span class="nav-text">7天预测</span>
-                </div>
-                <div class="nav-item" data-page="rainMonitor" role="button" tabindex="0" aria-label="降水监控">
+                </button>
+                <button type="button" class="nav-item" data-page="rainMonitor" aria-label="降水监控">
                     <svg class="nav-icon" aria-hidden="true"><use href="#icon-rain"></use></svg>
                     <span class="nav-text">降水监控</span>
-                </div>
-                <div class="nav-item" data-page="history" style="display: none;" role="button" tabindex="0" aria-label="历史记录">
+                </button>
+                <button type="button" class="nav-item" data-page="history" style="display: none;" aria-label="历史记录">
                     <svg class="nav-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>
                     <span class="nav-text">历史记录</span>
-                </div>
-                <div class="nav-item" data-page="rules" role="button" tabindex="0" aria-label="规则设置">
+                </button>
+                <button type="button" class="nav-item" data-page="rules" aria-label="规则设置">
                     <svg class="nav-icon" aria-hidden="true"><use href="#icon-settings"></use></svg>
                     <span class="nav-text">规则设置</span>
-                </div>
+                </button>
             </nav>
 
             <div class="sidebar-footer">
@@ -145,7 +161,7 @@
                 <div class="header-center">
                     <!-- 测试模式指示器 -->
                     <div id="testModeIndicator" style="display: none;" class="test-mode-badge">
-                        🧪 测试模式
+                        测试模式
                     </div>
                 </div>
                 <div class="header-right">
@@ -253,7 +269,8 @@
                                 </div>
                                 <div class="top-cities-list" id="topCitiesContainer"></div>
                                 <button class="btn-generate-brief" id="generateBriefBtn">
-                                    📄 生成今日简报
+                                    <svg class="inline-icon" aria-hidden="true"><use href="#icon-document"></use></svg>
+                                    生成今日简报
                                 </button>
                             </div>
                         </aside>
@@ -282,7 +299,7 @@
                         </div>
                         <div class="data-toolbar glass-panel">
                             <div class="search-box data-toolbar-search">
-                                <span class="search-icon">🔍</span>
+                                <span class="search-icon" aria-hidden="true"><svg class="inline-icon"><use href="#icon-search"></use></svg></span>
                                 <input type="text" id="reportSearchInput" placeholder="搜索城市名称..." />
                                 <button class="clear-search-btn" id="clearSearchBtn" type="button"
                                     aria-label="清除城市搜索" style="display: none;">✕</button>
@@ -332,7 +349,7 @@
                         </div>
                         <div class="data-toolbar glass-panel">
                             <div class="search-box data-toolbar-search">
-                                <span class="search-icon">🔍</span>
+                                <span class="search-icon" aria-hidden="true"><svg class="inline-icon"><use href="#icon-search"></use></svg></span>
                                 <input type="text" id="rainSearchInput" placeholder="搜索城市名称..." />
                                 <button class="clear-search-btn" id="clearRainSearchBtn" type="button"
                                     aria-label="清除降水城市搜索" style="display: none;">✕</button>
@@ -600,8 +617,8 @@
     <script src="js/rain-monitor.js"></script>
     <script src="js/core.js"></script>
     <script src="js/china-geo.js"></script>
-    <script src="js/map.js"></script>
-    <script src="js/ui.js"></script>
+    <script src="js/map.js?v=3"></script>
+    <script src="js/ui.js?v=2"></script>
     <script src="js/auth.js"></script>
     <script src="js/payment.js"></script>
     <script src="js/ads.js"></script>

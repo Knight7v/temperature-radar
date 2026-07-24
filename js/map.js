@@ -19,7 +19,7 @@
     };
 
     const COLORS = {
-        outbreak: '#D0021B',
+        outbreak: '#FF453A',
         action: '#F57C00',
         opportunity: '#F5A623',
         observe: '#4A90E2',
@@ -212,7 +212,7 @@
         if (el) {
             el.innerHTML = `
                 <div class="map-error">
-                    <div class="error-icon">⚠️</div>
+                    <div class="error-icon"><svg class="inline-icon" aria-hidden="true" focusable="false"><use href="#icon-alert"></use></svg></div>
                     <div class="error-message">地图数据加载失败<br><small>${error.message}</small></div>
                     <button class="error-retry" onclick="location.reload()">重新加载</button>
                 </div>
@@ -349,9 +349,9 @@
                     const getValueColor = (value, mode) => {
                         switch (mode) {
                             case 'adi': return levelInfo.color;
-                            case 'nightTemp': return value >= 28 ? '#D0021B' : value >= 26 ? '#F57C00' : value >= 24 ? '#F5A623' : '#00D4FF';
-                            case 'feelsLike': return value >= 40 ? '#D0021B' : value >= 37 ? '#F57C00' : value >= 34 ? '#F5A623' : '#00D4FF';
-                            case 'dayMax': return value >= 37 ? '#D0021B' : value >= 35 ? '#F57C00' : value >= 33 ? '#F5A623' : '#4A90E2';
+                            case 'nightTemp': return value >= 28 ? '#FF453A' : value >= 26 ? '#F57C00' : value >= 24 ? '#F5A623' : '#00D4FF';
+                            case 'feelsLike': return value >= 40 ? '#FF453A' : value >= 37 ? '#F57C00' : value >= 34 ? '#F5A623' : '#00D4FF';
+                            case 'dayMax': return value >= 37 ? '#FF453A' : value >= 35 ? '#F57C00' : value >= 33 ? '#F5A623' : '#4A90E2';
                             default: return '#fff';
                         }
                     };
@@ -385,11 +385,11 @@
                                     <div style="font-size: 0.9em; opacity: 0.8">ADI: <span style="color: ${levelInfo.color}">${city.adiScore} [${levelInfo.name}]</span></div>
                                 </div>` : `
                                 <div>白天最高温: <span style="color: ${getColorForTemp(city.maxTemp)}">${city.maxTemp}℃</span></div>
-                                <div>夜间最低温: <span style="color: ${city.nightMinTemp >= 28 ? '#D0021B' : '#00D4FF'}">${city.nightMinTemp}℃</span></div>
+                                <div>夜间最低温: <span style="color: ${city.nightMinTemp >= 28 ? '#FF453A' : '#00D4FF'}">${city.nightMinTemp}℃</span></div>
                                 <div>体感温度: <span style="color: ${getColorForTemp(city.feelsLike)}">${city.feelsLike}℃</span></div>
                                 `}
                                 <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.9em; opacity: 0.8">
-                                    湿度: ${city.humidity}% ${city.continuousHotNightDays > 0 ? `<span style="color: #D0021B; margin-left: 8px">🌙 连续热夜 ${city.continuousHotNightDays}天</span>` : ''}
+                                    湿度: ${city.humidity}% ${city.continuousHotNightDays > 0 ? `<span style="color: #FF453A; margin-left: 8px"><svg class="inline-icon" aria-hidden="true" focusable="false"><use href="#icon-moon"></use></svg> 连续热夜 ${city.continuousHotNightDays}天</span>` : ''}
                                 </div>
                             </div>
                             ${city.triggeredRules && city.triggeredRules.length > 0 ? `
@@ -424,8 +424,8 @@
                 calculable: true,
                 inRange: {
                     color: viewMode === 'adi'
-                        ? ['#333355', '#4A90E2', '#F5A623', '#F57C00', '#D0021B']
-                        : ['#00D4FF', '#4A90E2', '#F5A623', '#F57C00', '#D0021B']
+                        ? ['#333355', '#4A90E2', '#F5A623', '#F57C00', '#FF453A']
+                        : ['#00D4FF', '#4A90E2', '#F5A623', '#F57C00', '#FF453A']
                 },
                 textStyle: { color: '#8b9dc3' },
                 splitList: getSplitListForMode(viewMode)
@@ -476,7 +476,7 @@
                 item.itemStyle = {
                     shadowBlur: 30,
                     shadowColor: 'rgba(255, 53, 94, 0.9)',
-                    borderColor: '#D0021B',
+                    borderColor: '#FF453A',
                     borderWidth: 2
                 };
                 item.symbolSize = 25;
@@ -494,7 +494,7 @@
     }
 
     function getColorForTemp(temp) {
-        if (temp >= 42) return '#D0021B';
+        if (temp >= 42) return '#FF453A';
         if (temp >= 38) return '#F57C00';
         if (temp >= 32) return '#F5A623';
         if (temp >= 28) return '#4A90E2';

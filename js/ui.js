@@ -48,6 +48,10 @@ const UI = (function() {
         };
     }
 
+    function iconMarkup(symbolId, className = 'inline-icon') {
+        return `<svg class="${className}" aria-hidden="true" focusable="false"><use href="#${symbolId}"></use></svg>`;
+    }
+
     function showDayTooltip(city, dayData, dayIndex) {
         let tooltip = document.getElementById('forecastTooltip');
         if (!tooltip) {
@@ -66,10 +70,10 @@ const UI = (function() {
         tooltip.innerHTML = `
             <div class="forecast-tooltip-header">${escapeHtml(city.cityName)} - ${escapeHtml(dateStr)}</div>
             <div class="forecast-tooltip-body">
-                <div class="forecast-tooltip-row"><span>白天最高温:</span><span style="color: ${dayData.dayMax >= 35 ? '#D0021B' : '#F5A623'}">${dayData.dayMax}℃</span></div>
-                <div class="forecast-tooltip-row"><span>夜间最低温:</span><span style="color: ${dayData.nightMin >= 28 ? '#D0021B' : '#00D4FF'}">${dayData.nightMin}℃</span></div>
-                <div class="forecast-tooltip-row"><span>最高体感:</span><span style="color: ${dayData.dayFeelsLike >= 38 ? '#D0021B' : '#F5A623'}">${dayData.dayFeelsLike}℃</span></div>
-                <div class="forecast-tooltip-row"><span>最低体感:</span><span style="color: ${dayData.nightFeelsLike >= 30 ? '#D0021B' : '#00D4FF'}">${dayData.nightFeelsLike}℃</span></div>
+                <div class="forecast-tooltip-row"><span>白天最高温:</span><span style="color: ${dayData.dayMax >= 35 ? '#FF453A' : '#F5A623'}">${dayData.dayMax}℃</span></div>
+                <div class="forecast-tooltip-row"><span>夜间最低温:</span><span style="color: ${dayData.nightMin >= 28 ? '#FF453A' : '#00D4FF'}">${dayData.nightMin}℃</span></div>
+                <div class="forecast-tooltip-row"><span>最高体感:</span><span style="color: ${dayData.dayFeelsLike >= 38 ? '#FF453A' : '#F5A623'}">${dayData.dayFeelsLike}℃</span></div>
+                <div class="forecast-tooltip-row"><span>最低体感:</span><span style="color: ${dayData.nightFeelsLike >= 30 ? '#FF453A' : '#00D4FF'}">${dayData.nightFeelsLike}℃</span></div>
                 <div class="forecast-tooltip-row"><span>湿度:</span><span>${dayData.humidity}%</span></div>
                 <div class="forecast-tooltip-row"><span>天气:</span><span>${escapeHtml(dayData.weatherText || '无明显降水')}</span></div>
                 <div class="forecast-tooltip-row"><span>降水量:</span><span>${escapeHtml(String(dayData.precip || 0))}mm</span></div>
@@ -78,7 +82,7 @@ const UI = (function() {
                 <div class="forecast-tooltip-row"><span>湿热机会:</span><span>${escapeHtml(dayData.postRainMuggyLabel || '无明显机会')} ${escapeHtml(String(dayData.postRainMuggyScore || 0))}分</span></div>
                 <div class="forecast-tooltip-row"><span>湿热原因:</span><span style="font-size: 0.7rem;">${escapeHtml(dayData.postRainMuggyReason || '雨后湿热信号不足')}</span></div>
                 <div class="forecast-tooltip-row"><span>ADI:</span><span style="color: ${levelInfo.color}; font-weight: 600;">${dayData.adiScore} [${levelInfo.name}]</span></div>
-                ${dayData.isHotNight ? '<div class="forecast-tooltip-row" style="color: #D0021B;">🌙 热夜</div>' : ''}
+                ${dayData.isHotNight ? `<div class="forecast-tooltip-row hot-night-label">${iconMarkup('icon-moon')}<span>热夜</span></div>` : ''}
             </div>
         `;
         return tooltip;
@@ -103,12 +107,31 @@ const UI = (function() {
         setInterval(updateCurrentTime, 1000);
     }
 
+    function setAnalysisMenuExpanded(expanded) {
+        const analysisNavItem = document.querySelector('.nav-item[data-page="analysis"]');
+        const analysisSubmenu = document.getElementById('analysisSubmenu');
+        if (!analysisNavItem || !analysisSubmenu) return;
+
+        analysisNavItem.classList.toggle('expanded', expanded);
+        analysisNavItem.setAttribute('aria-expanded', String(expanded));
+        analysisSubmenu.classList.toggle('open', expanded);
+        analysisSubmenu.hidden = !expanded;
+        analysisSubmenu.setAttribute('aria-hidden', String(!expanded));
+        if (expanded) {
+            analysisSubmenu.removeAttribute('inert');
+        } else {
+            analysisSubmenu.setAttribute('inert', '');
+        }
+        analysisSubmenu.querySelectorAll('.nav-subitem').forEach(subitem => {
+            subitem.tabIndex = expanded ? 0 : -1;
+        });
+    }
+
     function initPageNavigation() {
         const navItems = document.querySelectorAll('.nav-item');
         const pages = document.querySelectorAll('.page');
         const pageTitle = document.getElementById('pageTitle');
         const analysisNavItem = document.querySelector('.nav-item[data-page="analysis"]');
-        const analysisSubmenu = document.getElementById('analysisSubmenu');
 
         const pageTitles = {
             dashboard: '今日热销',
@@ -119,21 +142,15 @@ const UI = (function() {
             rules: '规则设置'
         };
 
-        document.querySelectorAll('.nav-item, .nav-subitem').forEach(item => {
-            item.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    item.click();
-                }
-            });
-        });
+        setAnalysisMenuExpanded(false);
 
         navItems.forEach(item => {
             item.addEventListener('click', () => {
                 const page = item.dataset.page;
                 if (page === 'analysis' && item.classList.contains('active')) {
-                    analysisNavItem?.classList.toggle('expanded');
-                    analysisSubmenu?.classList.toggle('open');
+                    setAnalysisMenuExpanded(
+                        analysisNavItem?.getAttribute('aria-expanded') !== 'true'
+                    );
                     return;
                 }
 
@@ -145,9 +162,8 @@ const UI = (function() {
                 state.currentPage = page;
 
                 if (page !== 'analysis') {
-                    analysisNavItem?.classList.remove('expanded');
-                    analysisSubmenu?.classList.remove('open');
-                    analysisSubmenu?.querySelectorAll('.nav-subitem').forEach(subitem => {
+                    setAnalysisMenuExpanded(false);
+                    document.getElementById('analysisSubmenu')?.querySelectorAll('.nav-subitem').forEach(subitem => {
                         subitem.classList.remove('active');
                     });
                 }
@@ -328,6 +344,7 @@ const UI = (function() {
         const intensity = Core.calculateSalesIntensity(state.cityData);
         const regionStats = Core.calculateRegionStats(state.cityData);
         const regions = Object.entries(regionStats)
+            .filter(([, stats]) => stats.explosiveCount > 0 || stats.actionCount > 0)
             .sort((a, b) => {
                 const scoreA = a[1].explosiveCount * 2 + a[1].actionCount;
                 const scoreB = b[1].explosiveCount * 2 + b[1].actionCount;
@@ -452,7 +469,7 @@ const UI = (function() {
                           (b[1].explosiveCount * 2 + b[1].actionCount) - (a[1].explosiveCount * 2 + a[1].actionCount));
 
         const levelColors = {
-            '强': '#D0021B',
+            '强': '#FF453A',
             '偏强': '#F57C00',
             '中高': '#F5A623',
             '中': '#4A90E2',
@@ -611,7 +628,7 @@ const UI = (function() {
                         <div class="top-city-name">${escapeHtml(city.cityName)}</div>
                         <div class="top-city-meta">今日ADI ${escapeHtml(city.adiScore.toString())}→${escapeHtml(city.futureAdi3.toString())} (${escapeHtml(adiChg.toString())}) ｜ 最高温${escapeHtml(city.maxTemp.toString())}→${escapeHtml(city.futureMax3.toString())}℃ (${escapeHtml(maxChg)}) ｜ 夜间${escapeHtml(city.nightMinTemp.toString())}→${escapeHtml(city.futureNight3.toString())}℃ (${escapeHtml(nightChg)})</div>
                     </div>
-                    <span class="top-city-adi-badge" style="color: ${city.adiChange > 0 ? '#D0021B' : '#00D4FF'}">${escapeHtml(adiChg.toString())}</span>
+                    <span class="top-city-adi-badge" style="color: ${city.adiChange > 0 ? '#FF453A' : '#00D4FF'}">${escapeHtml(adiChg.toString())}</span>
                 </div>
             `;
         }).join('');
@@ -622,10 +639,8 @@ const UI = (function() {
     function renderAnalysis() {
         if (state.cityData.length === 0) return;
 
-        const analysisNavItem = document.querySelector('.nav-item[data-page="analysis"]');
         const analysisSubmenu = document.getElementById('analysisSubmenu');
-        analysisNavItem?.classList.add('expanded');
-        analysisSubmenu?.classList.add('open');
+        setAnalysisMenuExpanded(true);
         analysisSubmenu?.querySelectorAll('.nav-subitem').forEach(item => {
             item.classList.remove('active');
         });
@@ -717,11 +732,11 @@ const UI = (function() {
                                     <td style="color: ${i < 3 ? ['#ffd700', '#c0c0c0', '#cd7f32'][i] : 'inherit'}; font-weight: 600;">${i + 1}</td>
                                     <td style="color: var(--text-secondary); font-size: 0.85rem;">${city.province}</td>
                                     <td style="font-weight: 500;">${city.cityName}</td>
-                                    <td style="color: ${city.nightMinTemp >= 28 ? '#D0021B' : '#00D4FF'};">${city.nightMinTemp}℃</td>
+                                    <td style="color: ${city.nightMinTemp >= 28 ? '#FF453A' : '#00D4FF'};">${city.nightMinTemp}℃</td>
                                     <td>${nightFeels}℃</td>
                                     <td>${city.humidity}%</td>
                                     <td>${city.continuousHotNightDays > 0 ? city.continuousHotNightDays + '天' : '-'}</td>
-                                    <td style="font-family: 'Orbitron', sans-serif; font-weight: 600; color: ${info.color};">${city.adiScore}</td>
+                                    <td class="tabular-number" style="font-weight: 600; color: ${info.color};">${city.adiScore}</td>
                                     <td><span style="background: ${info.color}; color: #fff; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${info.name}</span></td>
                                 </tr>
                             `;
@@ -766,7 +781,7 @@ const UI = (function() {
                                     <td style="color: ${i < 3 ? ['#ffd700', '#c0c0c0', '#cd7f32'][i] : 'inherit'}; font-weight: 600;">${i + 1}</td>
                                     <td style="color: var(--text-secondary); font-size: 0.85rem;">${city.province}</td>
                                     <td style="font-weight: 500;">${city.cityName}</td>
-                                    <td style="font-family: 'Orbitron', sans-serif; font-weight: 600; color: ${info.color}; font-size: 1rem;">${city.maxAdi3}</td>
+                                    <td class="tabular-number" style="font-weight: 600; color: ${info.color}; font-size: 1rem;">${city.maxAdi3}</td>
                                     <td>${city.adiScore}</td>
                                     <td><span style="background: ${info.color}; color: #fff; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${info.name}</span></td>
                                     <td>${city.future3DayMaxTemps.join('℃ / ')}℃</td>
@@ -816,12 +831,12 @@ const UI = (function() {
                                     <td style="color: ${i < 3 ? ['#ffd700', '#c0c0c0', '#cd7f32'][i] : 'inherit'}; font-weight: 600;">${i + 1}</td>
                                     <td style="color: var(--text-secondary); font-size: 0.85rem;">${city.province}</td>
                                     <td style="font-weight: 500;">${city.cityName}</td>
-                                    <td style="font-family: 'Orbitron', sans-serif; font-weight: 600;">${city.adiScore}</td>
-                                    <td style="font-family: 'Orbitron', sans-serif; font-weight: 600; color: #D0021B;">${city.maxAdi7}</td>
-                                    <td style="font-family: 'Orbitron', sans-serif; font-weight: 600; color: ${city.adiChange > 0 ? '#D0021B' : '#00D4FF'};">${city.adiChange > 0 ? '+' : ''}${city.adiChange}</td>
+                                    <td class="tabular-number" style="font-weight: 600;">${city.adiScore}</td>
+                                    <td class="tabular-number" style="font-weight: 600; color: #FF453A;">${city.maxAdi7}</td>
+                                    <td class="tabular-number" style="font-weight: 600; color: ${city.adiChange > 0 ? '#FF453A' : '#00D4FF'};">${city.adiChange > 0 ? '+' : ''}${city.adiChange}</td>
                                     <td>${city.maxTemp}℃</td>
-                                    <td style="color: ${city.futureMax7 >= 35 ? '#D0021B' : '#F5A623'};">${city.futureMax7}℃</td>
-                                    <td style="color: ${tempChange > 0 ? '#D0021B' : '#4A90E2'};">${tempChange > 0 ? '+' : ''}${tempChange}℃</td>
+                                    <td style="color: ${city.futureMax7 >= 35 ? '#FF453A' : '#F5A623'};">${city.futureMax7}℃</td>
+                                    <td style="color: ${tempChange > 0 ? '#FF453A' : '#4A90E2'};">${tempChange > 0 ? '+' : ''}${tempChange}℃</td>
                                 </tr>
                             `;
                         }).join('')}
@@ -860,6 +875,16 @@ const UI = (function() {
 
                 return order === 'desc' ? valB - valA : valA - valB;
             });
+        }
+
+        function getAriaSort(field) {
+            if (currentSortField !== field) return 'none';
+            return currentSortOrder === 'desc' ? 'descending' : 'ascending';
+        }
+
+        function getSortIndicator(field) {
+            if (currentSortField !== field) return '↕';
+            return currentSortOrder === 'desc' ? '↓' : '↑';
         }
 
         function render() {
@@ -906,24 +931,24 @@ const UI = (function() {
             container.innerHTML = `
                 <div class="citygroup-monitor">
                     <div class="citygroup-left-panel">
-                        <div class="citygroup-tabs">
-                            <div class="citygroup-tab ${currentGroup === 'eastChina' ? 'active' : ''}" data-group="eastChina">
+                        <div class="citygroup-tabs" role="tablist" aria-label="重点城市群">
+                            <button type="button" class="citygroup-tab ${currentGroup === 'eastChina' ? 'active' : ''}" role="tab" aria-selected="${currentGroup === 'eastChina'}" data-group="eastChina">
                                 华东
-                            </div>
-                            <div class="citygroup-tab ${currentGroup === 'centralChina' ? 'active' : ''}" data-group="centralChina">
+                            </button>
+                            <button type="button" class="citygroup-tab ${currentGroup === 'centralChina' ? 'active' : ''}" role="tab" aria-selected="${currentGroup === 'centralChina'}" data-group="centralChina">
                                 华中
-                            </div>
-                            <div class="citygroup-tab ${currentGroup === 'southChina' ? 'active' : ''}" data-group="southChina">
+                            </button>
+                            <button type="button" class="citygroup-tab ${currentGroup === 'southChina' ? 'active' : ''}" role="tab" aria-selected="${currentGroup === 'southChina'}" data-group="southChina">
                                 华南
-                            </div>
-                            <div class="citygroup-tab ${currentGroup === 'southwestChina' ? 'active' : ''}" data-group="southwestChina">
+                            </button>
+                            <button type="button" class="citygroup-tab ${currentGroup === 'southwestChina' ? 'active' : ''}" role="tab" aria-selected="${currentGroup === 'southwestChina'}" data-group="southwestChina">
                                 西南
-                            </div>
+                            </button>
                         </div>
 
                         <div class="citygroup-conclusions">
                             <div class="conclusion-header">
-                                <span class="conclusion-icon">📋</span>
+                                <span class="conclusion-icon">${iconMarkup('icon-document')}</span>
                                 <span class="conclusion-title">参考结论</span>
                             </div>
                             <div class="conclusion-content">
@@ -940,7 +965,7 @@ const UI = (function() {
                                 </div>
                                 ${stats.avgFeelsLike >= 38 ? `
                                 <div class="conclusion-detail warning">
-                                    <span class="detail-label">⚠️ 高温：</span>
+                                    <span class="detail-label">${iconMarkup('icon-alert')}高温：</span>
                                     <span class="detail-value">平均体感${stats.avgFeelsLike}℃</span>
                                 </div>
                                 ` : ''}
@@ -980,16 +1005,16 @@ const UI = (function() {
                             <table class="citygroup-table">
                                 <thead>
                                     <tr>
-                                        <th data-sort="adiScore">排名</th>
-                                        <th>省份</th>
-                                        <th data-sort="cityName">城市</th>
-                                        <th data-sort="adiScore">ADI指数 <span class="sort-indicator ${currentSortField === 'adiScore' ? 'active' : ''}">↓</span></th>
-                                        <th data-sort="feelsLike">体感温度 <span class="sort-indicator ${currentSortField === 'feelsLike' ? 'active' : ''}">↓</span></th>
-                                        <th data-sort="nightMinTemp">夜间温度 <span class="sort-indicator ${currentSortField === 'nightMinTemp' ? 'active' : ''}">↓</span></th>
-                                        <th data-sort="maxTemp">白天最高温 <span class="sort-indicator ${currentSortField === 'maxTemp' ? 'active' : ''}">↓</span></th>
-                                        <th data-sort="humidity">湿度 <span class="sort-indicator ${currentSortField === 'humidity' ? 'active' : ''}">↓</span></th>
-                                        <th data-sort="continuousHotNightDays">连续热夜 <span class="sort-indicator ${currentSortField === 'continuousHotNightDays' ? 'active' : ''}">↓</span></th>
-                                        <th>等级</th>
+                                        <th scope="col">排名</th>
+                                        <th scope="col">省份</th>
+                                        <th data-sort="cityName" aria-sort="${getAriaSort('cityName')}"><button type="button" class="citygroup-sort-button" data-sort="cityName">城市 <span class="sort-indicator ${currentSortField === 'cityName' ? 'active' : ''}" aria-hidden="true">${getSortIndicator('cityName')}</span></button></th>
+                                        <th data-sort="adiScore" aria-sort="${getAriaSort('adiScore')}"><button type="button" class="citygroup-sort-button" data-sort="adiScore">ADI指数 <span class="sort-indicator ${currentSortField === 'adiScore' ? 'active' : ''}" aria-hidden="true">${getSortIndicator('adiScore')}</span></button></th>
+                                        <th data-sort="feelsLike" aria-sort="${getAriaSort('feelsLike')}"><button type="button" class="citygroup-sort-button" data-sort="feelsLike">体感温度 <span class="sort-indicator ${currentSortField === 'feelsLike' ? 'active' : ''}" aria-hidden="true">${getSortIndicator('feelsLike')}</span></button></th>
+                                        <th data-sort="nightMinTemp" aria-sort="${getAriaSort('nightMinTemp')}"><button type="button" class="citygroup-sort-button" data-sort="nightMinTemp">夜间温度 <span class="sort-indicator ${currentSortField === 'nightMinTemp' ? 'active' : ''}" aria-hidden="true">${getSortIndicator('nightMinTemp')}</span></button></th>
+                                        <th data-sort="maxTemp" aria-sort="${getAriaSort('maxTemp')}"><button type="button" class="citygroup-sort-button" data-sort="maxTemp">白天最高温 <span class="sort-indicator ${currentSortField === 'maxTemp' ? 'active' : ''}" aria-hidden="true">${getSortIndicator('maxTemp')}</span></button></th>
+                                        <th data-sort="humidity" aria-sort="${getAriaSort('humidity')}"><button type="button" class="citygroup-sort-button" data-sort="humidity">湿度 <span class="sort-indicator ${currentSortField === 'humidity' ? 'active' : ''}" aria-hidden="true">${getSortIndicator('humidity')}</span></button></th>
+                                        <th data-sort="continuousHotNightDays" aria-sort="${getAriaSort('continuousHotNightDays')}"><button type="button" class="citygroup-sort-button" data-sort="continuousHotNightDays">连续热夜 <span class="sort-indicator ${currentSortField === 'continuousHotNightDays' ? 'active' : ''}" aria-hidden="true">${getSortIndicator('continuousHotNightDays')}</span></button></th>
+                                        <th scope="col">等级</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1000,10 +1025,10 @@ const UI = (function() {
                                                 <td style="color: ${i < 3 ? ['#ffd700', '#c0c0c0', '#cd7f32'][i] : 'inherit'}; font-weight: 600;">${i + 1}</td>
                                                 <td style="color: var(--text-secondary); font-size: 0.85rem;">${city.province}</td>
                                                 <td style="font-weight: 500;">${city.cityName}</td>
-                                                <td style="font-family: 'Orbitron', sans-serif; font-weight: 600; color: ${info.color};">${city.adiScore}</td>
-                                                <td style="color: ${city.feelsLike >= 40 ? '#D0021B' : city.feelsLike >= 37 ? '#F57C00' : '#F5A623'};">${city.feelsLike}℃</td>
-                                                <td style="color: ${city.nightMinTemp >= 28 ? '#D0021B' : '#00D4FF'};">${city.nightMinTemp}℃</td>
-                                                <td style="color: ${city.maxTemp >= 37 ? '#D0021B' : city.maxTemp >= 35 ? '#F57C00' : '#F5A623'};">${city.maxTemp}℃</td>
+                                                <td class="tabular-number" style="font-weight: 600; color: ${info.color};">${city.adiScore}</td>
+                                                <td style="color: ${city.feelsLike >= 40 ? '#FF453A' : city.feelsLike >= 37 ? '#F57C00' : '#F5A623'};">${city.feelsLike}℃</td>
+                                                <td style="color: ${city.nightMinTemp >= 28 ? '#FF453A' : '#00D4FF'};">${city.nightMinTemp}℃</td>
+                                                <td style="color: ${city.maxTemp >= 37 ? '#FF453A' : city.maxTemp >= 35 ? '#F57C00' : '#F5A623'};">${city.maxTemp}℃</td>
                                                 <td>${city.humidity}%</td>
                                                 <td>${city.continuousHotNightDays > 0 ? city.continuousHotNightDays + '天' : '-'}</td>
                                                 <td><span style="background: ${info.color}; color: #fff; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${info.name}</span></td>
@@ -1025,9 +1050,9 @@ const UI = (function() {
                 });
             });
 
-            container.querySelectorAll('.citygroup-table th[data-sort]').forEach(th => {
-                th.addEventListener('click', () => {
-                    const field = th.dataset.sort;
+            container.querySelectorAll('.citygroup-sort-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const field = button.dataset.sort;
                     if (currentSortField === field) {
                         currentSortOrder = currentSortOrder === 'desc' ? 'asc' : 'desc';
                     } else {
@@ -1176,12 +1201,12 @@ const UI = (function() {
             <th class="fixed-left">区域</th>
             <th class="fixed-left">省份</th>
             <th class="fixed-left">城市</th>
-            <th class="fixed-left">当前等级</th>
-            <th class="fixed-left">今日ADI</th>
-            <th class="fixed-left">7天最高ADI</th>
-            <th class="fixed-left">7天最高等级</th>
-            <th class="fixed-left">热夜天数</th>
-            <th class="fixed-left">等级趋势</th>
+            <th>当前等级</th>
+            <th>今日ADI</th>
+            <th>7天最高ADI</th>
+            <th>7天最高等级</th>
+            <th>热夜天数</th>
+            <th>等级趋势</th>
         `;
 
         for (let i = 0; i < 7; i++) {
@@ -1202,7 +1227,7 @@ const UI = (function() {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="16" class="forecast-empty-state">
-                        <div class="forecast-empty-icon">🔍</div>
+                        <div class="forecast-empty-icon">${iconMarkup('icon-search')}</div>
                         <div>未找到匹配的城市</div>
                     </td>
                 </tr>
@@ -1224,29 +1249,29 @@ const UI = (function() {
                 <td class="fixed-left">${city.region}</td>
                 <td class="fixed-left">${city.province}</td>
                 <td class="fixed-left">${city.cityName}</td>
-                <td class="fixed-left">
+                <td>
                     <span class="table-level-badge" style="background: ${currentInfo.color}; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px;">
                         ${currentInfo.name}
                     </span>
                 </td>
-                <td class="fixed-left">${city.adiScore}</td>
-                <td class="fixed-left">${maxAdi}</td>
-                <td class="fixed-left">
+                <td>${city.adiScore}</td>
+                <td>${maxAdi}</td>
+                <td>
                     <span class="table-level-badge" style="background: ${maxLevelInfo.color}; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px;">
                         ${maxLevelInfo.name}
                     </span>
                 </td>
-                <td class="fixed-left">${hotNightCount > 0 ? hotNightCount + '天' : '-'}</td>
-                <td class="fixed-left" style="color: ${trendInfo.trendColor}; font-size: 0.75rem;">${trendInfo.trendText}</td>
+                <td>${hotNightCount > 0 ? hotNightCount + '天' : '-'}</td>
+                <td style="color: ${trendInfo.trendColor}; font-size: 0.75rem;">${trendInfo.trendText}</td>
             `;
 
             // 7-day data columns
             city.future7Days.forEach((day, idx) => {
                 const tempHigh = day.dayMax;
                 const tempLow = day.nightMin;
-                const highColor = tempHigh >= 35 ? '#D0021B' : tempHigh >= 33 ? '#F57C00' : tempHigh >= 30 ? '#F5A623' : '#4A90E2';
-                const lowColor = tempLow >= 28 ? '#D0021B' : tempLow >= 26 ? '#F5A623' : '#00D4FF';
-                const hotNightIcon = day.isHotNight ? '<span class="hot-night-indicator">🌙</span>' : '';
+                const highColor = tempHigh >= 35 ? '#FF453A' : tempHigh >= 33 ? '#F57C00' : tempHigh >= 30 ? '#F5A623' : '#4A90E2';
+                const lowColor = tempLow >= 28 ? '#FF453A' : tempLow >= 26 ? '#F5A623' : '#00D4FF';
+                const hotNightIcon = day.isHotNight ? `<span class="hot-night-indicator" aria-label="热夜">${iconMarkup('icon-moon')}</span>` : '';
 
                 rowHtml += `
                     <td data-city="${city.cityName}" data-day="${idx}">
@@ -1274,12 +1299,12 @@ const UI = (function() {
             <th class="fixed-left">区域</th>
             <th class="fixed-left">省份</th>
             <th class="fixed-left">城市</th>
-            <th class="fixed-left">当前等级</th>
-            <th class="fixed-left">今日ADI</th>
-            <th class="fixed-left">7天最高ADI</th>
-            <th class="fixed-left">7天最高等级</th>
-            <th class="fixed-left">热夜天数</th>
-            <th class="fixed-left">等级趋势</th>
+            <th>当前等级</th>
+            <th>今日ADI</th>
+            <th>7天最高ADI</th>
+            <th>7天最高等级</th>
+            <th>热夜天数</th>
+            <th>等级趋势</th>
         `;
 
         for (let i = 0; i < 7; i++) {
@@ -1300,7 +1325,7 @@ const UI = (function() {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="16" class="forecast-empty-state">
-                        <div class="forecast-empty-icon">🔍</div>
+                        <div class="forecast-empty-icon">${iconMarkup('icon-search')}</div>
                         <div>未找到匹配的城市</div>
                     </td>
                 </tr>
@@ -1323,29 +1348,29 @@ const UI = (function() {
                 <td class="fixed-left">${city.region}</td>
                 <td class="fixed-left">${city.province}</td>
                 <td class="fixed-left">${city.cityName}</td>
-                <td class="fixed-left">
+                <td>
                     <span class="table-level-badge" style="background: ${currentInfo.color}; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px;">
                         ${currentInfo.name}
                     </span>
                 </td>
-                <td class="fixed-left">${city.adiScore}</td>
-                <td class="fixed-left">${maxAdi}</td>
-                <td class="fixed-left">
+                <td>${city.adiScore}</td>
+                <td>${maxAdi}</td>
+                <td>
                     <span class="table-level-badge" style="background: ${maxLevelInfo.color}; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px;">
                         ${maxLevelInfo.name}
                     </span>
                 </td>
-                <td class="fixed-left">${hotNightCount > 0 ? hotNightCount + '天' : '-'}</td>
-                <td class="fixed-left" style="color: ${trendInfo.trendColor}; font-size: 0.75rem;">${trendInfo.trendText}</td>
+                <td>${hotNightCount > 0 ? hotNightCount + '天' : '-'}</td>
+                <td style="color: ${trendInfo.trendColor}; font-size: 0.75rem;">${trendInfo.trendText}</td>
             `;
 
             // 7-day data columns with feels-like temperatures
             city.future7Days.forEach((day, idx) => {
                 const dayFeelsLike = day.dayFeelsLike;
                 const nightFeelsLike = day.nightFeelsLike;
-                const highColor = dayFeelsLike >= 40 ? '#D0021B' : dayFeelsLike >= 37 ? '#F57C00' : dayFeelsLike >= 34 ? '#F5A623' : '#4A90E2';
-                const lowColor = nightFeelsLike >= 32 ? '#D0021B' : nightFeelsLike >= 30 ? '#F5A623' : '#00D4FF';
-                const hotNightIcon = nightFeelsLike >= 30 ? '<span class="hot-night-indicator">🌙</span>' : '';
+                const highColor = dayFeelsLike >= 40 ? '#FF453A' : dayFeelsLike >= 37 ? '#F57C00' : dayFeelsLike >= 34 ? '#F5A623' : '#4A90E2';
+                const lowColor = nightFeelsLike >= 32 ? '#FF453A' : nightFeelsLike >= 30 ? '#F5A623' : '#00D4FF';
+                const hotNightIcon = nightFeelsLike >= 30 ? `<span class="hot-night-indicator" aria-label="热夜">${iconMarkup('icon-moon')}</span>` : '';
 
                 rowHtml += `
                     <td data-city="${city.cityName}" data-day="${idx}">
@@ -1373,12 +1398,12 @@ const UI = (function() {
             <th class="fixed-left">区域</th>
             <th class="fixed-left">省份</th>
             <th class="fixed-left">城市</th>
-            <th class="fixed-left">当前等级</th>
-            <th class="fixed-left">今日ADI</th>
-            <th class="fixed-left">7天最高ADI</th>
-            <th class="fixed-left">7天最高等级</th>
-            <th class="fixed-left">热夜天数</th>
-            <th class="fixed-left">等级趋势</th>
+            <th>当前等级</th>
+            <th>今日ADI</th>
+            <th>7天最高ADI</th>
+            <th>7天最高等级</th>
+            <th>热夜天数</th>
+            <th>等级趋势</th>
         `;
 
         for (let i = 0; i < 7; i++) {
@@ -1399,7 +1424,7 @@ const UI = (function() {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="16" class="forecast-empty-state">
-                        <div class="forecast-empty-icon">🔍</div>
+                        <div class="forecast-empty-icon">${iconMarkup('icon-search')}</div>
                         <div>未找到匹配的城市</div>
                     </td>
                 </tr>
@@ -1431,20 +1456,20 @@ const UI = (function() {
                 <td class="fixed-left">${city.region}</td>
                 <td class="fixed-left">${city.province}</td>
                 <td class="fixed-left">${city.cityName}</td>
-                <td class="fixed-left">
+                <td>
                     <span class="table-level-badge" style="background: ${currentInfo.color}; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px;">
                         ${currentInfo.name}
                     </span>
                 </td>
-                <td class="fixed-left">${city.adiScore}</td>
-                <td class="fixed-left">${maxAdi}</td>
-                <td class="fixed-left">
+                <td>${city.adiScore}</td>
+                <td>${maxAdi}</td>
+                <td>
                     <span class="table-level-badge" style="background: ${maxLevelInfo.color}; font-size: 0.7rem; padding: 2px 6px; border-radius: 3px;">
                         ${maxLevelInfo.name}
                     </span>
                 </td>
-                <td class="fixed-left">${hotNightCount > 0 ? hotNightCount + '天' : '-'}</td>
-                <td class="fixed-left" style="color: ${trendInfo.trendColor}; font-size: 0.75rem;">${trendInfo.trendText}</td>
+                <td>${hotNightCount > 0 ? hotNightCount + '天' : '-'}</td>
+                <td style="color: ${trendInfo.trendColor}; font-size: 0.75rem;">${trendInfo.trendText}</td>
             `;
 
             // 7-day data columns with ADI scores
@@ -1452,7 +1477,7 @@ const UI = (function() {
                 const adi = day.adiScore;
                 const colorClass = getAdiColorClass(adi);
                 const levelInfo = Core.getLevelInfo(day.level);
-                const hotNightIcon = day.isHotNight ? '<span class="hot-night-indicator">🌙</span>' : '';
+                const hotNightIcon = day.isHotNight ? `<span class="hot-night-indicator" aria-label="热夜">${iconMarkup('icon-moon')}</span>` : '';
 
                 rowHtml += `
                     <td class="${colorClass}" data-city="${city.cityName}" data-day="${idx}">
@@ -1544,12 +1569,12 @@ const UI = (function() {
             <th class="fixed-left">区域</th>
             <th class="fixed-left">省份</th>
             <th class="fixed-left">城市</th>
-            <th class="fixed-left">最高提醒</th>
-            <th class="fixed-left">提醒天数</th>
-            <th class="fixed-left">强提醒天数</th>
-            <th class="fixed-left">最近提醒</th>
-            <th class="fixed-left">动作</th>
-            <th class="fixed-left">说明</th>
+            <th>最高提醒</th>
+            <th>提醒天数</th>
+            <th>强提醒天数</th>
+            <th>最近提醒</th>
+            <th>动作</th>
+            <th>说明</th>
         `;
 
         for (let i = 0; i < 7; i++) {
@@ -1565,7 +1590,7 @@ const UI = (function() {
         thead.innerHTML = headerHtml;
 
         if (cities.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="16" class="forecast-empty-state"><div class="forecast-empty-icon">🔍</div><div>未找到匹配的城市</div></td></tr>';
+            tbody.innerHTML = `<tr><td colspan="16" class="forecast-empty-state"><div class="forecast-empty-icon">${iconMarkup('icon-search')}</div><div>未找到匹配的城市</div></td></tr>`;
             return;
         }
 
@@ -1577,12 +1602,12 @@ const UI = (function() {
                 <td class="fixed-left">${escapeHtml(city.region)}</td>
                 <td class="fixed-left">${escapeHtml(city.province)}</td>
                 <td class="fixed-left">${escapeHtml(city.cityName)}</td>
-                <td class="fixed-left"><span class="rain-mini-badge insurance-${escapeHtml(city.maxRainInsuranceLevel || 'none')}">${escapeHtml(topDay ? topDay.rainInsuranceLabel : '无提醒')}</span></td>
-                <td class="fixed-left">${escapeHtml(String(remindDays.length))}天</td>
-                <td class="fixed-left">${escapeHtml(String(strongDays.length))}天</td>
-                <td class="fixed-left">${escapeHtml(topDay ? topDay.weatherText : '-')}</td>
-                <td class="fixed-left">配送照常</td>
-                <td class="fixed-left">下雨提醒投保</td>
+                <td><span class="rain-mini-badge insurance-${escapeHtml(city.maxRainInsuranceLevel || 'none')}">${escapeHtml(topDay ? topDay.rainInsuranceLabel : '无提醒')}</span></td>
+                <td>${escapeHtml(String(remindDays.length))}天</td>
+                <td>${escapeHtml(String(strongDays.length))}天</td>
+                <td>${escapeHtml(topDay ? topDay.weatherText : '-')}</td>
+                <td>配送照常</td>
+                <td>下雨提醒投保</td>
             `;
             city.future7Days.forEach((day, idx) => {
                 rowHtml += `
@@ -1607,12 +1632,12 @@ const UI = (function() {
             <th class="fixed-left">区域</th>
             <th class="fixed-left">省份</th>
             <th class="fixed-left">城市</th>
-            <th class="fixed-left">最高机会</th>
-            <th class="fixed-left">最高分</th>
-            <th class="fixed-left">机会天数</th>
-            <th class="fixed-left">今日ADI</th>
-            <th class="fixed-left">动作</th>
-            <th class="fixed-left">说明</th>
+            <th>最高机会</th>
+            <th>最高分</th>
+            <th>机会天数</th>
+            <th>今日ADI</th>
+            <th>动作</th>
+            <th>说明</th>
         `;
 
         for (let i = 0; i < 7; i++) {
@@ -1628,7 +1653,7 @@ const UI = (function() {
         thead.innerHTML = headerHtml;
 
         if (cities.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="16" class="forecast-empty-state"><div class="forecast-empty-icon">🔍</div><div>未找到匹配的城市</div></td></tr>';
+            tbody.innerHTML = `<tr><td colspan="16" class="forecast-empty-state"><div class="forecast-empty-icon">${iconMarkup('icon-search')}</div><div>未找到匹配的城市</div></td></tr>`;
             return;
         }
 
@@ -1639,12 +1664,12 @@ const UI = (function() {
                 <td class="fixed-left">${escapeHtml(city.region)}</td>
                 <td class="fixed-left">${escapeHtml(city.province)}</td>
                 <td class="fixed-left">${escapeHtml(city.cityName)}</td>
-                <td class="fixed-left"><span class="rain-mini-badge muggy-${escapeHtml(city.maxPostRainMuggyLevel || 'none')}">${escapeHtml(opportunityDays[0] ? opportunityDays[0].postRainMuggyLabel : '无明显机会')}</span></td>
-                <td class="fixed-left">${escapeHtml(String(maxScore))}</td>
-                <td class="fixed-left">${escapeHtml(String(opportunityDays.length))}天</td>
-                <td class="fixed-left">${escapeHtml(String(city.adiScore))}</td>
-                <td class="fixed-left">销售跟进</td>
-                <td class="fixed-left">雨后升温高湿</td>
+                <td><span class="rain-mini-badge muggy-${escapeHtml(city.maxPostRainMuggyLevel || 'none')}">${escapeHtml(opportunityDays[0] ? opportunityDays[0].postRainMuggyLabel : '无明显机会')}</span></td>
+                <td>${escapeHtml(String(maxScore))}</td>
+                <td>${escapeHtml(String(opportunityDays.length))}天</td>
+                <td>${escapeHtml(String(city.adiScore))}</td>
+                <td>销售跟进</td>
+                <td>雨后升温高湿</td>
             `;
             city.future7Days.forEach((day, idx) => {
                 rowHtml += `
@@ -1757,7 +1782,7 @@ const UI = (function() {
             <div class="rules-section">
                 <h4>ADI 权重配置</h4>
                 <div style="font-size:0.75rem;color:var(--alert-yellow);margin-bottom:1rem;padding:0.5rem;background:rgba(245,166,35,0.08);border-radius:6px;">
-                    💡 体感温度权重最高(40%)，夜间最低温权重20%，白天最高温权重30%，综合反映人体不适感和空调购买需求。
+                    ${iconMarkup('icon-insight')} 体感温度权重最高(40%)，夜间最低温权重20%，白天最高温权重30%，综合反映人体不适感和空调购买需求。
                 </div>
                 <div class="rule-field">
                     <label>夜间最低温 <input type="number" id="w_night" value="${Math.round(config.weights.nightMinTemp * 100)}" min="0" max="100" onchange="UI.updateWeightTotal()"><span class="weight-suffix">%</span></label>
@@ -1902,7 +1927,7 @@ const UI = (function() {
             <div class="modal-body">
                 <!-- 新增：管理层摘要 -->
                 <div class="management-summary" style="background: ${escapeHtml(info.color)}15; border-left: 3px solid ${escapeHtml(info.color)}; padding: 12px; margin-bottom: 16px; border-radius: 4px;">
-                    <strong style="color: ${escapeHtml(info.color)}">💡 管理层摘要</strong><br>
+                    <strong style="color: ${escapeHtml(info.color)}">${iconMarkup('icon-insight')} 管理层摘要</strong><br>
                     <span style="color: #e0e6ed; font-size: 14px;">该城市当前处于${escapeHtml(info.name)}，主要原因是${escapeHtml(city.shortReason)}，预计短期空调需求${info.order >= 3 ? '较强' : info.order >= 2 ? '中等' : '一般'}。</span>
                 </div>
 
@@ -1917,11 +1942,11 @@ const UI = (function() {
                     </div>
                     <div class="detail-item surface-raised">
                         <div class="detail-label">夜间最低温</div>
-                        <div class="detail-value" style="color: ${city.nightMinTemp >= 28 ? '#D0021B' : '#00D4FF'}">${escapeHtml(city.nightMinTemp.toString())}℃</div>
+                        <div class="detail-value" style="color: ${city.nightMinTemp >= 28 ? '#FF453A' : '#00D4FF'}">${escapeHtml(city.nightMinTemp.toString())}℃</div>
                     </div>
                     <div class="detail-item surface-raised">
                         <div class="detail-label">体感温度</div>
-                        <div class="detail-value" style="color: ${city.feelsLike >= 38 ? '#D0021B' : '#F5A623'}">${escapeHtml(city.feelsLike.toString())}℃</div>
+                        <div class="detail-value" style="color: ${city.feelsLike >= 38 ? '#FF453A' : '#F5A623'}">${escapeHtml(city.feelsLike.toString())}℃</div>
                     </div>
                     <div class="detail-item surface-raised">
                         <div class="detail-label">湿度</div>
@@ -1929,7 +1954,7 @@ const UI = (function() {
                     </div>
                     <div class="detail-item surface-raised">
                         <div class="detail-label">连续热夜</div>
-                        <div class="detail-value">${city.continuousHotNightDays > 0 ? '🔥 ' + escapeHtml(city.continuousHotNightDays.toString()) + '天' : '无'}</div>
+                        <div class="detail-value">${city.continuousHotNightDays > 0 ? escapeHtml(city.continuousHotNightDays.toString()) + '天' : '无'}</div>
                     </div>
                     <div class="detail-item surface-raised">
                         <div class="detail-label">未来3天最高温</div>
@@ -1990,9 +2015,9 @@ const UI = (function() {
 
             rows += `
                 <div class="forecast-row ${isHotNight ? 'hot' : ''}">
-                    <div class="forecast-date">${date.getMonth() + 1}/${date.getDate()} 周${weekDays[date.getDay()]}${isHotNight ? ' 🌙' : ''}</div>
+                    <div class="forecast-date">${date.getMonth() + 1}/${date.getDate()} 周${weekDays[date.getDay()]}${isHotNight ? ` <span class="hot-night-indicator" aria-label="热夜">${iconMarkup('icon-moon')}</span>` : ''}</div>
                     <div style="color: #FF6B35; font-weight: 600">${high}°</div>
-                    <div style="color: ${night >= 28 ? '#D0021B' : '#00D4FF'}">${night}°</div>
+                    <div style="color: ${night >= 28 ? '#FF453A' : '#00D4FF'}">${night}°</div>
                     <div style="color: #F5A623">${feels}°</div>
                     <div><span style="color: ${fInfo.color}; font-weight: 600">${adi}</span> <span style="background:${fInfo.color};color:#fff;padding:0 4px;border-radius:3px;font-size:0.6rem;margin-left:4px;">${fInfo.name}</span></div>
                 </div>

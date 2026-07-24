@@ -6,11 +6,12 @@
     --titanium-surface-solid: #1c1c1e;
     --titanium-text: #f5f5f7;
     --titanium-text-secondary: #a1a1a6;
-    --titanium-text-muted: #6e6e73;
+    --titanium-text-muted: #8e8e93;
     --titanium-accent: #5e8dff;
     --titanium-success: #30d158;
     --titanium-warning: #ff9f0a;
     --titanium-danger: #ff453a;
+    --alert-red: var(--titanium-danger);
     --titanium-border: rgba(255, 255, 255, 0.10);
     --titanium-border-strong: rgba(255, 255, 255, 0.18);
     --titanium-radius-sm: 10px;
@@ -27,6 +28,37 @@ body {
     color: var(--titanium-text);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
         "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+}
+
+.tabular-number {
+    font-variant-numeric: tabular-nums;
+}
+
+.inline-icon {
+    width: 1em;
+    height: 1em;
+    flex: 0 0 auto;
+    vertical-align: -0.14em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+}
+
+.hot-night-label,
+.hot-night-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--titanium-danger);
+}
+
+[style*="color: #D0021B" i] {
+    color: var(--titanium-danger) !important;
+}
+
+.header-stat-value.intensity-strong,
+.temp-cell-high {
+    color: var(--titanium-danger) !important;
 }
 
 body::before {
@@ -103,8 +135,14 @@ body::before {
 
 .nav-item,
 .nav-subitem {
+    width: 100%;
     min-height: 44px;
+    padding-inline: 16px;
     color: var(--titanium-text-secondary);
+    font: inherit;
+    text-align: start;
+    background: transparent;
+    border: 0;
     border-radius: var(--titanium-radius-sm);
     transition: color var(--titanium-ease), background var(--titanium-ease),
         box-shadow var(--titanium-ease);
@@ -166,6 +204,13 @@ body::before {
     max-width: 1600px;
     min-width: 0;
     margin-inline: auto;
+}
+
+#dashboard.page.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100%;
 }
 
 .main-content,
@@ -234,7 +279,10 @@ body::before {
 
 .dashboard-layout {
     display: grid;
+    flex: 1 1 auto;
     grid-template-columns: minmax(230px, 0.9fr) minmax(520px, 2fr) minmax(260px, 1fr);
+    height: auto;
+    min-height: 0;
     gap: 14px;
 }
 
@@ -359,6 +407,10 @@ body::before {
     box-shadow: var(--titanium-shadow);
 }
 
+.data-table-shell .forecast-table {
+    background: rgba(20, 20, 22, 0.86) !important;
+}
+
 .forecast-table thead th,
 .subpage-table thead th,
 .citygroup-table thead th {
@@ -366,6 +418,14 @@ body::before {
     color: var(--titanium-text-secondary);
     border-color: var(--titanium-border);
     backdrop-filter: blur(18px);
+}
+
+.data-table-shell .forecast-table thead th {
+    background: rgba(28, 28, 30, 0.96) !important;
+}
+
+.data-table-shell .forecast-table tbody td.fixed-left {
+    background: rgba(28, 28, 30, 0.96) !important;
 }
 
 .forecast-table tbody td,
@@ -379,6 +439,25 @@ body::before {
 .subpage-table tbody tr:hover,
 .citygroup-table tbody tr:hover {
     background: rgba(255, 255, 255, 0.05);
+}
+
+.citygroup-tab {
+    min-height: 44px;
+    color: var(--titanium-text-secondary);
+    font: inherit;
+}
+
+.citygroup-sort-button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 0;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
 }
 
 .forecast-tooltip {
@@ -439,6 +518,12 @@ body::before {
     border-radius: var(--titanium-radius-md);
     box-shadow: var(--titanium-shadow);
     backdrop-filter: var(--titanium-blur);
+}
+
+.settings-actions .btn-primary {
+    background: var(--titanium-accent);
+    border-radius: var(--titanium-radius-sm);
+    box-shadow: none;
 }
 
 .rules-save-status {
@@ -633,6 +718,10 @@ body::before {
 }
 
 @media (max-width: 1439px) {
+    #dashboard.page.active {
+        height: auto;
+    }
+
     .dashboard-layout {
         grid-template-columns: minmax(220px, 0.8fr) minmax(520px, 1.8fr);
         height: auto;

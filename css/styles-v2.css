@@ -1491,15 +1491,9 @@ body {
     background: #1a2347;
 }
 
-.forecast-table thead th.fixed-left:nth-child(1) { left: 0; min-width: 60px; }
-.forecast-table thead th.fixed-left:nth-child(2) { left: 70px; min-width: 70px; }
-.forecast-table thead th.fixed-left:nth-child(3) { left: 140px; min-width: 80px; }
-.forecast-table thead th.fixed-left:nth-child(4) { left: 220px; min-width: 80px; }
-.forecast-table thead th.fixed-left:nth-child(5) { left: 300px; min-width: 70px; }
-.forecast-table thead th.fixed-left:nth-child(6) { left: 370px; min-width: 70px; }
-.forecast-table thead th.fixed-left:nth-child(7) { left: 440px; min-width: 90px; }
-.forecast-table thead th.fixed-left:nth-child(8) { left: 530px; min-width: 70px; }
-.forecast-table thead th.fixed-left:nth-child(9) { left: 600px; min-width: 90px; }
+.forecast-table thead th.fixed-left:nth-child(1) { left: 0; width: 76px; min-width: 76px; max-width: 76px; }
+.forecast-table thead th.fixed-left:nth-child(2) { left: 76px; width: 84px; min-width: 84px; max-width: 84px; }
+.forecast-table thead th.fixed-left:nth-child(3) { left: 160px; width: 92px; min-width: 92px; max-width: 92px; }
 
 .forecast-table tbody tr:hover {
     background: rgba(255, 255, 255, 0.03);
@@ -1521,144 +1515,11 @@ body {
     z-index: 5;
 }
 
-.forecast-table tbody td.fixed-left:nth-child(1) { left: 0; min-width: 60px; }
-.forecast-table tbody td.fixed-left:nth-child(2) { left: 70px; min-width: 70px; }
-.forecast-table tbody td.fixed-left:nth-child(3) { left: 140px; min-width: 80px; }
-.forecast-table tbody td.fixed-left:nth-child(4) { left: 220px; min-width: 80px; }
-.forecast-table tbody td.fixed-left:nth-child(5) { left: 300px; min-width: 70px; }
-.forecast-table tbody td.fixed-left:nth-child(6) { left: 370px; min-width: 70px; }
-.forecast-table tbody td.fixed-left:nth-child(7) { left: 440px; min-width: 90px; }
-.forecast-table tbody td.fixed-left:nth-child(8) { left: 530px; min-width: 70px; }
-.forecast-table tbody td.fixed-left:nth-child(9) { left: 600px; min-width: 90px; }
+.forecast-table tbody td.fixed-left:nth-child(1) { left: 0; width: 76px; min-width: 76px; max-width: 76px; }
+.forecast-table tbody td.fixed-left:nth-child(2) { left: 76px; width: 84px; min-width: 84px; max-width: 84px; }
+.forecast-table tbody td.fixed-left:nth-child(3) { left: 160px; width: 92px; min-width: 92px; max-width: 92px; }
 
 .forecast-table tbody tr:hover td.fixed-left {
-    background: rgba(40, 47, 80, 0.95);
-}
-
-/* 日期列固定定位 - 第10-16列 */
-.forecast-table thead th:nth-child(10) {
-    position: sticky !important;
-    left: 690px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(11) {
-    position: sticky !important;
-    left: 760px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(12) {
-    position: sticky !important;
-    left: 830px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(13) {
-    position: sticky !important;
-    left: 900px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(14) {
-    position: sticky !important;
-    left: 970px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(15) {
-    position: sticky !important;
-    left: 1040px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-.forecast-table thead th:nth-child(16) {
-    position: sticky !important;
-    left: 1110px !important;
-    min-width: 70px;
-    z-index: 20;
-    background: #1a2347;
-    padding: 12px 16px;
-}
-
-.forecast-table tbody td:nth-child(10) {
-    position: sticky !important;
-    left: 690px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(11) {
-    position: sticky !important;
-    left: 760px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(12) {
-    position: sticky !important;
-    left: 830px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(13) {
-    position: sticky !important;
-    left: 900px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(14) {
-    position: sticky !important;
-    left: 970px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(15) {
-    position: sticky !important;
-    left: 1040px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-.forecast-table tbody td:nth-child(16) {
-    position: sticky !important;
-    left: 1110px !important;
-    min-width: 70px;
-    background: rgba(20, 27, 61, 0.95);
-    z-index: 5;
-    padding: 10px 14px;
-    text-align: center;
-}
-
-/* Hover effect for sticky date columns */
-.forecast-table tbody tr:hover td:nth-child(n+10):nth-child(-n+16) {
     background: rgba(40, 47, 80, 0.95);
 }
 
