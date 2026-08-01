@@ -44,3 +44,15 @@ test('Core loads via ADICore and keeps public API', () => {
     assert.equal(r.adiScore, 70);
     assert.equal(typeof s.__Core.generateAllCityData, 'function');
 });
+
+test('core.js fetchWeatherData targets the /api/weather proxy', () => {
+    const src = read('js/core.js');
+    assert.ok(src.includes('/api/weather'), 'fetchWeatherData must call /api/weather');
+    assert.equal(src.includes('qweatherapi.com'), false, 'must not call QWeather host directly');
+});
+
+test('core.js no longer contains hardcoded QWeather key or baseUrl', () => {
+    const src = read('js/core.js');
+    assert.equal(src.includes('c7d384b2fa484e558b11e316ca4bb161'), false, 'hardcoded key must be gone');
+    assert.equal(src.includes('qweatherapi.com'), false, 'baseUrl must be gone (moved to server)');
+});

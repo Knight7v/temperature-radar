@@ -67,7 +67,6 @@ const Core = (function() {
             if (cached) {
                 const { data, timestamp } = JSON.parse(cached);
                 if (now - timestamp < QWEATHER_CONFIG.cacheDuration) {
-                    console.log(`使用缓存数据: ${city.name}`);
                     return data;
                 }
             }
@@ -75,42 +74,28 @@ const Core = (function() {
             console.warn('缓存读取失败:', e);
         }
 
-        // 调用API
+        // 调用 /api/weather 代理(key 在服务端 env)
         const location = `${city.lng.toFixed(2)},${city.lat.toFixed(2)}`;
-        const url = `${QWEATHER_CONFIG.baseUrl}?location=${encodeURIComponent(location)}&key=${QWEATHER_CONFIG.apiKey}`;
-
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), QWEATHER_CONFIG.requestTimeout);
-
-            const response = await fetch(url, {
+            const response = await fetch(`/api/weather?location=${encodeURIComponent(location)}`, {
                 signal: controller.signal,
-                headers: { 'Accept': 'application/json' }
+                headers: { Accept: 'application/json' }
             });
             clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const result = await response.json();
-
-            if (result.code !== '200') {
-                throw new Error(`API错误: ${result.code}`);
-            }
+            if (result.code !== '200') throw new Error(`API错误: ${result.code}`);
 
             // 保存到缓存
             try {
-                localStorage.setItem(cacheKey, JSON.stringify({
-                    data: result,
-                    timestamp: now
-                }));
+                localStorage.setItem(cacheKey, JSON.stringify({ data: result, timestamp: now }));
             } catch (e) {
                 console.warn('缓存保存失败:', e);
             }
 
             return result;
-
         } catch (error) {
             console.error(`获取 ${city.name} 天气数据失败:`, error);
             return null;
@@ -118,12 +103,11 @@ const Core = (function() {
     }
 
     // ==================== 和风天气API配置 ====================
-
+    // key 已迁服务端 env (QWEATHER_API_KEY);baseUrl 已在 api/utils/qweather.js。
+    // 前端只保留请求超时与 localStorage 缓存时长。
     const QWEATHER_CONFIG = {
-        apiKey: 'c7d384b2fa484e558b11e316ca4bb161',
-        baseUrl: 'https://m96x89njb8.re.qweatherapi.com/v7/weather/7d',
-        requestTimeout: 10000,  // 10秒超时
-        cacheDuration: 6 * 60 * 60 * 1000  // 6小时缓存（毫秒）
+        requestTimeout: 10000,              // /api/weather 请求超时
+        cacheDuration: 6 * 60 * 60 * 1000   // 6 小时 localStorage 缓存
     };
 
     // ==================== 每日简报 ====================
