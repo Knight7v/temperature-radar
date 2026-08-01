@@ -255,7 +255,17 @@ WECHAT_APP_ID=your-wechat-appid
 WECHAT_APP_SECRET=your-wechat-secret
 SMS_ACCESS_KEY=your-sms-key
 SMS_SECRET_KEY=your-sms-secret
+QWEATHER_API_KEY=你的和风天气key
+WECOM_BOT_WEBHOOK=https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx
+CRON_SECRET=自定义cron鉴权token(可选)
 ```
+
+## 定时推送(cron)
+
+- `/api/cron-push` 由 Vercel Cron 每日 01:30 UTC(北京 09:30)以 GET 触发。
+- 推送「高温重点关注」与「升温预报」,达标才推(无爆热/行动级或无显著升温则不推)。
+- 需配置环境变量:`QWEATHER_API_KEY`、`WECOM_BOT_WEBHOOK`;可选 `CRON_SECRET`(查询参 `?token=` 额外鉴权)。
+- 生产用 `vercel env add QWEATHER_API_KEY` 等命令配置。
 
 ---
 
