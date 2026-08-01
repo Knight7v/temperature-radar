@@ -430,6 +430,259 @@
         return cityDataList.filter(c => c.level === level).sort((a, b) => b.adiScore - a.adiScore);
     }
 
+    /**
+     * 解析和风API数据为城市数据对象（从 core.js 搬入，仅 RainMonitor 守卫一处改动）。
+     * @param {Object} apiData - 和风API返回的数据
+     * @param {Object} city - 城市对象
+     * @returns {Object} 转换后的城市数据
+     */
+    function parseWeatherData(apiData, city) {
+        if (!apiData || !apiData.daily || apiData.daily.length === 0) {
+            return null;
+        }
+
+        const today = apiData.daily[0];
+
+        // 今天的数据
+        const maxTemp = parseInt(today.tempMax, 10);
+        const nightMinTemp = parseInt(today.tempMin, 10);
+        const humidity = parseInt(today.humidity, 10);
+
+        // 体感温度：最高温 + 湿度影响
+        const feelsLike = Math.round(maxTemp + Math.max(0, (humidity - 55) * 0.06));
+
+        // 计算连续高温夜天数
+        let continuousHotNightDays = 0;
+        for (let i = 0; i < Math.min(7, apiData.daily.length); i++) {
+            const dayMin = parseInt(apiData.daily[i].tempMin, 10);
+            if (dayMin >= 28) {
+                continuousHotNightDays++;
+            } else if (dayMin >= 26 && continuousHotNightDays > 0) {
+                // 26度以上连续天数可以累加，但28度以上是强信号
+                continuousHotNightDays++;
+            } else {
+                break;
+            }
+        }
+
+        // 未来3天温度（保留用于其他功能）
+        const future3DayMaxTemps = [];
+        const future3NightMinTemps = [];
+        for (let i = 1; i < Math.min(4, apiData.daily.length); i++) {
+            future3DayMaxTemps.push(parseInt(apiData.daily[i].tempMax, 10));
+            future3NightMinTemps.push(parseInt(apiData.daily[i].tempMin, 10));
+        }
+
+        // 未来7天温度（从今天开始，用于趋势图）
+        const future7DayMaxTemps = [];
+        const future7NightMinTemps = [];
+        for (let i = 0; i < Math.min(7, apiData.daily.length); i++) {  // 索引0-6，对应今天到第6天
+            future7DayMaxTemps.push(parseInt(apiData.daily[i].tempMax, 10));
+            future7NightMinTemps.push(parseInt(apiData.daily[i].tempMin, 10));
+        }
+
+        // 未来7天ADI趋势（从今天开始，索引0-6，最多7天）
+        const future7AdiScores = [];
+        const maxDays = Math.min(7, apiData.daily.length);
+
+        // 未来7天完整数据（用于7天预测页面）
+        const future7Days = [];
+
+        for (let i = 0; i < maxDays; i++) {
+            const day = apiData.daily[i];
+            const dayMax = parseInt(day.tempMax, 10);
+            const dayNight = parseInt(day.tempMin, 10);
+            const dayHumidity = parseInt(day.humidity, 10);
+            const dayFeels = Math.round(dayMax + Math.max(0, (dayHumidity - 55) * 0.08));
+
+            // For day 0, use today's continuous count
+            // For days 1-6, calculate continuous count from that day forward
+            let dayCont;
+            if (i === 0) {
+                dayCont = continuousHotNightDays;
+            } else {
+                // Count consecutive hot nights starting from day i
+                dayCont = 0;
+                for (let j = i; j < Math.min(7, apiData.daily.length); j++) {
+                    const futureMin = parseInt(apiData.daily[j].tempMin, 10);
+                    if (futureMin >= 28) {
+                        dayCont++;
+                    } else if (futureMin >= 26 && dayCont > 0) {
+                        dayCont++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            const dayData = {
+                maxTemp: dayMax,
+                nightMinTemp: dayNight,
+                feelsLike: dayFeels,
+                humidity: dayHumidity,
+                continuousHotNightDays: dayCont
+            };
+            const adiResult = calculateADI(dayData);
+            future7AdiScores.push(adiResult.adiScore);
+
+            // 使用API返回的fxDate字段来设置正确的日期，避免数据偏移
+            const dayDate = new Date(day.fxDate);
+
+            future7Days.push({
+                date: dayDate,
+                dayMax: dayMax,
+                nightMin: dayNight,
+                dayFeelsLike: dayFeels,
+                nightFeelsLike: Math.round(dayNight + Math.max(0, (dayHumidity - 50) * 0.08)),
+                humidity: dayHumidity,
+                adiScore: adiResult.adiScore,
+                level: adiResult.level,
+                isHotNight: dayNight >= 28,
+                weatherTextDay: day.textDay || '',
+                weatherTextNight: day.textNight || '',
+                weatherText: [day.textDay, day.textNight].filter(Boolean).join(' / ') || '无明显降水',
+                precip: Number.isFinite(Number(day.precip)) ? Number(day.precip) : 0
+            });
+        }
+
+        // 使用RainMonitor丰富降水数据（服务端无 window，跳过）
+        const RainMonitor = (typeof window !== 'undefined') ? window.RainMonitor : null;
+        const enrichedFuture7Days = RainMonitor
+            ? RainMonitor.enrichFuture7Days(future7Days)
+            : future7Days;
+        const maxRainInsuranceLevel = RainMonitor
+            ? RainMonitor.getMaxRainInsuranceLevel(enrichedFuture7Days)
+            : 'none';
+        const maxPostRainMuggyLevel = RainMonitor
+            ? RainMonitor.getMaxPostRainMuggyLevel(enrichedFuture7Days)
+            : 'none';
+        const maxPostRainMuggyScore = enrichedFuture7Days.reduce((max, day) => Math.max(max, day.postRainMuggyScore || 0), 0);
+
+        return {
+            cityName: city.name,
+            region: city.region,
+            province: city.province,
+            lat: city.lat,
+            lng: city.lng,
+            maxTemp,
+            nightMinTemp,
+            feelsLike,
+            humidity,
+            continuousHotNightDays,
+            future3DayMaxTemps,
+            future3NightMinTemps,
+            future7DayMaxTemps,      // 新增：未来7天最高温
+            future7NightMinTemps,    // 新增：未来7天最低温
+            future7AdiScores,
+            future7Days: enrichedFuture7Days,             // 新增：未来7天完整数据
+            maxRainInsuranceLevel,   // 降水监控：最高投保提醒等级
+            maxPostRainMuggyLevel,   // 降水监控：最高湿热机会等级
+            maxPostRainMuggyScore,   // 降水监控：最高湿热机会分数
+            nightMuggyScore: 0,
+            updatedAt: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
+        };
+    }
+
+    /**
+     * 装配城市数据：在 parsedData 上附加 adiScore/level/reason/shortReason/levelTrend。
+     * 封装 core.js generateCityData 中 API 成功路径的装配块（纯函数）。
+     */
+    function assembleCityData(parsedData) {
+        parsedData.nightMuggyScore = calculateNightMuggyScore(parsedData);
+        const adiResult = calculateADI(parsedData);
+        parsedData.adiScore = adiResult.adiScore;
+        const levelResult = determineLevel(adiResult.adiScore, parsedData);
+        const reason = generateReason(parsedData, adiResult.adiScore, levelResult.level, levelResult.triggeredRules);
+        const shortReason = generateShortReason(parsedData, levelResult.level, levelResult.triggeredRules);
+        const levelTrend = calculateLevelTrend(levelResult.level, parsedData.future7AdiScores);
+        return {
+            ...parsedData,
+            adiBreakdown: adiResult.breakdown,
+            level: levelResult.level,
+            triggeredRules: levelResult.triggeredRules,
+            reason, shortReason, levelTrend
+        };
+    }
+
+    const RULES = { heatRise: { minAdiChange: 10 } };
+
+    function fmtUpdateTime(d) {
+        const pad = (n) => String(n).padStart(2, '0');
+        return pad(d.getMonth() + 1) + '/' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+
+    function toOutbreak(c) {
+        return { name: c.cityName, adi: c.adiScore, maxTemp: c.maxTemp, nightMin: c.nightMinTemp, feelsLike: c.feelsLike };
+    }
+
+    function regionList(cityData) {
+        return Object.entries(calculateRegionStats(cityData))
+            .filter(([, st]) => st.explosiveCount > 0 || st.actionCount > 0)
+            .sort((a, b) => (b[1].explosiveCount * 2 + b[1].actionCount) - (a[1].explosiveCount * 2 + a[1].actionCount))
+            .slice(0, 3)
+            .map(([name, st]) => ({
+                name, level: st.level, explosive: st.explosiveCount,
+                action: st.actionCount, reps: st.representativeCities || []
+            }));
+    }
+
+    function buildHeatFocusSummary(cityData, opts) {
+        const summary = {
+            updateTime: (opts && opts.updateTime) || fmtUpdateTime(new Date()),
+            totalCities: cityData.length,
+            stats: { outbreak: 0, action: 0 }
+        };
+        const outbreak = getCitiesByLevel(cityData, 'outbreak');
+        const action = getCitiesByLevel(cityData, 'action');
+        const st = getLevelStats(cityData);
+        summary.stats = { outbreak: st.outbreak || 0, action: st.action || 0 };
+        summary.outbreakCities = outbreak.map(toOutbreak);
+        summary.actionCities = action.map((c) => c.cityName);
+        summary.activeRegions = regionList(cityData);
+        summary.hasContent = outbreak.length > 0 || action.length > 0;
+        return summary;
+    }
+
+    function buildHeatRiseSummary(cityData, opts) {
+        const summary = {
+            updateTime: (opts && opts.updateTime) || fmtUpdateTime(new Date()),
+            totalCities: cityData.length
+        };
+        const minChg = RULES.heatRise.minAdiChange;
+        const rising = getTopHeatRise(cityData, 50)
+            .filter((c) => (c.adiChange || 0) >= minChg)
+            .sort((a, b) => (b.adiChange || 0) - (a.adiChange || 0))
+            .map((c) => ({
+                name: c.cityName, adiNow: c.adiScore, adiFuture3: c.futureAdi3,
+                adiChange: c.adiChange, maxTempChange: c.maxTempChange
+            }));
+        summary.risingCities = rising;
+        summary.hasContent = rising.length > 0;
+        return summary;
+    }
+
+    function buildSummary(type, cityData, opts) {
+        if (type === 'heatFocus') return buildHeatFocusSummary(cityData, opts);
+        if (type === 'heatRise') return buildHeatRiseSummary(cityData, opts);
+        // brief:完整简报（强度+重点+升温+大区）
+        const summary = {
+            updateTime: (opts && opts.updateTime) || fmtUpdateTime(new Date()),
+            totalCities: cityData.length,
+            stats: { outbreak: 0, action: 0, opportunity: 0, observe: 0 }
+        };
+        summary.intensity = calculateSalesIntensity(cityData);
+        const st = getLevelStats(cityData);
+        summary.stats = { outbreak: st.outbreak || 0, action: st.action || 0, opportunity: st.opportunity || 0, observe: st.observe || 0 };
+        summary.outbreakCities = getCitiesByLevel(cityData, 'outbreak').map(toOutbreak);
+        summary.actionCities = getCitiesByLevel(cityData, 'action').map((c) => c.cityName);
+        summary.risingCities = getTopHeatRise(cityData, 8).map((c) => ({
+            name: c.cityName, adiNow: c.adiScore, adiFuture3: c.futureAdi3,
+            adiChange: c.adiChange, maxTempChange: c.maxTempChange
+        }));
+        summary.activeRegions = regionList(cityData);
+        return summary;
+    }
+
     function getLevelInfo(levelId) {
         return LEVELS[levelId] || LEVELS.normal;
     }
@@ -610,6 +863,7 @@
         calculateLevelTrend, generateReason,
         getLevelStats, getHotNightCities, getLongestHotNight,
         getTopByADI, getTopNightMuggy, getTopHeatRise, getCitiesByLevel,
-        getLevelInfo, getLevelOrder
+        getLevelInfo, getLevelOrder,
+        parseWeatherData, assembleCityData, buildSummary, buildHeatFocusSummary, buildHeatRiseSummary, RULES
     };
 });
