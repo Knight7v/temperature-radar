@@ -75,3 +75,13 @@ test('buildHeatRiseSummary filters by minAdiChange=10', () => {
     assert.equal(s.risingCities.length, 1);
     // adiChange = futureAdi3(75) - adiNow(60) = 15 >= 10
 });
+
+test('buildSummary brief shape matches manual-push contract', () => {
+    const cities = [
+        { cityName: 'A', adiScore: 90, level: 'outbreak', region: '华东', maxTemp: 38, nightMinTemp: 29, feelsLike: 41, future7AdiScores: [90, 90, 90], future3DayMaxTemps: [38, 38, 38], future3NightMinTemps: [29, 29, 29] }
+    ];
+    const s = ADICore.buildSummary('brief', cities, { updateTime: '08/01 09:30' });
+    assert.equal(s.intensity === '强' || s.intensity === '偏强' || s.intensity === '中' || s.intensity === '低', true);
+    assert.equal(Array.isArray(s.outbreakCities), true);
+    assert.equal(Array.isArray(s.activeRegions), true);
+});
