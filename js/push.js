@@ -26,10 +26,6 @@ const Push = (function () {
         return (window.UI && window.UI.state && window.UI.state.cityData) || [];
     }
 
-    function getCore() {
-        return window.Core;
-    }
-
     function showToast(msg) {
         if (window.UI && typeof window.UI.showToast === 'function') {
             window.UI.showToast(msg);

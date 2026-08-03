@@ -68,12 +68,18 @@ test('buildHeatFocusSummary sets hasContent=true with outbreak city', () => {
 test('buildHeatRiseSummary filters by minAdiChange=10', () => {
     const cities = [
         { cityName: 'R', adiScore: 60, level: 'opportunity', region: '华东', maxTemp: 33, nightMinTemp: 24,
-          future7AdiScores: [60, 65, 75], future3DayMaxTemps: [33, 34, 36], future3NightMinTemps: [24, 25, 26] }
+          future7AdiScores: [60, 65, 75], future3DayMaxTemps: [33, 34, 36], future3NightMinTemps: [24, 25, 26] },
+        // 第二城:adiChange=3 < 阈值10,应被排除(移除 >= minChg 过滤将导致本测试失败)
+        { cityName: 'S', adiScore: 60, level: 'opportunity', region: '华北', maxTemp: 33, nightMinTemp: 24,
+          future7AdiScores: [60, 61, 63], future3DayMaxTemps: [33, 33, 33], future3NightMinTemps: [24, 24, 24] }
     ];
     const s = ADICore.buildSummary('heatRise', cities, { updateTime: '08/01 09:30' });
     assert.equal(s.hasContent, true);
     assert.equal(s.risingCities.length, 1);
-    // adiChange = futureAdi3(75) - adiNow(60) = 15 >= 10
+    assert.equal(s.risingCities[0].name, 'R');
+    assert.equal(s.risingCities.find(c => c.name === 'S'), undefined);
+    // R: adiChange = futureAdi3(75) - adiNow(60) = 15 >= 10
+    // S: adiChange = futureAdi3(63) - adiNow(60) = 3 < 10
 });
 
 test('buildSummary brief shape matches manual-push contract', () => {

@@ -4,10 +4,11 @@ const QWeather = require('./utils/qweather.js');
 const WecomMessage = require('./utils/wecom-message.js');
 
 function authorized(req) {
-    if (req.headers && req.headers['x-vercel-cron'] === '1') return true;
     const secret = process.env.CRON_SECRET;
-    if (secret && req.query && req.query.token === secret) return true;
-    return false;
+    if (secret) {
+        return !!(req.query && req.query.token === secret);
+    }
+    return !!(req.headers && req.headers['x-vercel-cron'] === '1');
 }
 
 async function pushType(type, summary, webhook) {
