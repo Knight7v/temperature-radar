@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const Q = require(path.join(__dirname, '..', 'api', 'utils', 'qweather.js'));
+const Q = require(path.join(__dirname, '..', 'lib', 'qweather.js'));
 
 test('buildWeatherUrl encodes location and appends key', () => {
     const url = Q.buildWeatherUrl('120.00,30.00', 'KEY123');

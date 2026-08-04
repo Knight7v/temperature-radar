@@ -1,5 +1,5 @@
 // 天气代理:key 只在服务端 env;前端匿名 GET。
-const { fetch7d } = require('./utils/qweather.js');
+const { fetch7d } = require('../lib/qweather.js');
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {

@@ -2,7 +2,7 @@
 // 前端 POST 一个紧凑简报摘要 → 服务端格式化为 markdown → 转发到企业微信 webhook。
 // webhook 地址通过环境变量 WECOM_BOT_WEBHOOK 注入,不暴露到前端。
 
-const { buildForType } = require('./utils/wecom-message.js');
+const { buildForType } = require('../lib/wecom-message.js');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

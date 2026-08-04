@@ -1,7 +1,7 @@
 // 定时推送入口(北京 09:30 = UTC 01:30)。Vercel cron 以 GET 调用。
 const ADICore = require('../js/adi-core.js');
-const QWeather = require('./utils/qweather.js');
-const WecomMessage = require('./utils/wecom-message.js');
+const QWeather = require('../lib/qweather.js');
+const WecomMessage = require('../lib/wecom-message.js');
 
 function authorized(req) {
     const secret = process.env.CRON_SECRET;

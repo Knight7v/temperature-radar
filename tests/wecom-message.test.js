@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
 
-const WecomMessage = require(path.join(__dirname, '..', 'api', 'utils', 'wecom-message.js'));
+const WecomMessage = require(path.join(__dirname, '..', 'lib', 'wecom-message.js'));
 
 function run(name, fn) {
     try {
