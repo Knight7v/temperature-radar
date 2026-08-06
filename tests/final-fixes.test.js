@@ -150,17 +150,14 @@ test('dynamic UI templates use shared numeric typography and the SVG icon system
     const html = read('index-v2.html');
     const ui = read('js/ui.js');
     const map = read('js/map.js');
-    const testMode = read('js/test-mode.js');
 
-    ['icon-search', 'icon-document', 'icon-insight', 'icon-moon', 'icon-alert', 'icon-test-mode']
+    ['icon-search', 'icon-document', 'icon-insight', 'icon-moon', 'icon-alert']
         .forEach((id) => assert.match(html, new RegExp(`id="${id}"`)));
     assert.doesNotMatch(ui, /Orbitron/);
     assert.match(ui, /class="[^"]*tabular-number[^"]*"/);
     assert.doesNotMatch(html, /🧪|📄|🔍/u);
     assert.doesNotMatch(ui, /🌙|📋|⚠️|🔍|💡|🔥/u);
     assert.doesNotMatch(map, /🌙|⚠️/u);
-    assert.doesNotMatch(testMode, /🧪|✅/u);
-    assert.match(testMode, /<use href="#icon-test-mode"><\/use>/);
     assert.match(
         read('css/titanium-theme.css'),
         /\.tabular-number\s*\{[\s\S]*?font-variant-numeric:\s*tabular-nums;/

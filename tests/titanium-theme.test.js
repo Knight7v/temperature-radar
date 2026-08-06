@@ -474,36 +474,20 @@ test('rules groups collapse without overflowing narrow viewports', () => {
 
 test('applies titanium surfaces to all product modals', () => {
     const html = read('index-v2.html');
-    ['cityDetailModal', 'dailyBriefModal', 'loginModal', 'paymentModal'].forEach((id) => {
+    ['cityDetailModal', 'dailyBriefModal'].forEach((id) => {
         const pattern = new RegExp(`id="${id}"[\\s\\S]{0,500}modal-surface`);
         assert.match(html, pattern);
     });
 });
 
-test('login controls retain labels and accessible input modes', () => {
-    const html = read('index-v2.html');
-    assert.match(html, /for="loginPhone"/);
-    assert.match(html, /id="loginPhone"[^>]*class="titanium-input"[^>]*inputmode="numeric"[^>]*autocomplete="tel"/);
-    assert.match(html, /for="loginCode"/);
-    assert.match(html, /id="loginCode"[^>]*class="titanium-input"[^>]*inputmode="numeric"[^>]*autocomplete="one-time-code"/);
-});
-
-test('preserves modal IDs, form IDs, and authentication and payment handlers', () => {
+test('preserves core modal IDs and modal close handlers', () => {
     const html = read('index-v2.html');
 
-    ['cityDetailModal', 'dailyBriefModal', 'loginModal', 'paymentModal',
-        'phoneLoginForm', 'wechatLoginForm', 'wechatQRCode', 'wechatLoading',
-        'loginPhone', 'loginCode', 'sendCodeBtn']
+    ['cityDetailModal', 'dailyBriefModal']
         .forEach((id) => assert.match(html, new RegExp(`id="${id}"`)));
     [
         'UI.closeCityDetail()',
-        'UI.closeDailyBriefModal()',
-        'Auth.closeModal()',
-        'Auth.sendCode()',
-        'Auth.phoneLogin()',
-        'Payment.closeModal()',
-        "Payment.buy('hot_analysis', 'onetime')",
-        "Payment.buy('forecast_7d', 'subscription')"
+        'UI.closeDailyBriefModal()'
     ].forEach((handler) => assert.ok(html.includes(handler), `${handler} must remain wired`));
 });
 
@@ -512,7 +496,7 @@ test('gives every product modal close button an accessible name', () => {
     const ui = read('js/ui.js');
     const staticCloseButtons = html.match(/<button class="modal-close"[^>]*>/g);
 
-    assert.equal(staticCloseButtons.length, 3);
+    assert.equal(staticCloseButtons.length, 1);
     staticCloseButtons.forEach((button) => {
         assert.match(button, /type="button"/);
         assert.match(button, /aria-label="关闭[^"]*"/);
@@ -523,28 +507,10 @@ test('gives every product modal close button an accessible name', () => {
     );
 });
 
-test('gives the dynamically rendered payment QR close button a precise accessible name', () => {
-    const payment = read('js/payment.js');
-    const qrCloseButtons = [
-        ...payment.matchAll(/<button[^>]*class="modal-close"[^>]*>/g)
-    ].map((match) => match[0]);
-
-    assert.equal(qrCloseButtons.length, 1);
-    assert.match(qrCloseButtons[0], /type="button"/);
-    assert.match(qrCloseButtons[0], /aria-label="关闭支付二维码"/);
-    assert.match(
-        qrCloseButtons[0],
-        /onclick="this\.closest\('\.payment-qr-modal'\)\.remove\(\)"/
-    );
-});
-
-test('uses titanium pricing, QR placeholder, feedback, and city detail surfaces', () => {
+test('uses titanium feedback and city detail surfaces', () => {
     const html = read('index-v2.html');
     const ui = read('js/ui.js');
 
-    assert.equal((html.match(/class="payment-plan pricing-card(?: featured)?"/g) || []).length, 2);
-    assert.match(html, /class="wechat-qr-placeholder"[^>]*role="img"[^>]*aria-label="微信登录二维码区域"/);
-    assert.match(html, /登录二维码将在服务接入后显示/);
     assert.match(html, /id="toast" class="toast feedback-toast"/);
     assert.match(ui, /content\.innerHTML = `\s*<div class="modal-header titanium-modal-header">/);
     assert.ok((ui.match(/class="detail-item surface-raised"/g) || []).length >= 9);
@@ -716,7 +682,7 @@ test('icon-only controls have accessible names', () => {
         ...html.matchAll(/<button[^>]*class="[^"]*(?:modal-close|clear-search-btn)[^"]*"[^>]*>/g)
     ];
 
-    assert.ok(iconButtons.length >= 4);
+    assert.ok(iconButtons.length >= 3);
     iconButtons.forEach(([button]) => assert.match(button, /aria-label=/));
 });
 

@@ -73,9 +73,6 @@
         <symbol id="icon-alert" viewBox="0 0 24 24">
             <path d="M12 3 2.8 20h18.4L12 3Zm0 6v5m0 3v.1"/>
         </symbol>
-        <symbol id="icon-test-mode" viewBox="0 0 24 24">
-            <path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3M8 14h8"/>
-        </symbol>
     </svg>
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
@@ -161,13 +158,7 @@
                     <p class="header-date" id="headerDate">--</p>
                     <h2 id="pageTitle">今日热销</h2>
                 </div>
-                <div class="header-center">
-                    <!-- 测试模式指示器 -->
-                    <div id="testModeIndicator" style="display: none;" class="test-mode-badge">
-                        <svg class="inline-icon" aria-hidden="true"><use href="#icon-test-mode"></use></svg>
-                        测试模式
-                    </div>
-                </div>
+                <div class="header-center"></div>
                 <div class="header-right">
                     <div class="current-time" id="currentTime">--:--:--</div>
                     <div class="header-stats">
@@ -521,109 +512,6 @@
     <!-- Toast -->
     <div id="toast" class="toast feedback-toast"></div>
 
-    <!-- Login Modal -->
-    <div class="login-modal" id="loginModal">
-        <div class="modal-overlay" onclick="Auth.closeModal()"></div>
-        <div class="modal-content modal-surface login-modal-content">
-            <div class="modal-header">
-                <h3>登录 / 注册</h3>
-                <button class="modal-close" type="button" aria-label="关闭登录窗口" onclick="Auth.closeModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <!-- Login Tabs -->
-                <div class="login-tabs">
-                    <button class="login-tab active" data-type="phone">手机号登录</button>
-                    <button class="login-tab" data-type="wechat">微信扫码</button>
-                </div>
-
-                <!-- Phone Login Form -->
-                <div class="login-form active" id="phoneLoginForm">
-                    <div class="form-group">
-                        <label for="loginPhone">手机号</label>
-                        <input type="tel" id="loginPhone" class="titanium-input"
-                            placeholder="请输入手机号" maxlength="11" inputmode="numeric" autocomplete="tel">
-                    </div>
-                    <div class="form-group">
-                        <label for="loginCode">验证码</label>
-                        <div class="code-input-group">
-                            <input type="text" id="loginCode" class="titanium-input"
-                                placeholder="请输入验证码" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
-                            <button type="button" class="send-code-btn" id="sendCodeBtn" onclick="Auth.sendCode()">
-                                发送验证码
-                            </button>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-block" onclick="Auth.phoneLogin()">
-                        登录 / 注册
-                    </button>
-                </div>
-
-                <!-- WeChat Login Form -->
-                <div class="login-form" id="wechatLoginForm">
-                    <div class="wechat-qr-container">
-                        <div id="wechatQRCode" class="wechat-qr-placeholder" role="img" aria-label="微信登录二维码区域">
-                            <span>登录二维码将在服务接入后显示</span>
-                            <span id="wechatLoading" hidden></span>
-                        </div>
-                        <p class="wechat-tip">请使用微信扫描二维码登录</p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <p class="login-tip">
-                    登录即表示同意 <a href="#">用户协议</a> 和 <a href="#">隐私政策</a>
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Payment Modal -->
-    <div class="payment-modal" id="paymentModal">
-        <div class="modal-overlay" onclick="Payment.closeModal()"></div>
-        <div class="modal-content modal-surface payment-modal-content">
-            <div class="modal-header">
-                <h3>解锁付费功能</h3>
-                <button class="modal-close" type="button" aria-label="关闭支付窗口" onclick="Payment.closeModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="payment-plans">
-                    <div class="payment-plan pricing-card">
-                        <div class="plan-header">
-                            <h4>热销分析</h4>
-                            <div class="plan-price">¥29.9<span>/次</span></div>
-                        </div>
-                        <ul class="plan-features">
-                            <li>✓ 夜间闷热排行榜</li>
-                            <li>✓ 未来3天热销榜</li>
-                            <li>✓ 重点城市群监控</li>
-                            <li>✓ 24小时有效</li>
-                        </ul>
-                        <button class="btn btn-primary" onclick="Payment.buy('hot_analysis', 'onetime')">
-                            立即购买
-                        </button>
-                    </div>
-                    <div class="payment-plan pricing-card featured">
-                        <div class="plan-badge">推荐</div>
-                        <div class="plan-header">
-                            <h4>7天预测</h4>
-                            <div class="plan-price">¥19.9<span>/月</span></div>
-                        </div>
-                        <ul class="plan-features">
-                            <li>✓ 未来7天温度预测</li>
-                            <li>✓ 未来7天ADI指数</li>
-                            <li>✓ 城市筛选功能</li>
-                            <li>✓ 数据导出功能</li>
-                            <li>✓ 自动续费可取消</li>
-                        </ul>
-                        <button class="btn btn-primary" onclick="Payment.buy('forecast_7d', 'subscription')">
-                            立即订阅
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
     <script src="js/rain-monitor.js"></script>
     <script src="js/adi-core.js"></script>
@@ -631,11 +519,7 @@
     <script src="js/china-geo.js"></script>
     <script src="js/map.js?v=3"></script>
     <script src="js/ui.js?v=3"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/payment.js"></script>
-    <script src="js/ads.js"></script>
     <script src="js/push.js"></script>
-    <script src="js/test-mode.js?v=2"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

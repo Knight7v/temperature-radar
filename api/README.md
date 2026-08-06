@@ -1,233 +1,65 @@
 # API 文档
 
-## 认证相关 API
+本服务目前仅保留核心管线相关接口:天气数据代理、企微推送(手动 + 定时)。
+登录 / 支付 / 订阅 / 权限 / 广告等商业化端点已下线(代码见 git 历史)。
 
-### 1. 发送验证码
-**POST** `/api/auth/send-code`
+---
 
-请求体：
+## 天气数据代理
+
+### 获取 7 天预报
+**GET** `/api/weather?location={city}`
+
+和风天气数据代理。API key 仅存服务端环境变量,前端匿名调用。
+
+查询参数:
+```
+?location=北京        # 城市名(中文)或 LocationID
+```
+
+响应:和风天气原始 JSON(约 1 小时刷新,带 `Cache-Control: public, max-age=3600`)。
+
+错误:
+- `400` 缺少 `location`
+- `503` 未配置 `QWEATHER_API_KEY`
+- `502` 上游获取失败
+
+---
+
+## 企微推送
+
+### 手动推送(前端按钮触发)
+**POST** `/api/push`
+
+前端 `Push.pushBrief()` 用 `ADICore.buildSummary()` 预构建摘要后提交;服务端用 `lib/wecom-message.js` 格式化为 markdown 并转发到企业微信机器人 webhook。
+
+请求体(已构建的摘要对象):
 ```json
 {
-  "phone": "13800138000"
+  "type": "heatFocus | heatRise | brief",
+  "...": "buildSummary 产出的字段"
 }
 ```
 
-响应：
+响应:
 ```json
-{
-  "success": true,
-  "message": "验证码已发送"
-}
+{ "success": true }
 ```
 
 ---
 
-### 2. 手机号登录
-**POST** `/api/auth/login`
+### 定时推送(Vercel Cron)
+**GET** `/api/cron-push`
 
-请求体：
+`vercel.json` 中注册,每日 **01:30 UTC(北京 09:30)** 由 Vercel Cron 以 GET 触发。抓取全部城市 → 装配数据 → 构建「高温重点关注」与「升温预报」摘要 → 达标才推(无爆热/行动级或无显著升温则跳过)。
+
+鉴权:
+- 若配置了 `CRON_SECRET`:需带查询参 `?token={CRON_SECRET}`。
+- 否则退化为检查 `x-vercel-cron: 1` 头(**生产环境务必配置 `CRON_SECRET`**,否则该头可被伪造)。
+
+响应:
 ```json
-{
-  "phone": "13800138000",
-  "code": "123456"
-}
-```
-
-响应：
-```json
-{
-  "success": true,
-  "message": "登录成功",
-  "data": {
-    "user": {
-      "user_id": "user_xxx",
-      "phone": "13800138000",
-      "nickname": "用户8000",
-      "avatar": "https://avatar.url"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
----
-
-### 3. 微信登录
-**POST** `/api/auth/wechat`
-
-请求体：
-```json
-{
-  "code": "wx_auth_code"
-}
-```
-
-响应：
-```json
-{
-  "success": true,
-  "message": "登录成功",
-  "data": {
-    "user": {
-      "user_id": "user_xxx",
-      "nickname": "微信用户",
-      "avatar": "https://avatar.url"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-}
-```
-
----
-
-### 4. 验证Token
-**GET** `/api/auth/verify`
-
-请求头：
-```
-Authorization: Bearer {token}
-```
-
-响应：
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "user_id": "user_xxx",
-      "phone": "13800138000",
-      "nickname": "用户8000",
-      "avatar": "https://avatar.url"
-    }
-  }
-}
-```
-
----
-
-### 5. 登出
-**POST** `/api/auth/logout`
-
-请求头：
-```
-Authorization: Bearer {token}
-```
-
-响应：
-```json
-{
-  "success": true,
-  "message": "登出成功"
-}
-```
-
----
-
-## 权限检查 API
-
-### 检查功能权限
-**GET** `/api/permissions/check`
-
-请求头：
-```
-Authorization: Bearer {token}
-```
-
-查询参数：
-```
-?feature=hot_analysis
-```
-
-响应：
-```json
-{
-  "success": true,
-  "data": {
-    "has_access": true,
-    "access_type": "subscription",
-    "expires_at": "2026-06-12T00:00:00Z"
-  }
-}
-```
-
----
-
-## 支付相关 API
-
-### 创建订单
-**POST** `/api/payment/create`
-
-请求头：
-```
-Authorization: Bearer {token}
-```
-
-请求体：
-```json
-{
-  "product_id": "forecast_7d",
-  "payment_method": "wechat"
-}
-```
-
-响应：
-```json
-{
-  "success": true,
-  "data": {
-    "order_id": "order_xxx",
-    "amount": 19.90,
-    "payment_url": "https://pay.example.com/...",
-    "qr_code": "https://pay.example.com/qr/..."
-  }
-}
-```
-
----
-
-### 支付回调
-**POST** `/api/payment/callback`
-
-请求体（来自支付平台）：
-```json
-{
-  "order_id": "order_xxx",
-  "transaction_id": "wx_xxx",
-  "status": "paid"
-}
-```
-
-响应：
-```json
-{
-  "success": true,
-  "message": "支付成功"
-}
-```
-
----
-
-## 广告相关 API
-
-### 获取广告位
-**GET** `/api/ads`
-
-查询参数：
-```
-?position=top_banner
-```
-
-响应：
-```json
-{
-  "success": true,
-  "data": {
-    "ad_id": "ad_xxx",
-    "title": "夏季空调大促",
-    "image_url": "https://cdn.example.com/ad.jpg",
-    "link_url": "https://example.com/promo"
-  }
-}
+{ "cities": 12, "failed": [], "pushed": { "heatFocus": true, "heatRise": false }, "errors": [] }
 ```
 
 ---
@@ -237,36 +69,23 @@ Authorization: Bearer {token}
 | 错误码 | 说明 |
 |--------|------|
 | 400 | 请求参数错误 |
-| 401 | 未授权或Token过期 |
-| 403 | 无权限访问该功能 |
-| 404 | 资源不存在 |
-| 429 | 请求过于频繁 |
+| 401 | 未授权(cron token 缺失/不符) |
+| 502 | 上游(和风)获取失败 |
+| 503 | 缺少必要环境变量 |
 | 500 | 服务器内部错误 |
 
 ---
 
-## 开发环境配置
+## 环境变量
 
-创建 `.env.local` 文件：
+在 Vercel 用 `vercel env add <NAME>` 配置(Production / Preview):
+
 ```
-NODE_ENV=development
-JWT_SECRET=your-secret-key
-WECHAT_APP_ID=your-wechat-appid
-WECHAT_APP_SECRET=your-wechat-secret
-SMS_ACCESS_KEY=your-sms-key
-SMS_SECRET_KEY=your-sms-secret
-QWEATHER_API_KEY=你的和风天气key
-WECOM_BOT_WEBHOOK=https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx
-CRON_SECRET=自定义cron鉴权token(可选)
+QWEATHER_API_KEY=你的和风天气key          # 必需:weather + cron-push
+WECOM_BOT_WEBHOOK=https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx   # 必需:push + cron-push
+CRON_SECRET=自定义cron鉴权token            # 强烈建议:cron-push 额外鉴权
 ```
-
-## 定时推送(cron)
-
-- `/api/cron-push` 由 Vercel Cron 每日 01:30 UTC(北京 09:30)以 GET 触发。
-- 推送「高温重点关注」与「升温预报」,达标才推(无爆热/行动级或无显著升温则不推)。
-- 需配置环境变量:`QWEATHER_API_KEY`、`WECOM_BOT_WEBHOOK`;可选 `CRON_SECRET`(查询参 `?token=` 额外鉴权)。
-- 生产用 `vercel env add QWEATHER_API_KEY` 等命令配置。
 
 ---
 
-**最后更新：** 2026-05-12
+**最后更新:** 2026-08-06
