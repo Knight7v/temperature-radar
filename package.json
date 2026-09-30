@@ -11,14 +11,21 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:seed": "node scripts/seed.js",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "dev": "node scripts/dev-server.js --port 41873",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "drizzle-orm": "^0.45.2",
-    "jose": "^6.2.8"
+    "exceljs": "^4.4.0",
+    "jose": "^6.2.8",
+    "papaparse": "^5.7.0",
+    "pg": "^8.23.0",
+    "yauzl": "^3.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "drizzle-kit": "^0.31.10"
   }
 }

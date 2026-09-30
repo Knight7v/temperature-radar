@@ -31,3 +31,7 @@ layout-debug.html
 # Old files
 index-old.html
 index-v2-before-sales-overview.html
+
+# Browser validation artifacts
+test-results/
+playwright-report/
