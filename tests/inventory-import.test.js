@@ -1,0 +1,12 @@
+const test=require('node:test'),assert=require('node:assert/strict');const ExcelJS=require('exceljs');
+const {parseInventoryFile}=require('../lib/inventory/import-parser');
+const header=['日期','仓库名称','京东SKU','商家商品编码','商家商品标识','商品名称','省市','在库件数','在库件数-良品','在库件数-残品','可用在库件数','销售出库件数','近7天销售出库件数','近15天销售出库件数','近30天销售出库件数','商品MTD周转','30天周转'];
+const row=['2026-09-29','甲仓','JD-I','000123','内机','测试内机','上海',16,16,0,16,2,14,24,40,'',''];
+const now=new Date('2026-09-30T02:00:00Z');
+function csv(r=row,h=header){return Buffer.from('\uFEFF'+h.join(',')+'\n'+r.join(','));}
+test('CSV preserves zero-padded codes and missing optional turnover',async()=>{const p=await parseInventoryFile({buffer:csv(),filename:'jd.csv',now});assert.equal(p.rows[0].merchantCode,'000123');assert.equal(p.rows[0].sourceTurnover.mtd,null);assert.equal(p.rows[0].available,16);});
+test('XLSX and CSV normalize to same hash',async()=>{const w=new ExcelJS.Workbook(),s=w.addWorksheet('库存');s.addRow(header);s.addRow(row);const b=Buffer.from(await w.xlsx.writeBuffer());const a=await parseInventoryFile({buffer:b,filename:'jd.xlsx',now}),c=await parseInventoryFile({buffer:csv(),filename:'jd.csv',now});assert.equal(a.contentHash,c.contentHash);});
+for(const [name,mutate] of [['blank quantity',r=>r[10]=''],['negative',r=>r[10]=-1],['rollup inconsistency',r=>r[12]=80],['future date',r=>r[0]='2026-10-01']])test('rejects '+name,async()=>{const r=[...row];mutate(r);await assert.rejects(parseInventoryFile({buffer:csv(r),filename:'a.csv',now}),e=>e.status===422);});
+test('duplicate key and duplicate header rejected',async()=>{await assert.rejects(parseInventoryFile({buffer:Buffer.from(csv().toString()+'\n'+row.join(',')),filename:'a.csv',now}),e=>e.status===422);await assert.rejects(parseInventoryFile({buffer:csv(row,[...header.slice(0,-1),'日期']),filename:'a.csv',now}),e=>e.status===422);});
+test('XLSX formula and multiple nonempty sheets rejected',async()=>{const w=new ExcelJS.Workbook(),s=w.addWorksheet('库存');s.addRow(header);s.addRow(row);s.getCell('K2').value={formula:'1+1',result:2};await assert.rejects(parseInventoryFile({buffer:Buffer.from(await w.xlsx.writeBuffer()),filename:'a.xlsx',now}),e=>e.status===422);s.getCell('K2').value=16;w.addWorksheet('另外').addRow(['数据']);await assert.rejects(parseInventoryFile({buffer:Buffer.from(await w.xlsx.writeBuffer()),filename:'a.xlsx',now}),e=>e.status===422);});
+module.exports={header,row,csv,now};

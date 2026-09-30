@@ -1,0 +1,17 @@
+CREATE TABLE inventory_state (tenant_id uuid PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE, config_revision integer NOT NULL DEFAULT 0, latest_date date);
+CREATE TABLE inventory_warehouses (tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, id text NOT NULL, data jsonb NOT NULL, PRIMARY KEY(tenant_id,id));
+CREATE TABLE inventory_skus (tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, id text NOT NULL, data jsonb NOT NULL, PRIMARY KEY(tenant_id,id));
+CREATE TABLE inventory_products (tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, id text NOT NULL, data jsonb NOT NULL, PRIMARY KEY(tenant_id,id));
+CREATE TABLE inventory_pairings (tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, id text NOT NULL, data jsonb NOT NULL, PRIMARY KEY(tenant_id,id));
+CREATE TABLE inventory_pairing_members (tenant_id uuid NOT NULL, sku_id text NOT NULL, product_id text NOT NULL, PRIMARY KEY(tenant_id,sku_id), FOREIGN KEY(tenant_id,sku_id) REFERENCES inventory_skus(tenant_id,id), FOREIGN KEY(tenant_id,product_id) REFERENCES inventory_products(tenant_id,id));
+CREATE TABLE inventory_rules (tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, id text NOT NULL, data jsonb NOT NULL, PRIMARY KEY(tenant_id,id));
+CREATE TABLE inventory_snapshots (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, date date NOT NULL, revision integer NOT NULL, calculation_id uuid, data jsonb NOT NULL, UNIQUE(tenant_id,date), UNIQUE(tenant_id,id));
+CREATE TABLE inventory_snapshot_rows (tenant_id uuid NOT NULL, snapshot_id uuid NOT NULL, warehouse text NOT NULL, sku text NOT NULL, data jsonb NOT NULL, PRIMARY KEY(tenant_id,snapshot_id,warehouse,sku), FOREIGN KEY(tenant_id,snapshot_id) REFERENCES inventory_snapshots(tenant_id,id) ON DELETE CASCADE);
+CREATE TABLE inventory_calculations (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,id));
+ALTER TABLE inventory_snapshots ADD CONSTRAINT inventory_snapshot_calculation_fk FOREIGN KEY(tenant_id,calculation_id) REFERENCES inventory_calculations(tenant_id,id);
+CREATE TABLE inventory_import_previews (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, expires_at timestamptz NOT NULL, data jsonb NOT NULL);
+CREATE TABLE inventory_import_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE inventory_audit_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE inventory_push_config (tenant_id uuid PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE, data jsonb NOT NULL);
+CREATE TABLE inventory_push_runs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, execution_date date NOT NULL, delivery_kind text NOT NULL DEFAULT 'daily', request_id uuid NOT NULL, data jsonb NOT NULL, lease_token uuid, lease_until timestamptz, created_at timestamptz NOT NULL DEFAULT now(), UNIQUE(tenant_id,request_id));
+CREATE UNIQUE INDEX inventory_daily_run_unique ON inventory_push_runs(tenant_id,execution_date) WHERE delivery_kind='daily';
