@@ -655,6 +655,25 @@ body::before {
     min-height: 44px;
 }
 
+/* 简报模态框:推送内容类型下拉(与钛色输入框风格一致) */
+.push-type-select {
+    padding: 10px 14px;
+    min-height: 44px;
+    border-radius: var(--titanium-radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--titanium-text);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--titanium-border);
+}
+
+.push-type-select:focus-visible {
+    outline: 2px solid var(--titanium-accent);
+    outline-offset: 2px;
+    border-color: var(--titanium-accent);
+}
+
 .pricing-card,
 .payment-plan {
     background: rgba(255, 255, 255, 0.045);
