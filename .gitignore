@@ -35,3 +35,9 @@ index-v2-before-sales-overview.html
 # Browser validation artifacts
 test-results/
 playwright-report/
+
+# Local database backups
+backups/
+
+# Local agent workspace memory
+.workbuddy/

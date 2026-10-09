@@ -1,0 +1,2 @@
+// Future adapter must return a Blob. API credentials belong on the server.
+(function(root){let provider=null;root.ComparisonAI={setProvider(fn){if(typeof fn!=='function')throw Error('Provider must be a function');provider=fn;},async generateBackground(prompt){if(!provider)throw Error('AI 背景服务尚未配置');const blob=await provider({prompt,kind:'comparison-background'});if(!(blob instanceof Blob))throw Error('生成服务未返回图片');return blob;},buildPrompt(direction){return `电商商品对比海报背景，竖版。${direction}\n禁止生成文字、数字、品牌标志或产品。商品与参数由编辑器叠加。`;}};})(globalThis);

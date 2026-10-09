@@ -13,10 +13,13 @@
     "db:seed": "node scripts/seed.js",
     "db:studio": "drizzle-kit studio",
     "dev": "node scripts/dev-server.js --port 41873",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "db:backup": "node scripts/backup-db.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
+    "@phosphor-icons/core": "^2.1.1",
+    "chart.js": "^4.5.1",
     "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",
     "jose": "^6.2.8",

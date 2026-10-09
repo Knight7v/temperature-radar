@@ -18,7 +18,7 @@
    if(response.status===401){if(read()?.accessToken===sentToken)await refresh();if(!read())throw expired();response=await send();if(response.status===401){clear();throw expired();}}
    return response;
   }
-  return {clear,authorizedFetch,async login(credentials){const d=await jsonResponse(await fetchImpl('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(credentials)}));save(d);return {user:d.user,tenant:d.tenant};},async getIdentity(){return jsonResponse(await authorizedFetch('/api/auth/me'));},async logout(){let remoteRevoked=false;try{remoteRevoked=(await authorizedFetch('/api/auth/logout',{method:'POST'})).ok;}catch{}finally{clear();}return {remoteRevoked};}};
+  return {clear,authorizedFetch,async login(credentials){const d=await jsonResponse(await fetchImpl('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(credentials)}));save(d);return {user:d.user,tenant:d.tenant};},async getIdentity(){try{return await jsonResponse(await authorizedFetch('/api/auth/me'));}catch(e){if(/signature verification failed|JWT_SECRET|令牌无效/i.test(e.message||'')){clear();throw expired();}throw e;}},async logout(){let remoteRevoked=false;try{remoteRevoked=(await authorizedFetch('/api/auth/logout',{method:'POST'})).ok;}catch{}finally{clear();}return {remoteRevoked};}};
  }
  return {safeReturnTo,createSessionClient};
 });

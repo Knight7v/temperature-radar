@@ -1,0 +1,24 @@
+/* Sales overview: heading and period controls, followed by one compact filter row. */
+.sales-overview-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+.sales-overview-heading h2{margin:0;font-size:20px;line-height:32px;white-space:nowrap}
+.sales-overview-heading .date-bar{margin:0 0 0 auto;padding:0;border:0;background:transparent;gap:12px;justify-content:flex-end;max-width:100%}
+.sales-overview-heading #dateCurrent{font-size:12px;white-space:nowrap}
+.sales-overview-heading .date-shortcuts{padding:3px;background:#f5f6f8;border-radius:6px;gap:2px}
+.sales-overview-heading .date-shortcuts button{font-size:13px;line-height:24px;padding:1px 9px;border-radius:4px;white-space:nowrap}
+.sales-overview-heading .date-shortcuts button[aria-pressed=true]{color:#315eff;box-shadow:0 1px 5px #182b4914}
+.sales-overview-heading #datePanel{left:auto;right:0;top:calc(100% + 10px);max-width:calc(100vw - 48px)}
+.sales-filters{align-items:center;gap:14px 8px;margin-bottom:18px}
+.sales-filters label{display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap}
+.sales-filters select{height:34px;min-height:34px;padding:5px 28px 5px 10px;border-radius:5px;font-size:13px;max-width:210px}
+.sales-filters select{min-width:0;width:110px}
+.sales-filters #shopFilter{width:165px}
+.sales-filters #shopStatus{width:205px}
+.sales-filters #brand,.sales-filters #platform{width:110px}
+.sales-filter-actions{display:flex;gap:10px;align-items:center}
+.import-actions{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;margin-top:14px}.import-actions #file{width:185px;min-width:0}.import-actions #confirm{margin:0;font-size:12px;padding:7px 10px}.import-actions #preview{margin:0;font-size:12px;padding:7px 10px}
+.sales-filter-actions button{font-size:13px;line-height:20px;padding:6px 15px;border-radius:5px;white-space:nowrap}
+.sales-filters select:focus-visible,.sales-overview-heading button:focus-visible,.sales-filter-actions button:focus-visible{outline:2px solid #315eff;outline-offset:2px}
+@media(max-width:1100px){.sales-overview-heading{gap:12px}.sales-overview-heading .date-bar{gap:8px}.sales-filters{gap:12px}}
+@media(max-width:700px){.sales-overview-heading .date-bar{width:100%;justify-content:flex-start;margin-left:0}.sales-overview-heading #dateCurrent{width:100%}.sales-overview-heading .date-shortcuts{flex-wrap:wrap}.sales-filters label{width:100%;justify-content:space-between}.sales-filters select,.sales-filters #shopFilter,.sales-filters #shopStatus,.sales-filters #brand,.sales-filters #platform{width:70%;max-width:none}.sales-filter-actions{width:100%;flex-wrap:wrap}.sales-overview-heading #datePanel{right:0;left:auto}}
+@media(max-width:700px){.import-actions{flex-wrap:wrap}.import-actions #file{width:100%}}
+.target-dialog{width:min(1080px,96vw);max-height:90vh;overflow:auto;border:0;border-radius:12px;padding:24px 32px;color:var(--wb-ink)}.target-dialog::backdrop{background:#0008}.target-close,.target-controls,.target-footer{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.target-close{justify-content:space-between;margin-bottom:20px}.target-close h2{margin:0}.target-close button{border:0;font-size:24px;color:#888}.target-controls label{display:flex;align-items:center;gap:8px}.target-controls input{width:140px}.target-controls select{max-width:220px}.target-dialog table{width:100%;border-collapse:collapse}.target-dialog th{background:#f7f7f8}.target-dialog th,.target-dialog td{padding:9px 12px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap}.target-dialog th:first-child,.target-dialog td:first-child{text-align:left}.target-dialog td input{width:140px;min-height:30px;padding:4px 9px;border-radius:4px}.target-footer{justify-content:flex-end;margin-top:20px}#targetError{color:#a73939}#targetTotals{color:var(--wb-muted)}

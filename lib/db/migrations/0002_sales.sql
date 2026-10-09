@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS sales_shops(tenant_id uuid NOT NULL REFERENCES tenants(id),id uuid NOT NULL DEFAULT gen_random_uuid(),data jsonb NOT NULL,revision integer NOT NULL DEFAULT 0,PRIMARY KEY(tenant_id,id));
+CREATE TABLE IF NOT EXISTS sales_daily(tenant_id uuid NOT NULL,shop_id uuid NOT NULL,date date NOT NULL,cents bigint NOT NULL CHECK(cents>=0),PRIMARY KEY(tenant_id,shop_id,date),FOREIGN KEY(tenant_id,shop_id) REFERENCES sales_shops(tenant_id,id));
+CREATE TABLE IF NOT EXISTS sales_targets(tenant_id uuid NOT NULL,shop_id uuid NOT NULL,period text NOT NULL,cents bigint NOT NULL CHECK(cents>0),PRIMARY KEY(tenant_id,shop_id,period),FOREIGN KEY(tenant_id,shop_id) REFERENCES sales_shops(tenant_id,id));
+CREATE TABLE IF NOT EXISTS sales_previews(tenant_id uuid NOT NULL,id uuid NOT NULL DEFAULT gen_random_uuid(),shop_id uuid NOT NULL,data jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(tenant_id,id));
+CREATE TABLE IF NOT EXISTS sales_imports(tenant_id uuid NOT NULL,id uuid NOT NULL DEFAULT gen_random_uuid(),data jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(tenant_id,id));
