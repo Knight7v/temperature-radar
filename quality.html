@@ -1,1 +1,50 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>客服质检 · 公司工作台</title><link rel="stylesheet" href="/css/workbench.css"><style>.qc-card{background:#fff;border:1px solid var(--wb-line);border-radius:14px;padding:20px;margin:16px 0}.qc-toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.qc-toolbar label{display:grid;gap:4px;color:var(--wb-muted);font-size:12px}.qc-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.qc-kpi{background:#fff;border:1px solid var(--wb-line);border-radius:12px;padding:16px}.qc-kpi strong{display:block;font-size:26px;margin-top:5px}.qc-table{width:100%;border-collapse:collapse}.qc-table th,.qc-table td{padding:11px;border-bottom:1px solid #edf0f4;text-align:left}.qc-tag{padding:3px 8px;border-radius:99px;background:#fff0e8;color:#a85518;font-size:12px;margin:2px;display:inline-block}.qc-ok{background:#e9f7ef;color:#26815f}@media(max-width:800px){.qc-kpis{grid-template-columns:repeat(2,1fr)}}</style><body class="workbench-body"><div id="shell"></div><main class="workbench-main"><div class="workbench-eyebrow">SERVICE QUALITY</div><h1>客服质检</h1><p class="workbench-muted">抽检电商客服聊天记录，识别服务态度、响应和规范问题。</p><section class="qc-card"><div class="qc-toolbar"><label>聊天记录文件<input id="file" type="file" accept=".xlsx,.xls,.csv"></label><label>抽检比例<select id="rate"><option value="10">10%</option><option value="20">20%</option><option value="50">50%</option><option value="100">全部</option></select></label><label><input id="mask" type="checkbox" checked> 自动脱敏手机号</label><label><input id="filterMarketing" type="checkbox" checked> 过滤无效营销</label><button id="run" class="workbench-primary">开始抽检</button></div><p id="status" role="status">请导入客服聊天记录。</p></section><section id="result" hidden><div class="qc-kpis"><div class="qc-kpi">抽检会话<strong id="total">0</strong></div><div class="qc-kpi">平均质量分<strong id="score">-</strong></div><div class="qc-kpi">态度合格率<strong id="attitude">-</strong></div><div class="qc-kpi">突出问题<strong id="issues">0</strong></div></div><section class="qc-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2>抽检明细与改进建议</h2><button id="exportResult">导出质检结果</button></div><div style="overflow:auto"><table class="qc-table"><thead><tr><th>会话/客服</th><th>质量分</th><th>服务态度</th><th>问题标签</th><th>优化建议</th></tr></thead><tbody id="rows"></tbody></table></div></section></section></main><script src="/js/workbench-session.js"></script><script src="/js/workbench-shell.js"></script><script src="/js/quality.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>客服质检 · 公司工作台</title>
+<link rel="stylesheet" href="/css/workbench.css">
+<style>
+.qc-card{background:#fff;border:1px solid var(--wb-line);border-radius:14px;padding:20px;margin:16px 0}
+.qc-toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.qc-toolbar label{display:grid;gap:4px;color:var(--wb-muted);font-size:12px}
+.qc-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.qc-kpi{background:#fff;border:1px solid var(--wb-line);border-radius:12px;padding:16px}
+.qc-kpi strong{display:block;font-size:26px;margin-top:5px}
+.qc-note{background:#f7f9fc;border:1px dashed var(--wb-line);border-radius:12px;padding:16px 18px;color:var(--wb-muted);line-height:1.7}
+@media(max-width:800px){.qc-kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+<body class="workbench-body">
+<div id="shell"></div>
+<main class="workbench-main">
+  <div class="workbench-eyebrow">SERVICE QUALITY</div>
+  <h1>客服质检</h1>
+  <p class="workbench-muted">导入客服聊天记录，统计会话量并做手机号脱敏与营销过滤。</p>
+  <section class="qc-card">
+    <div class="qc-toolbar">
+      <label>聊天记录文件<input id="file" type="file" accept=".csv,.txt,.xlsx,.xls"></label>
+      <label>抽检比例<select id="rate"><option value="10">10%</option><option value="20">20%</option><option value="50">50%</option><option value="100">全部</option></select></label>
+      <label><input id="mask" type="checkbox" checked> 自动脱敏手机号</label>
+      <label><input id="filterMarketing" type="checkbox" checked> 过滤无效营销</label>
+      <button id="run" class="workbench-primary">开始抽检</button>
+    </div>
+    <p id="status" role="status">请导入客服聊天记录（支持 CSV；XLSX 请先另存为 CSV）。</p>
+  </section>
+  <section id="result" hidden>
+    <div class="qc-kpis">
+      <div class="qc-kpi">文件记录数<strong id="total">0</strong></div>
+      <div class="qc-kpi">抽检会话数<strong id="sample">0</strong></div>
+      <div class="qc-kpi">脱敏手机号<strong id="masked">0</strong></div>
+      <div class="qc-kpi">过滤营销<strong id="filtered">0</strong></div>
+    </div>
+    <section class="qc-card">
+      <h2>抽检统计</h2>
+      <div class="qc-note">质量评分与问题识别能力待接入。当前版本仅提供会话统计、手机号脱敏与营销过滤，不生成质量分、态度评级或问题标签。</div>
+    </section>
+  </section>
+</main>
+<script src="/js/workbench-session.js"></script>
+<script src="/js/workbench-shell.js"></script>
+<script src="/js/quality.js"></script>
+</body>
+</html>
