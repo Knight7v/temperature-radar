@@ -1,64 +1,57 @@
-(async () => {
-  const s = WorkbenchSession.createSessionClient();
-  const q = (id) => document.getElementById(id);
-  const status = q('status');
-  const SAMPLED_KEY = 'wb_quality_sampled_total'; // 本机累计抽检条数，供首页驾驶舱展示真实数字
-
-  try {
-    const i = await s.getIdentity();
-    WorkbenchShell.mountShell({
-      container: q('shell'),
-      activeModule: 'quality',
-      identity: i,
-      onLogout: async () => { await s.logout(); location = '/login.html'; }
-    });
-  } catch (e) {
-    status.textContent = e.message;
-    return;
-  }
-
-  q('file').onchange = () => {
-    const f = q('file').files[0];
-    if (f) status.textContent = `已选择：${f.name}（${(f.size / 1024 / 1024).toFixed(2)} MB），点击「开始抽检」继续。`;
-  };
-
-  q('run').onclick = async () => {
-    const f = q('file').files[0];
-    if (!f) { status.textContent = '请先选择聊天记录文件'; return; }
-    const ext = (f.name.split('.').pop() || '').toLowerCase();
-    if (!['csv', 'txt'].includes(ext)) {
-      status.textContent = 'XLSX / XLS 二进制格式暂不支持在线统计，请先用 Excel 另存为 CSV 后再导入。';
-      return;
-    }
-    if (f.size > 15 * 1024 * 1024) { status.textContent = '文件过大，单个文件不能超过 15 MB。'; return; }
-
-    status.textContent = '正在读取并脱敏聊天记录…';
-    const raw = await f.text();
-    const masked = q('mask').checked ? raw.replace(/(1\d{2})\d{4}(\d{4})/g, '$1****$2') : raw;
-
-    // 仅做真实统计，不生成质量分 / 态度评级 / 问题标签
-    const phoneCount = (raw.match(/(1\d{2})\d{4}(\d{4})/g) || []).length;
-    const marketingCount = (masked.match(/京挑客|团长|返利|优惠券群|加微信/gi) || []).length;
-    const totalRows = Math.max(0, raw.split(/\r?\n/).filter((x) => x.trim()).length - 1);
-    const filtered = q('filterMarketing').checked ? Math.min(marketingCount, totalRows) : 0;
-    const sample = totalRows > 0 ? Math.max(1, Math.round(totalRows * Number(q('rate').value) / 100)) : 0;
-
-    q('total').textContent = totalRows;
-    q('sample').textContent = sample;
-    q('masked').textContent = q('mask').checked ? phoneCount : 0;
-    q('filtered').textContent = filtered;
-    q('result').hidden = false;
-
-    // 累计本机抽检条数（供首页驾驶舱读取真实数字）
-    if (sample > 0) {
-      try {
-        const prev = Number(localStorage.getItem(SAMPLED_KEY) || 0);
-        localStorage.setItem(SAMPLED_KEY, String(prev + sample));
-      } catch (_) {}
-    }
-
-    status.textContent = `抽检完成：共识别 ${totalRows} 条记录，本次抽检 ${sample} 条，过滤营销 ${filtered} 条` +
-      (q('mask').checked ? `，脱敏手机号 ${phoneCount} 个` : '') +
-      '。质量评分与问题识别能力待接入。';
-  };
+(async()=>{
+'use strict';
+const session=WorkbenchSession.createSessionClient(),get=id=>document.getElementById(id);
+let role='viewer',rules=[],shops=[],categories=[],checksByCategory={},machinePolicy=[],previewId=null,page=1,total=0,current=null,ratingDraft={};
+function node(tag,text,klass){const el=document.createElement(tag);if(text!=null)el.textContent=String(text);if(klass)el.className=klass;return el;}
+function setStatus(message){get('status').textContent=message;}
+async function api(action,{method='GET',body,params={},sampling=false}={}){
+ const query=new URLSearchParams({action,...params});
+ const response=await session.authorizedFetch((sampling?'/api/quality-analysis-v2?':'/api/quality?')+query,{method,headers:body instanceof ArrayBuffer?{'x-quality-filename':encodeURIComponent(get('file').files[0].name)}:body?{'Content-Type':'application/json'}:undefined,body:body instanceof ArrayBuffer?body:body?JSON.stringify(body):undefined});
+ const result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error||'请求失败');return result.data;
+}
+async function run(button,task,onError){button.disabled=true;try{await task();}catch(error){(onError||setStatus)(error.message);}finally{button.disabled=false;}}
+function stat(label,value){const box=node('div',null,'qc-stat');box.append(node('strong',value),node('span',label));return box;}
+function renderPreview(data,sampling){
+ previewId=data.id;get('previewBox').hidden=false;
+ get('sampleStats').textContent=`默认抽检 ${sampling.requestedRate}%：共 ${sampling.total} 通会话，实际抽检 ${sampling.selected} 通（${sampling.actualRate}%），覆盖 ${sampling.agentCount} 位客服。`+(sampling.coverageRaisedSample?' 为确保每位客服均被抽检，实际数量高于比例名额。':'');
+ const stats=get('previewStats');stats.replaceChildren(stat('会话',data.summary.conversations),stat('消息',data.summary.messages),stat('缺少结束标记',data.summary.missingEnd),stat('结束时间冲突',data.summary.endTimeConflicts),stat('未识别客服',data.summary.withoutAgent));
+ get('previewWarning').textContent=data.summary.withoutAgent?`有 ${data.summary.withoutAgent} 通会话未识别客服发言，请检查“客服名称关键词”。确认后仍可人工复核。`:'预览已完成。确认导入后系统将给出机器预评分和异常提醒，主管负责最终复核。';
+ const examples=get('previewExamples');examples.replaceChildren();for(const item of data.examples){examples.append(node('p',`会话 ${item.ordinal} · ${item.agent} · ${item.startedAt} · 证据提示 ${item.evidenceCount} 条${item.anomalies.length?' · 异常：'+item.anomalies.join('、'):''}`));}
+ setStatus(`已读取 ${data.filename}，请核对预览后确认导入。`);
+}
+async function loadList(){
+ const data=await api('list',{sampling:true,params:{page,scope:get('filterScope').value,status:get('filterStatus').value,agent:get('filterAgent').value,date:get('filterDate').value,shop:get('filterShop').value,brand:get('filterBrand').value,group:get('filterGroup').value,warning:get('filterWarning').value}});total=data.total;
+ get('listSummary').textContent=`当前范围共 ${data.total} 通会话；列表每页 50 通。`;get('pageLabel').textContent=`第 ${page} 页`;
+ get('prevPage').disabled=page<=1;get('nextPage').disabled=page*50>=total;
+ const tbody=get('rows');tbody.replaceChildren();
+ if(!data.rows.length){const tr=node('tr');const td=node('td','暂无匹配会话');td.colSpan=12;tr.append(td);tbody.append(tr);return;}
+ for(const row of data.rows){const tr=node('tr'),machine=row.machine||{},warnings=machine.warnings||[],high=warnings.filter(item=>item.severity==='high').length;const categoryText=(row.categories||['unknown']).map(id=>categories.find(item=>item.id===id)?.label||'待分类').join('、');for(const value of [row.started_at,row.assignment?.shopName||'未关联店铺',row.assignment?.brand||'未识别',row.assignment?.group||'未识别',row.agent,categoryText,row.message_count,machine.score==null?'待识别':machine.score+' 分',high?'⚠ '+high+' 项高风险':warnings.length+' 项提示',row.sampled==='true'?{pending:'待复核',draft:'草稿',reviewed:'已复核'}[row.status]:'未抽检',row.score==null?'—':row.score])tr.append(node('td',value));if(high)tr.classList.add('qc-high-row');const td=node('td'),button=node('button',row.status==='reviewed'?'查看':'复核');button.type='button';button.dataset.sessionId=String(row.id);button.onclick=()=>run(button,()=>openDetail(row.id),message=>setStatus(message));td.append(button);tr.append(td);tbody.append(tr);}
+}
+function renderMessages(messages){const box=get('messages');box.replaceChildren();for(const message of messages){const item=node('div',null,'qc-message '+message.role);item.id='qc-message-'+message.id;item.append(node('small',`${message.role==='agent'?'客服':'顾客'} · ${message.speaker} · ${message.at}`),node('div',message.text||'[无文字内容]'));box.append(item);}}
+function jumpTo(id){const el=get('qc-message-'+id);if(!el)return;el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('focus');setTimeout(()=>el.classList.remove('focus'),2500);}
+function renderEvidence(evidence,decisions={}){const box=get('evidence');box.replaceChildren();if(!evidence.length){box.append(node('p','未找到规则线索，仍需主管检查原始聊天。','qc-note'));return;}
+ evidence.forEach((item,index)=>{const card=node('div',null,'qc-evidence');card.append(node('strong',item.title));const summary=node('p',`对应规则：${rules.find(rule=>rule.id===item.ruleId)?.label||item.ruleId}${item.waitSeconds!=null?' · 间隔 '+item.waitSeconds+' 秒':''}`);card.append(summary);
+ for(const id of item.messageIds){const button=node('button','定位消息 '+(Number(id)+1));button.type='button';button.onclick=()=>jumpTo(id);card.append(button);}
+ const select=node('select');select.dataset.evidenceIndex=String(index);for(const [value,label] of [['','请选择处理结果'],['issue','确认问题'],['dismissed','排除提示'],['external','需外部核实']]){const option=node('option',label);option.value=value;select.append(option);}select.value=decisions[index]||'';card.append(select);box.append(card);});}
+function renderMachine(machine={}){const box=get('machinePanel');box.replaceChildren();const score=machine.score==null?'无法评分':machine.score+' / 100';box.append(node('h3','机器聊天行为预评分：'+score));const policy=machinePolicy.map(item=>item.label+'扣 '+item.points+' 分').join('；');box.append(node('p','仅检查可从文字和时间直接定位的行为。满分 100；'+policy+'（回复间隔只计最长一次）。投诉、商品承诺、日志异常只提醒不扣分。主管评分为最终结果。','qc-note'));
+ const deductions=machine.deductions||[];if(deductions.length){const title=node('strong','扣分依据');box.append(title);for(const item of deductions){const line=node('div',`−${item.points} 分 · ${item.label}`,'qc-machine-item');for(const id of item.messageIds||[]){const button=node('button','定位消息 '+(Number(id)+1));button.type='button';button.onclick=()=>jumpTo(id);line.append(button);}box.append(line);}}
+ const warnings=machine.warnings||[];if(warnings.length){box.append(node('strong','异常及待核查事项'));for(const item of warnings){const line=node('div',(item.severity==='high'?'高风险 · ':item.severity==='medium'?'需核查 · ':'提示 · ')+item.label,'qc-machine-item '+(item.severity==='high'?'high':''));for(const id of item.messageIds||[]){const button=node('button','定位消息 '+(Number(id)+1));button.type='button';button.onclick=()=>jumpTo(id);line.append(button);}box.append(line);}}else box.append(node('p','未命中当前机器规则；这不代表会话已经通过主管质检。','qc-note'));}
+function selectedCategories(){return [...get('consultationCategories').querySelectorAll('input:checked')].map(input=>input.value);}
+function showApplicableChecks(){const ids=selectedCategories(),box=get('consultationChecks');box.replaceChildren();const seen=new Set();for(const id of ids){for(const check of checksByCategory[id]||[]){if(seen.has(check.label))continue;seen.add(check.label);const item=node('div',null,'qc-check-item');item.append(node('strong',check.label),node('span',' · '+(check.mode==='external'?'需外部资料：':check.mode==='objective'?'可计算线索：':'主管核对：')+check.guidance));box.append(item);}}}
+function renderClassification(analysis={},selected=[]){const box=get('consultationCategories');box.replaceChildren();const ids=selected.length?selected:['unknown'];for(const category of categories){const label=node('label',null,'qc-category'),input=node('input');input.type='checkbox';input.id='category-'+category.id;input.value=category.id;input.checked=ids.includes(category.id);input.disabled=role!=='admin';input.onchange=()=>{if(input.checked&&input.value==='unknown'){for(const other of box.querySelectorAll('input'))if(other!==input)other.checked=false;}else if(input.checked)get('category-unknown').checked=false;if(!selectedCategories().length)get('category-unknown').checked=true;for(const select of get('ratings').querySelectorAll('select'))if(select.value)ratingDraft[select.dataset.ruleId]=/^\d+$/.test(select.value)?Number(select.value):select.value;showApplicableChecks();renderRatings(ratingDraft);};label.append(input,node('span',category.label));box.append(label);}
+ const detected=(analysis.categories||[]).map(item=>item.label).join('、')||'待分类';const metrics=analysis.metrics||{};get('consultationMetrics').textContent=`机器建议：${detected} · 顾客轮次 ${metrics.customerTurns??'—'} · 客服轮次 ${metrics.agentTurns??'—'} · 首次回复 ${metrics.firstReplySeconds==null?'未识别':metrics.firstReplySeconds+' 秒'}。机器分类仅供参考，主管确认后用于适用规则。`;
+ showApplicableChecks();const signals=get('consultationSignals');signals.replaceChildren();for(const item of analysis.signals||[]){const line=node('div',null,'qc-signal');line.append(node('span',(item.verification==='external'?'待资料核实 · ':'待主管核对 · ')+item.title));for(const id of item.messageIds||[]){const button=node('button','定位消息 '+(Number(id)+1));button.type='button';button.onclick=()=>jumpTo(id);line.append(button);}signals.append(line);}}
+function renderRatings(ratings={}){const box=get('ratings'),ids=selectedCategories();box.replaceChildren();for(const rule of rules){if(rule.categories&&!ids.includes('unknown')&&!rule.categories.some(id=>ids.includes(id)))continue;const line=node('label',null,'qc-rule'),description=node('span');description.append(node('strong',rule.label),node('small',rule.help));const select=node('select');select.dataset.ruleId=rule.id;for(const [value,label] of (rule.kind==='standard'?[['','待评分'],['5','5 分'],['3','3 分'],['1','1 分'],['na','不适用']]:[['','待评分'],['pass','合格'],['issue','问题'],['na','不适用']])){const option=node('option',label);option.value=value;select.append(option);}select.value=ratings[rule.id]==null?'':String(ratings[rule.id]);select.disabled=role!=='admin';line.append(description,select);box.append(line);}}
+async function openDetail(id){const data=await api('detail',{sampling:true,params:{id}});current=data;get('detail').hidden=false;get('detailMeta').textContent=`会话 ${data.ordinal} · ${data.agent} · ${data.started_at} 至 ${data.ended_at} · ${data.assignment?.shopName||'未关联店铺'} · ${data.assignment?.group||'未识别'} · ${data.status==='reviewed'?'已复核':data.status==='draft'?'草稿':'待复核'}`;
+ const anomalies=data.data.anomalies||[];get('anomalies').hidden=!anomalies.length;get('anomalies').textContent=anomalies.length?'日志异常：'+anomalies.join('、')+'. 请结合原始记录核实时间。':'';
+ ratingDraft={...(data.review?.ratings||{})};renderClassification(data.analysis||{},data.review?.categoryIds||data.analysis?.categories?.map(item=>item.id)||['unknown']);renderMachine(data.machine);renderMessages(data.data.messages||[]);renderEvidence(data.data.evidence||[],data.review?.decisions||{});renderRatings(ratingDraft);get('reviewNote').value=data.review?.note||'';get('reviewNote').disabled=role!=='admin';get('saveDraft').hidden=role!=='admin';get('finishReview').hidden=role!=='admin';get('reviewStatus').textContent=data.status==='reviewed'?`已复核 · 评分 ${data.review?.score??'—'}`:'请逐项核对证据和评分。';get('detail').scrollIntoView({behavior:'smooth',block:'start'});}
+function collectReview(finish){const ratings={},decisions={};for(const select of get('ratings').querySelectorAll('select')){if(select.value)ratings[select.dataset.ruleId]=/^\d+$/.test(select.value)?Number(select.value):select.value;}for(const select of get('evidence').querySelectorAll('select')){if(select.value)decisions[select.dataset.evidenceIndex]=select.value;}return{id:current.id,revision:current.revision,categoryIds:selectedCategories(),ratings,decisions,note:get('reviewNote').value,finish};}
+async function saveReview(finish){const button=get(finish?'finishReview':'saveDraft');await run(button,async()=>{const result=await api('review',{sampling:true,method:'POST',body:collectReview(finish)});get('reviewStatus').textContent=finish?`复核完成，评分 ${result.review.score}`:'草稿已保存';await loadList();await openDetail(current.id);},message=>get('reviewStatus').textContent=message);}
+try{const identity=await session.getIdentity();WorkbenchShell.mountShell({container:get('shell'),activeModule:'quality',identity,onLogout:async()=>{await session.logout();location='/login.html'}});const meta=await api('meta',{sampling:true});role=meta.role;rules=meta.rules;shops=meta.shops||[];categories=[...(meta.categories||[]).filter(item=>item.id!=='unknown'),{id:'unknown',label:'待分类'}];checksByCategory=meta.checksByCategory||{};machinePolicy=meta.machinePolicy||[];for(const shop of shops){for(const id of ['importShop','filterShop']){const option=node('option',shop.data.name+' · '+(shop.data.brand||'品牌未填'));option.value=shop.id;get(id).append(option);}}await loadList();}catch(error){setStatus(error.message);get('listSummary').textContent='无法加载会话';return;}
+get('file').onchange=()=>{previewId=null;get('previewBox').hidden=true;const file=get('file').files[0];setStatus(file?`已选择 ${file.name}，点击“校验与预览”。`:'请选择聊天记录文件。');};
+get('preview').onclick=()=>run(get('preview'),async()=>{const file=get('file').files[0];if(!file)throw Error('请先选择 .log 或 .txt 文件');if(!/\.(log|txt)$/i.test(file.name))throw Error('仅支持 LOG、TXT 格式的聊天记录');if(!file.size||file.size>3*1024*1024)throw Error('文件不能为空，且不能超过 3 MB');setStatus('正在解析聊天记录…');const buffer=await file.arrayBuffer();const data=await api('preview',{method:'POST',body:buffer,params:{agentHint:get('agentHint').value.trim()}});const sampling=await api('preview',{sampling:true,params:{id:data.id,rate:get('rate').value}});renderPreview(data,sampling);});
+get('confirm').onclick=()=>run(get('confirm'),async()=>{if(!previewId)throw Error('请先预览文件');const result=await api('confirm',{sampling:true,method:'POST',body:{id:previewId,rate:Number(get('rate').value),shopId:get('importShop').value||null}});get('previewBox').hidden=true;setStatus(result.duplicate?'此文件已导入，已显示已有抽检会话。':`成功导入 ${result.sampling.total} 通会话，抽检 ${result.sampling.selected} 通（${result.sampling.actualRate}%），覆盖 ${result.sampling.agentCount} 位客服。`);page=1;await loadList();});
+get('rate').onchange=()=>{if(!previewId)return;run(get('rate'),async()=>{const sampling=await api('preview',{sampling:true,params:{id:previewId,rate:get('rate').value}});get('sampleStats').textContent=`抽检 ${sampling.requestedRate}%：共 ${sampling.total} 通会话，实际抽检 ${sampling.selected} 通（${sampling.actualRate}%），覆盖 ${sampling.agentCount} 位客服。`+(sampling.coverageRaisedSample?' 为确保每位客服均被抽检，实际数量高于比例名额。':'');});};
+get('search').onclick=()=>run(get('search'),async()=>{page=1;await loadList();},message=>setStatus(message));get('reload').onclick=()=>run(get('reload'),loadList,message=>setStatus(message));get('prevPage').onclick=()=>run(get('prevPage'),async()=>{page--;await loadList();});get('nextPage').onclick=()=>run(get('nextPage'),async()=>{page++;await loadList();});get('closeDetail').onclick=()=>{get('detail').hidden=true;current=null;};get('saveDraft').onclick=()=>saveReview(false);get('finishReview').onclick=()=>saveReview(true);
+get('export').onclick=()=>run(get('export'),async()=>{const date=get('filterDate').value;if(!date)throw Error('请先选择会话日期，再导出当日结果');const response=await session.authorizedFetch('/api/quality?'+new URLSearchParams({action:'export',date}));if(!response.ok){const result=await response.json().catch(()=>({}));throw Error(result.error||'导出失败');}const url=URL.createObjectURL(await response.blob()),a=node('a');a.href=url;a.download=`客服质检-${date}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);},message=>setStatus(message));
 })();
