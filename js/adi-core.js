@@ -526,7 +526,8 @@
             future7AdiScores.push(adiResult.adiScore);
 
             // 使用API返回的fxDate字段来设置正确的日期，避免数据偏移
-            const dayDate = new Date(day.fxDate);
+            const [year, month, dayOfMonth] = day.fxDate.split('-').map(Number);
+            const dayDate = new Date(year, month - 1, dayOfMonth);
 
             future7Days.push({
                 date: dayDate,

@@ -22,7 +22,7 @@ http.createServer(async(req,res)=>{
  if(url.pathname.startsWith('/api/')){
   try{
    if(!/^\/api\/[a-z0-9/-]+$/.test(url.pathname))throw Error('Not found');
-   const file=path.join(root,url.pathname+'.js');if(!fs.existsSync(file)){res.writeHead(404);return res.end();}
+   const file=path.join(root,'api/index.js');
    const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>3*1024*1024+1024){res.writeHead(413);return res.end();}chunks.push(chunk);}
    const bytes=Buffer.concat(chunks);req.body=(req.headers['content-type']||'').includes('application/json')?(bytes.length?JSON.parse(bytes):{}):bytes;
    req.query=Object.fromEntries(url.searchParams);res.status=c=>(res.statusCode=c,res);res.json=b=>{res.setHeader('Content-Type','application/json');res.end(JSON.stringify(b));};res.send=b=>res.end(b);

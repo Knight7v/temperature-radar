@@ -6,7 +6,7 @@ test('销售匹配入库、闭店筛选、真实导入时间及库存处理权�
  process.env.JWT_SECRET='isolated-integration-test-secret';
  const {getInventoryPool}=require('../lib/db/inventory-client'),pool=getInventoryPool();
  const {signAccessToken}=require('../lib/auth');
- const sales=require('../api/sales'),followups=require('../api/inventory/followups'),users=require('../api/auth/users');
+ const sales=require('../handlers/sales'),followups=require('../handlers/inventory/followups'),users=require('../handlers/auth/users');
  const tenant=randomUUID(),uid=randomUUID(),shop=randomUUID(),calc=randomUUID();
  let token;
  async function call(handler,method,query={},body={},headers={}){const res={statusCode:200,status(c){this.statusCode=c;return this},json(b){this.body=b;return this}};await handler({method,query,body,headers:{authorization:'Bearer '+token,...headers}},res);return res;}

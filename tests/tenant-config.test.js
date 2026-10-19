@@ -5,7 +5,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'tenant-config-test-secret-16+';
 const auth = require('../lib/auth');
-const handler = require('../api/tenant/config');
+const handler = require('../handlers/tenant/config');
 
 const dbTest = process.env.DATABASE_URL ? test : test.skip;
 

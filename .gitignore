@@ -41,3 +41,6 @@ backups/
 
 # Local agent workspace memory
 .workbuddy/
+.env*
+.agents/
+skills-lock.json

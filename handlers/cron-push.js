@@ -6,7 +6,7 @@ const WecomMessage = require('../lib/wecom-message.js');
 function authorized(req) {
     const secret = process.env.CRON_SECRET;
     if (secret) {
-        return !!(req.query && req.query.token === secret);
+        return req.headers?.authorization === `Bearer ${secret}`;
     }
     return !!(req.headers && req.headers['x-vercel-cron'] === '1');
 }
@@ -26,7 +26,7 @@ async function pushType(type, summary, webhook) {
     }
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     if (!authorized(req)) return res.status(401).json({ error: '未授权' });
 
     const apiKey = process.env.QWEATHER_API_KEY;

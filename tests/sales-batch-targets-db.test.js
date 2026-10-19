@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 test('七个月批量导入、幂等、重复日期拒绝、回滚、年度目标保存', {skip:!process.env.SALES_TEST_DATABASE_URL},async()=>{
  process.env.DATABASE_URL=process.env.SALES_TEST_DATABASE_URL;process.env.JWT_SECRET='isolated-integration-test-secret';
- const pool=require('../lib/db/inventory-client').getInventoryPool(),handler=require('../api/sales'),{signAccessToken}=require('../lib/auth');
+ const pool=require('../lib/db/inventory-client').getInventoryPool(),handler=require('../handlers/sales'),{signAccessToken}=require('../lib/auth');
  const tenant=randomUUID(),user=randomUUID(),shop=randomUUID(),shop2=randomUUID();let token;
  async function call(action,body={},query={}){const res={statusCode:200,status(c){this.statusCode=c;return this},json(b){this.body=b;return this}};await handler({method:'POST',query:{action,...query},body,headers:{authorization:'Bearer '+token}},res);return res;}
  async function preview(month,shopId=shop){const Excel=require('exceljs'),w=new Excel.Workbook(),s=w.addWorksheet('日报');s.addRow(['时间','成交金额']);s.addRow([`2026-${String(month).padStart(2,'0')}-01`,'100.00']);const r=await call('preview',Buffer.from(await w.xlsx.writeBuffer()),{shop:shopId});assert.equal(r.statusCode,200,JSON.stringify(r.body));return r.body.data.id;}

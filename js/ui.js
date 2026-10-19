@@ -1963,15 +1963,15 @@ const UI = (function() {
                         <div class="detail-value" style="color: ${escapeHtml(info.color)}">${escapeHtml(city.adiScore.toString())}</div>
                     </div>
                     <div class="detail-item surface-raised">
-                        <div class="detail-label">白天最高温</div>
+                        <div class="detail-label">今日预报最高温</div>
                         <div class="detail-value" style="color: #F57C00">${escapeHtml(city.maxTemp.toString())}℃</div>
                     </div>
                     <div class="detail-item surface-raised">
-                        <div class="detail-label">夜间最低温</div>
+                        <div class="detail-label">今日预报最低温</div>
                         <div class="detail-value" style="color: ${city.nightMinTemp >= 28 ? '#FF453A' : '#00D4FF'}">${escapeHtml(city.nightMinTemp.toString())}℃</div>
                     </div>
                     <div class="detail-item surface-raised">
-                        <div class="detail-label">体感温度</div>
+                        <div class="detail-label">估算体感温度</div>
                         <div class="detail-value" style="color: ${city.feelsLike >= 38 ? '#FF453A' : '#F5A623'}">${escapeHtml(city.feelsLike.toString())}℃</div>
                     </div>
                     <div class="detail-item surface-raised">
@@ -2006,7 +2006,7 @@ const UI = (function() {
                 </div>
 
                 <div class="forecast-section">
-                    <h3>未来7天ADI趋势</h3>
+                    <h3>今天起7天ADI趋势</h3>
                     ${renderForecastTable(city)}
                 </div>
             </div>
@@ -2018,18 +2018,15 @@ const UI = (function() {
     function renderForecastTable(city) {
         const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
         let rows = '';
-        // 从明天开始显示（i+1），与future7AdiScores的索引对应
-        const daysToShow = Math.min(7, city.future7AdiScores.length);
+        const daysToShow = Math.min(7, city.future7Days?.length || 0);
 
         for (let i = 0; i < daysToShow; i++) {
-            const date = new Date();
-            date.setDate(date.getDate() + i + 1);  // 从明天开始
-            const adi = city.future7AdiScores[i] || city.adiScore;
-            // 使用真实的7天API数据，而不是随机生成
-            const high = city.future7DayMaxTemps?.[i] ?? city.future3DayMaxTemps[i] ?? Math.round(city.maxTemp);
-            const night = city.future7NightMinTemps?.[i] ?? city.future3NightMinTemps[i] ?? Math.round(city.nightMinTemp);
-            // 根据当天温度重新计算体感温度（暂时用简单公式）
-            const feels = Math.round(high + Math.max(0, (city.humidity - 55) * 0.08));
+            const forecast = city.future7Days[i];
+            const date = new Date(forecast.date);
+            const adi = forecast.adiScore;
+            const high = forecast.dayMax;
+            const night = forecast.nightMin;
+            const feels = forecast.dayFeelsLike;
             const isHotNight = night >= 28;
 
             let fLevel = 'cool';

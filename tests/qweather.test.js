@@ -40,3 +40,18 @@ test('fetch7dBatch reports failed cities without throwing', async () => {
     assert.ok(results.length >= 1);
     assert.ok(failed.includes('BAD'));
 });
+
+test('server cache does not keep a previous-day forecast after midnight', async () => {
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Shanghai' });
+    const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('sv-SE', { timeZone: 'Asia/Shanghai' });
+    let calls = 0;
+    const fetchImpl = async () => ({
+        ok: true,
+        json: async () => ({ code: '200', daily: [{ fxDate: ++calls === 1 ? yesterday : today, tempMax: String(calls) }] }),
+    });
+    const first = await Q.fetch7d('116.46,39.92-cache-test', 'KEY', { fetchImpl });
+    const second = await Q.fetch7d('116.46,39.92-cache-test', 'KEY', { fetchImpl });
+    assert.equal(first.daily[0].fxDate, yesterday);
+    assert.equal(second.daily[0].fxDate, today);
+    assert.equal(calls, 2);
+});

@@ -1,7 +1,7 @@
 // 天气代理:key 只在服务端 env;前端匿名 GET。
 const { fetch7d } = require('../lib/qweather.js');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
     }

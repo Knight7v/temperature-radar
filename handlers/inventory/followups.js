@@ -5,7 +5,7 @@ const {createRepository}=require('../../lib/inventory/repository');
 const fail=(message,status=422)=>{throw Object.assign(Error(message),{status});};
 module.exports=apiHandler(async(req,res)=>{
  if(!['GET','POST'].includes(req.method))return res.status(405).json({error:'不支持此请求'});
- const ctx=await requireInventoryUser(req,req.method==='GET'?['admin','operator','viewer']:['admin','operator']);
+ const ctx=await requireInventoryUser(req,req.method==='GET'?['admin','operator','supply_chain','viewer']:['admin','operator']);
  const pool=getInventoryPool(),body=req.body||{},date=req.method==='GET'?req.query.date:body.date;
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date||''))fail('请选择数据日期');
  if(req.method==='GET'){

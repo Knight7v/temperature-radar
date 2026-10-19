@@ -6,6 +6,7 @@ const response=(data,status=200)=>new Response(JSON.stringify(data),{status,head
 test('returnTo rejects external, escaped hosts and unknown pages',()=>{
  for(const s of ['//evil.test','https://evil.test','/\\evil.test','/api/auth/me','javascript:alert(1)']) assert.equal(safeReturnTo(s),'/workbench.html');
  assert.equal(safeReturnTo('/inventory.html?date=2026-09-29'),'/inventory.html?date=2026-09-29');
+ assert.equal(safeReturnTo('/replenishment.html?sku=123'),'/replenishment.html?sku=123');
 });
 test('concurrent expired requests share refresh and preserve rotated tokens',async()=>{
  const s=storage();s.setItem('workbench.session.v1',JSON.stringify({accessToken:'old',refreshToken:'r1',expiresAt:1}));

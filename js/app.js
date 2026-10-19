@@ -62,10 +62,17 @@
         if (errorEl) errorEl.style.display = 'none';
 
         try {
-            const cityData = await Core.generateAllCityData();
+            const { cityData, failedCities } = await Core.generateAllCityData();
+            if (cityData.length === 0) throw new Error('所有城市的天气数据均获取失败，请稍后重试。');
             AppState.cityData = cityData;
             AppState.lastUpdateTime = new Date();
             UI.renderDashboard(cityData);
+
+            if (errorEl && failedCities.length) {
+                const sample = failedCities.slice(0, 5).join('、');
+                errorEl.textContent = `${failedCities.length} 个城市天气数据获取失败（${sample}${failedCities.length > 5 ? '等' : ''}），已从统计中排除。`;
+                errorEl.style.display = 'block';
+            }
 
             // 手动触发地图渲染事件
             if (typeof CustomEvent !== 'undefined') {
@@ -82,7 +89,7 @@
             console.error('数据加载失败:', error);
             // 显示错误提示
             if (errorEl) {
-                errorEl.textContent = `数据加载失败: ${error.message}`;
+                errorEl.textContent = `数据加载失败：${error.message}${AppState.lastUpdateTime ? ' 当前仍显示上次成功获取的数据。' : ''}`;
                 errorEl.style.display = 'block';
             }
             if (loadingEl) {
