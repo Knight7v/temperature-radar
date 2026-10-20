@@ -27,6 +27,7 @@
         <button type="button" data-mode="first" aria-pressed="true">京东首图<small>合规白底</small></button>
         <button type="button" data-mode="scene" aria-pressed="false">场景副图<small>AI 背景</small></button>
         <button type="button" data-mode="promo" aria-pressed="false">活动图<small>强营销</small></button>
+        <button type="button" data-mode="deal" aria-pressed="false">大促主图<small>价格角标</small></button>
       </div>
       <p class="ds-hint" id="modeHint"></p>
 
@@ -35,7 +36,7 @@
         <input id="productFile" type="file" accept="image/png,image/jpeg,image/webp">
         <small class="ds-hint" id="fileHint">支持 PNG、JPG、WebP，最大 15 MB。白底图或透明底图效果最好。</small>
       </div>
-      <div class="ds-field">
+      <div class="ds-field" id="nameField">
         <span>商品名称</span>
         <input id="productName" maxlength="36" placeholder="例如：格力云之海 1.5 匹挂机">
       </div>
@@ -90,11 +91,11 @@
           <option value="1600">1600 × 1600（高清）</option>
         </select>
       </div>
-      <div class="ds-field">
+      <div class="ds-field" id="ratioField">
         <span>商品占比 <b id="ratioValue">78%</b></span>
         <input id="ratio" type="range" min="40" max="92" value="78" step="1">
       </div>
-      <div class="ds-field">
+      <div class="ds-field" id="anchorField">
         <span>商品位置</span>
         <select id="anchor">
           <option value="center">居中</option>
@@ -119,6 +120,82 @@
           <option value="none">不垫（仅限已抠好的透明 PNG）</option>
         </select>
       </div>
+
+      <div id="dealFields" hidden>
+        <hr class="ds-divider">
+        <h2>大促文案</h2>
+        <div class="ds-field">
+          <span>配色</span>
+          <select id="dTheme">
+            <option value="gold">暖金大促（推荐）</option>
+            <option value="crimson">中国红</option>
+            <option value="ice">冰蓝科技</option>
+            <option value="ink">高级灰</option>
+          </select>
+        </div>
+        <div class="ds-grid2">
+          <label class="ds-field"><span>规格</span><input id="dSpec" maxlength="10" value="1.5匹"></label>
+          <label class="ds-field"><span>适用面积</span><input id="dArea" maxlength="16" value="适用：16-20m²"></label>
+        </div>
+        <label class="ds-field"><span>主标题</span><input id="dTitle" maxlength="20" value="硬核新品 风量新升级"></label>
+        <label class="ds-field"><span>副标题（卖点用 | 分隔）</span><input id="dSub" maxlength="40" value="新一级能效 | 56℃净菌自洁 | WiFi智控"></label>
+
+        <details class="ds-fold" open>
+          <summary>价格与服务承诺</summary>
+          <div class="ds-grid2">
+            <label class="ds-field"><span>开抢时间</span><input id="dRush" maxlength="20" value="10月20日晚8点开抢："></label>
+            <label class="ds-field"><span>价格</span><input id="dPrice" maxlength="9" value="2124.15"></label>
+          </div>
+          <div class="ds-grid3">
+            <label class="ds-field"><span>承诺 1</span><input id="dS1Pre" maxlength="8" value="整机"></label>
+            <label class="ds-field"><span>大字</span><input id="dS1Big" maxlength="8" value="10年"></label>
+            <label class="ds-field"><span>尾注</span><input id="dS1Post" maxlength="10" value="免费包修"></label>
+          </div>
+          <div class="ds-grid3">
+            <label class="ds-field"><span>承诺 2</span><input id="dS2Pre" maxlength="14" value="以旧换新 至高再抵"></label>
+            <label class="ds-field"><span>大字</span><input id="dS2Big" maxlength="6" value="650"></label>
+            <label class="ds-field"><span>单位</span><input id="dS2Unit" maxlength="3" value="元"></label>
+          </div>
+          <div class="ds-grid3">
+            <label class="ds-field"><span>承诺 3</span><input id="dS3Pre" maxlength="14" value="价保30天 买贵补差"></label>
+            <label class="ds-field"><span>大字</span><input id="dS3Big" maxlength="6" value="30"></label>
+            <label class="ds-field"><span>单位</span><input id="dS3Unit" maxlength="3" value="天"></label>
+          </div>
+        </details>
+
+        <details class="ds-fold">
+          <summary>角标与品牌</summary>
+          <div class="ds-grid2">
+            <label class="ds-field"><span>品牌</span><input id="dBrand" maxlength="12" value="GREE格力"></label>
+            <label class="ds-field"><span>品牌副标</span><input id="dBrandSub" maxlength="12" value="纯铜管空调"></label>
+          </div>
+          <div class="ds-grid3">
+            <label class="ds-field"><span>印章上行</span><input id="dSealTop" maxlength="6" value="冷凝器"></label>
+            <label class="ds-field"><span>印章大字</span><input id="dSealMain" maxlength="6" value="纯铜管"></label>
+            <label class="ds-field"><span>印章脚注</span><input id="dSealFoot" maxlength="12" value="真材实料纯铜管"></label>
+          </div>
+          <div class="ds-grid2">
+            <label class="ds-field"><span>底部左</span><input id="dFootLeft" maxlength="14" value="格力空调官方直营"></label>
+            <label class="ds-field"><span>底部右</span><input id="dFootRight" maxlength="22" value="真材实料格力造·纯铜管·真省电"></label>
+          </div>
+          <label class="ds-field"><span>人像 / 代言人（可选，圆形裁切放下方）</span>
+            <input id="dPortrait" type="file" accept="image/png,image/jpeg,image/webp">
+            <small class="ds-hint">没有就留空，版式会自动收紧，不会留空洞。</small>
+          </label>
+          <label class="ds-switch">
+            <input id="dAirflow" type="checkbox" checked>
+            <span>气流光效<small>从出风口向下的金色光带</small></span>
+          </label>
+          <label class="ds-switch">
+            <input id="dSeal" type="checkbox" checked>
+            <span>印章角标<small>压在商品右上的金边黑章</small></span>
+          </label>
+          <label class="ds-switch">
+            <input id="dShowPortrait" type="checkbox" checked>
+            <span>显示人像<small>关闭后价格条右侧自动扩展</small></span>
+          </label>
+        </details>
+      </div>
     </aside>
 
     <section class="ds-panel ds-preview">
@@ -141,6 +218,7 @@
 <script src="/js/workbench-session.js?v=20261020-guanxingtai"></script>
 <script src="/js/workbench-shell.js?v=20261020-guanxingtai"></script>
 <script src="/js/design-ai.js?v=20261020-design1"></script>
-<script src="/js/design.js?v=20261020-design1"></script>
+<script src="/js/design-deal.js?v=20261020-deal1"></script>
+<script src="/js/design.js?v=20261020-deal1"></script>
 </body>
 </html>

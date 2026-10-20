@@ -52,6 +52,15 @@
       defaultRatio: 62,
       defaultAnchor: 'top',
       minRatio: 0.4
+    },
+    deal: {
+      label: '大促主图',
+      hint: '大促 / 秒杀主图：价格、服务承诺、品牌角标、印章一次排好。这类图不要当京东第 1 张主图（会被判「牛皮癣」），放第 2-5 张或详情页首屏。',
+      needText: false,
+      needBackground: false,
+      defaultRatio: 78,
+      defaultAnchor: 'center',
+      minRatio: 0
     }
   };
 
@@ -64,6 +73,8 @@
     scene: null,
     sceneImage: null,
     generated: null,
+    // 大促主图可选的人像（代言人 / 主播），没有就留空
+    portrait: null,
     // true 表示输入框里已经是 AI 扩写好的英文提示词，生成时直接当 prompt 用
     drafted: false,
     busy: false,
@@ -155,6 +166,17 @@
       $('downloadPng').disabled = false;
       $('downloadJpg').disabled = false;
       draw();
+
+      // 大促图对商品底的处理和别的模式不一样，单独说清楚
+      if (state.mode === 'deal') {
+        if (state.analysis && state.analysis.mode === 'alpha') {
+          status(`图片已就绪：透明底，商品会直接悬在背景上，效果最好（${image.width}×${image.height}）。`, 'ok');
+        } else {
+          status('检测到白底图，已自动垫一块白色展示台。想做出「悬浮在场景里」的效果，请换透明底 PNG。', 'ok');
+        }
+        return;
+      }
+
       if (state.analysis) {
         const kind = state.analysis.mode === 'alpha' ? '透明底' : '纯色底';
         status(`图片已就绪：识别为${kind}，已自动裁掉多余留白（原图 ${image.width}×${image.height}）。`, 'ok');
@@ -214,12 +236,65 @@
     return cursor;
   }
 
+  // 大促主图的面板配置。空值一律回落到兜底，避免某个框被清空就画不出来。
+  function dealConfig() {
+    const text = id => {
+      const node = $(id);
+      return node && node.value.trim() ? node.value.trim() : '';
+    };
+    const raw = String($('dPrice').value || '0').replace(/[^\d.]/g, '');
+    const [intPart, decPart] = raw.split('.');
+    return {
+      theme: $('dTheme').value,
+      brand: text('dBrand') || '品牌',
+      brandSub: text('dBrandSub'),
+      spec: text('dSpec'),
+      area: text('dArea'),
+      title: text('dTitle') || '主标题',
+      sub: text('dSub'),
+      sealTop: text('dSealTop'),
+      sealMain: text('dSealMain'),
+      sealFoot: text('dSealFoot'),
+      rush: text('dRush'),
+      priceInt: intPart || '0',
+      priceDec: (decPart || '00').padEnd(2, '0').slice(0, 2),
+      service1Pre: text('dS1Pre'),
+      service1Big: text('dS1Big'),
+      service1Post: text('dS1Post'),
+      service2Pre: text('dS2Pre'),
+      service2Big: text('dS2Big'),
+      service2Unit: text('dS2Unit'),
+      service3Pre: text('dS3Pre'),
+      service3Big: text('dS3Big'),
+      service3Unit: text('dS3Unit'),
+      footerLeft: text('dFootLeft'),
+      footerRight: text('dFootRight'),
+      showAirflow: $('dAirflow').checked,
+      showSeal: $('dSeal').checked,
+      showPortrait: $('dShowPortrait').checked
+    };
+  }
+
   function draw() {
     const mode = MODES[state.mode];
     const size = num('size');
     canvas.width = canvas.height = size;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, size, size);
+
+    // 大促主图是区块版式（角标+价格+承诺条），走独立渲染器；其余三种仍是三段式
+    if (state.mode === 'deal') {
+      const bg = state.analysis && state.analysis.background;
+      const alreadyCut = Boolean(state.analysis) && state.analysis.mode === 'alpha';
+      DealKit.render(ctx, size, dealConfig(), {
+        product: state.productLayer || state.product,
+        portrait: state.portrait,
+        // 白底图要垫柔光吃掉硬边；透明底图直接叠，不需要
+        whiteBackdrop: !alreadyCut && (!bg || (bg[0] > 232 && bg[1] > 232 && bg[2] > 232))
+      });
+      renderChecks();
+      return;
+    }
 
     const pad = size * 0.0375;
     const coverage = num('ratio') / 100;
@@ -369,6 +444,19 @@
   }
 
   function renderChecks() {
+    if (state.mode === 'deal') {
+      const rows = DealKit.checks(dealConfig(), num('size'));
+      rows.unshift(
+        state.product
+          ? { label: '商品图', ok: true, text: `${state.product.width} × ${state.product.height}` }
+          : { label: '商品图', ok: false, text: '还没上传商品图' }
+      );
+      $('checks').innerHTML = rows
+        .map(row => checkRow(row.label, row.ok ? 'pass' : row.level || 'fail', row.text))
+        .join('');
+      return;
+    }
+
     const mode = MODES[state.mode];
     const size = num('size');
     const coverage = num('ratio') / 100;
@@ -473,6 +561,25 @@
     $('cardField').hidden = !config.needBackground;
     $('bgTools').hidden = !config.needBackground;
     $('bgLocked').hidden = config.needBackground;
+    $('dealFields').hidden = mode !== 'deal';
+    // 大促图靠自己的控件排版，这两组通用字段对它是干扰
+    $('nameField').hidden = mode === 'deal';
+    $('ratioField').hidden = mode === 'deal';
+    $('anchorField').hidden = mode === 'deal';
+    if (mode === 'deal') {
+      $('bgLocked').textContent = '大促主图的背景由「配色」自动生成，不用选场景，也不会出现 AI 乱加元素的问题。';
+      if (state.product) {
+        const cut = state.analysis && state.analysis.mode === 'alpha';
+        status(
+          cut
+            ? '大促主图：商品会直接悬在背景上。价格、角标、承诺文案改哪一项，预览就跟着变。'
+            : '大促主图：白底商品图会自动垫白色展示台。想要悬浮效果，换透明底 PNG。',
+          'ok'
+        );
+      }
+    } else {
+      $('bgLocked').textContent = '京东首图必须是纯白背景（RGB 255,255,255），这里已锁定，不需要选背景。';
+    }
     $('ratio').value = String(config.defaultRatio);
     $('ratioValue').textContent = `${config.defaultRatio}%`;
     $('anchor').value = config.defaultAnchor;
@@ -625,6 +732,38 @@
     };
 
     $('cardStyle').onchange = draw;
+
+    // 大促主图的所有文案改动即时重绘
+    [
+      'dSpec', 'dArea', 'dTitle', 'dSub', 'dRush', 'dPrice',
+      'dS1Pre', 'dS1Big', 'dS1Post', 'dS2Pre', 'dS2Big', 'dS2Unit',
+      'dS3Pre', 'dS3Big', 'dS3Unit', 'dBrand', 'dBrandSub',
+      'dSealTop', 'dSealMain', 'dSealFoot', 'dFootLeft', 'dFootRight'
+    ].forEach(id => {
+      $(id).addEventListener('input', draw);
+      $(id).addEventListener('change', draw);
+    });
+    $('dTheme').addEventListener('change', draw);
+    ['dAirflow', 'dSeal', 'dShowPortrait'].forEach(id => $(id).addEventListener('change', draw));
+
+    $('dPortrait').onchange = async () => {
+      const file = $('dPortrait').files[0];
+      if (!file) {
+        state.portrait = null;
+        draw();
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      try {
+        state.portrait = await DesignAI.loadImage(url);
+      } catch (error) {
+        state.portrait = null;
+        status(`人像加载失败：${error.message}`, 'error');
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+      draw();
+    };
     $('downloadPng').onclick = () => exportAs('image/png');
     $('downloadJpg').onclick = () => exportAs('image/jpeg');
   }
