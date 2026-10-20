@@ -94,9 +94,81 @@ q('yearViewToggle').addEventListener('click',safe(async event=>{
 q('query').onclick=safe(load);q('resetFilters').onclick=()=>{for(const id of ['shopFilter','brand','platform','owner','executor'])q(id).value='';q('shopStatus').value='current';dates.reset();};q('export').onclick=safe(async()=>{const r=await s.authorizedFetch('/api/sales?action=export'+params());if(!r.ok)throw Error('导出失败');const url=URL.createObjectURL(await r.blob()),a=document.createElement('a');a.href=url;a.download='销售统计.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 function clear(){previews=[];q('confirm').hidden=true;q('diff').replaceChildren();}q('file').onchange=()=>{clear();q('importShop').value='';const files=[...q('file').files];if(files.length>10){q('file').value='';return msg('一次最多选择10个文件');}if(!files.length)return;const matches=[];for(const file of files){try{const shop=SalesPolicy.resolveShop(shops,file.name,'');matches.push(shop.data.name);}catch(e){matches.push('按文件内店铺名称自动识别');}}q('importMatch').textContent=files.length===1?'已识别店铺：'+matches[0]:`已选择 ${files.length} 个文件：`+matches.join('、');};q('importShop').onchange=()=>{clear();q('importMatch').textContent='已变更选择，预览时将重新核对文件店铺ID';};q('preview').onclick=safe(async()=>{clear();const files=[...q('file').files];if(!files.length)throw Error('请先选择文件');if(files.length>10)throw Error('一次最多选择10个文件');q('preview').disabled=true;try{const all=[];const notes=[];for(const file of files){let matched=null;try{matched=SalesPolicy.resolveShop(shops,file.name,q('importShop').value);}catch(e){matched=null;}const r=await s.authorizedFetch('/api/sales?action=preview'+(matched?'&shop='+matched.id:''),{method:'POST',headers:{'Content-Type':'application/octet-stream','x-sales-filename':encodeURIComponent(file.name)},body:await file.arrayBuffer()});const d=await r.json();if(!r.ok)throw Error(`${file.name}：${d.error||'校验失败'}`);previews.push(d.data.id);all.push(...d.data.diff.map(v=>[d.data.shopName,v.date,v.old==null?'无数据':money(v.old.cents),money(v.cents),v.status]));if(d.data.template==='order-detail'&&d.data.stats){const st=d.data.stats;const drop=Object.entries(st.byStatus||{}).filter(([k])=>k!=='已签收').map(([k,v])=>k+' '+v+' 行').join('、');notes.push(`${d.data.shopName}：保留已签收 ${st.orders} 单，剔除未签收 ${st.rowsSkipped||0} 行${drop?'（'+drop+'）':''}、外机 ${st.rowsOuter} 行`);}const ow=d.data.stats&&d.data.stats.outsideWindow;if(ow&&(ow.before||ow.after)){const parts=[];if(ow.before)parts.push(ow.before+' 天早于开店日期');if(ow.after)parts.push(ow.after+' 天晚于闭店日期');notes.push(`${d.data.shopName}：`+parts.join('、')+'（按原样导入）');}}table('diff',['店铺','日期','原金额（万元）','新金额（万元）','操作'],all);q('confirm').hidden=false;msg(`已校验 ${files.length} 个文件，共 ${all.length} 天${notes.length?'（'+notes.join('；')+'）':''}，请核对差异后确认。`);}finally{q('preview').disabled=false;}});
 q('confirm').onclick=safe(async()=>{q('confirm').disabled=true;try{const d=await api('confirm-batch',{ids:previews});clear();if(d){q('start').value=d.start;q('end').value=d.end;q('shopFilter').value=d.shop;const importedShop=shops.find(v=>v.id===d.shop);if(importedShop&&Life.effectiveStatus(importedShop)==='已闭店')q('shopStatus').value='all';dates.sync();await load();}msg(`导入完成：新增 ${d.added} 天，覆盖 ${d.changed} 天，其余跳过。`);}finally{q('confirm').disabled=false;}});
-async function targets(){const d=await api('targets');table('targetList',['店铺','周期','目标（万元）'],d.map(r=>[shops.find(s=>s.id===r.shop_id)?.data.name||r.shop_id,r.period,Number(r.cents)===0?'0.00（增量业务，不考核）':money(r.cents)]));}q('targetForm').onsubmit=safe(async e=>{e.preventDefault();const f=new FormData(e.target),amount=Number(f.get('amount')),year=String(f.get('period')).slice(0,4);const d=await api('target',{shop:q('targetShop').value,period:f.get('period'),yuan:(amount*10000).toFixed(2)});await targets();msg(d&&d.annual!=null?`目标已保存，${year} 年年度目标已同步为 ${money(d.annual)} 万元（12 个月度目标合计）`:(amount===0?'目标已保存：该店铺按增量业务处理，不纳入销售考核':'目标已保存'));if(q('start').value)await load();});
+let targetYear=String(new Date().getFullYear()),targetRows=null;
+const targetMoney=v=>v==null?'—':(Number(v)/1e6).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+async function targets(){targetRows=await api('targets');renderTargets();}
+function targetCell(tr,value,className,title){const td=document.createElement('td');if(className)td.className=className;td.textContent=value;if(title)td.title=title;tr.append(td);return td;}
+function renderTargets(){
+ const rows=targetRows||[],years=new Set(rows.map(r=>String(r.period).slice(0,4)).filter(y=>/^20\d{2}$/.test(y)));
+ years.add(String(new Date().getFullYear()));
+ const yearList=[...years].sort().reverse();
+ if(!yearList.includes(targetYear))targetYear=yearList[0];
+ q('targetYear').replaceChildren(...yearList.map(y=>new Option(y+' 年',y)));
+ q('targetYear').value=targetYear;
+ const byShop=new Map();
+ for(const row of rows){
+  const period=String(row.period);
+  if(period.slice(0,4)!==targetYear)continue;
+  const cell=byShop.get(row.shop_id)||{months:new Map(),annual:null,quarters:new Map()};
+  if(/^\d{4}$/.test(period))cell.annual=Number(row.cents);
+  else if(/^\d{4}-Q[1-4]$/.test(period))cell.quarters.set(period.slice(5),Number(row.cents));
+  else if(/^\d{4}-\d{2}$/.test(period))cell.months.set(Number(period.slice(5,7)),Number(row.cents));
+  byShop.set(row.shop_id,cell);
+ }
+ const blank={months:new Map(),annual:null,quarters:new Map()};
+ const items=shops.filter(shop=>byShop.has(shop.id)||Life.effectiveStatus(shop)!=='已闭店').map(shop=>{
+  const cell=byShop.get(shop.id)||blank,
+   months=Array.from({length:12},(_,index)=>cell.months.has(index+1)?cell.months.get(index+1):null),
+   filled=months.filter(value=>value!=null).length,
+   annual=filled?months.reduce((sum,value)=>sum+(value||0),0):cell.annual;
+  return {shop,months,filled,annual,closed:Life.effectiveStatus(shop)==='已闭店'};
+ });
+ items.sort((a,b)=>((b.filled>0||b.annual!=null)?1:0)-((a.filled>0||a.annual!=null)?1:0)||(b.annual||0)-(a.annual||0)||String(a.shop.data.name).localeCompare(String(b.shop.data.name),'zh'));
+ const table=document.createElement('table');table.className='yearly-month-table';
+ const thead=document.createElement('thead'),headRow=document.createElement('tr');
+ const corner=document.createElement('th');corner.textContent='店铺';corner.rowSpan=2;corner.scope='col';headRow.append(corner);
+ const groupHead=document.createElement('th');groupHead.textContent='目标（万元）';groupHead.colSpan=13;groupHead.scope='colgroup';groupHead.className='yearly-group';headRow.append(groupHead);
+ thead.append(headRow);
+ const subRow=document.createElement('tr');
+ ['年度',...Array.from({length:12},(_,index)=>(index+1)+'月')].forEach(label=>{const th=document.createElement('th');th.scope='col';th.textContent=label;subRow.append(th);});
+ thead.append(subRow);table.append(thead);
+ const tbody=document.createElement('tbody');
+ for(const item of items){
+  const tr=document.createElement('tr'),nameCell=document.createElement('td');
+  const name=document.createElement('span');name.className='target-shop';name.textContent=item.shop.data.name;nameCell.append(name);
+  const badge=(text,kind,title)=>{const span=document.createElement('span');span.className='target-badge '+kind;span.textContent=text;if(title)span.title=title;nameCell.append(span);};
+  if(item.closed)badge('已闭店','closed','已闭店店铺不参与目标考核');
+  else if(item.filled>0&&item.filled<12)badge(item.filled+'/12','warn','只填了 '+item.filled+' 个月，年度目标仅含已填月份');
+  else if(!item.filled&&item.annual==null)badge('未设目标','empty','该店铺尚未设置 '+targetYear+' 年目标');
+  tr.append(nameCell);
+  targetCell(tr,targetMoney(item.annual),'yearly-total'+(item.annual==null?' target-unset':''));
+  for(const value of item.months){
+   if(value==null){targetCell(tr,'—','target-unset');continue;}
+   targetCell(tr,targetMoney(value),Number(value)===0?'target-zero':'',Number(value)===0?'增量业务，不考核':null);
+  }
+  tbody.append(tr);
+ }
+ const totalRow=document.createElement('tr');totalRow.className='target-total-row';
+ const totalLabel=document.createElement('td');totalLabel.textContent='合计';totalRow.append(totalLabel);
+ const sum=list=>list.reduce((n,v)=>n+(v||0),0),annualSum=sum(items.map(item=>item.annual));
+ targetCell(totalRow,targetMoney(annualSum),'yearly-total');
+ for(let index=0;index<12;index++)targetCell(totalRow,targetMoney(sum(items.map(item=>item.months[index]))));
+ tbody.append(totalRow);table.append(tbody);
+ q('targetList').replaceChildren(table);
+ const withTarget=items.filter(item=>item.filled>0||item.annual!=null).length,
+  incomplete=items.filter(item=>item.filled>0&&item.filled<12),
+  zeroMonths=items.reduce((n,item)=>n+item.months.filter(value=>value===0).length,0),
+  quarters=[];
+ for(const cell of byShop.values())for(const [key,value] of cell.quarters)quarters.push(key+' '+targetMoney(value)+' 万元');
+ const parts=[`${targetYear} 年 ${items.length} 家店铺，${withTarget} 家已设目标，年度目标合计 ${targetMoney(annualSum)} 万元`];
+ if(incomplete.length)parts.push(`${incomplete.length} 家未填满 12 个月（年度目标只含已填月份）`);
+ if(zeroMonths)parts.push(`${zeroMonths} 个月填 0（增量业务，不考核）`);
+ q('targetSummary').textContent=parts.join('｜');
+ q('targetNote').textContent='0.00 = 增量业务不考核；— = 未设置目标。年度目标 = 12 个月度目标合计，此表只读，修改请点上方「年度／月度目标设置」；已闭店店铺不参与目标考核。'+(quarters.length?'　另有季度目标：'+quarters.join('、')+'。':'');
+}
+q('targetYear').onchange=()=>{targetYear=q('targetYear').value;renderTargets();};q('targetForm').onsubmit=safe(async e=>{e.preventDefault();const f=new FormData(e.target),amount=Number(f.get('amount')),year=String(f.get('period')).slice(0,4);const d=await api('target',{shop:q('targetShop').value,period:f.get('period'),yuan:(amount*10000).toFixed(2)});targetYear=year;await targets();msg(d&&d.annual!=null?`目标已保存，${year} 年年度目标已同步为 ${money(d.annual)} 万元（12 个月度目标合计）`:(amount===0?'目标已保存：该店铺按增量业务处理，不纳入销售考核':'目标已保存'));if(q('start').value)await load();});
 // 目标保存后，当前页的报表达成率、目标列表立刻用新口径重算（不用整页刷新）
-window.addEventListener('sales:targets-updated',safe(async e=>{const d=e.detail||{};await targets();await load();msg(d.annual==null?`${d.shop} ${d.year} 年度与月度目标已清空`:`${d.shop} ${d.year} 目标已保存：年度目标 ${money(d.annual)} 万元（${d.months||0}/12 个月度目标合计），首页驾驶舱与报表同步使用该数值`);}));
+window.addEventListener('sales:targets-updated',safe(async e=>{const d=e.detail||{};if(d.year)targetYear=String(d.year);await targets();await load();msg(d.annual==null?`${d.shop} ${d.year} 年度与月度目标已清空`:`${d.shop} ${d.year} 目标已保存：年度目标 ${money(d.annual)} 万元（${d.months||0}/12 个月度目标合计），首页驾驶舱与报表同步使用该数值`);}));
 q('file').multiple=true;q('file').setAttribute('aria-label','选择最多10个XLSX文件');const importActions=document.createElement('div');importActions.className='import-actions';q('file').before(importActions);importActions.append(q('file'),q('preview'),q('confirm'));
 const salesSections=['overview','shops','import','targets','logs'];
 async function showSalesSection(){

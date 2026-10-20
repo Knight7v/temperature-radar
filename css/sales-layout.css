@@ -56,3 +56,40 @@
 #targetTotals:empty{display:none}
 .target-dialog .sales-table td input[data-month]{text-align:right}
 .target-hint.warn{background:#fff5e8;border-color:#ffe1bd;color:#a4621a}
+
+/* 目标管理：改为与「销售概况 · 年累计 · 月度明细」同款的店铺 × 月份矩阵 */
+.target-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:18px 0 12px}
+.target-toolbar label{display:flex;align-items:center;gap:7px;font-size:13px;white-space:nowrap}
+.target-toolbar select{height:32px;min-height:32px;padding:4px 26px 4px 10px;border-radius:6px;font-size:13px}
+.target-summary{font-size:13px;color:var(--wb-muted)}
+.target-note{margin:12px 0 0;font-size:12px;line-height:1.8;color:var(--wb-muted)}
+.target-matrix-wrap th,.target-matrix-wrap td{min-width:0}
+.target-shop{font-weight:600}
+.target-badge{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:500;line-height:17px;vertical-align:1px;white-space:nowrap}
+.target-badge.warn{background:#fff5e8;border:1px solid #ffe1bd;color:#a4621a}
+.target-badge.empty{background:#f2f5f9;border:1px solid #e2e8f1;color:#8c9bb0}
+.target-badge.closed{background:#f3f4f6;border:1px solid #e4e7ec;color:#98a2b3}
+.yearly-num,.target-matrix-wrap td{font-variant-numeric:tabular-nums}
+.target-matrix-wrap .target-unset{color:#b3bdcc;font-weight:400}
+.target-matrix-wrap .target-zero{color:#9a7332;background:#fffbf2}
+.target-matrix-wrap .target-total-row td{font-weight:600;background:#f7f9fc;border-top:1px solid #dfe6ef}
+.target-matrix-wrap .target-total-row .yearly-total{background:#eef3fa}
+.target-matrix-wrap tbody tr.target-total-row:hover td{background:#f7f9fc}
+.target-matrix-wrap tbody tr.target-total-row:hover .yearly-total{background:#eef3fa}
+
+/* 目标管理顶部：主入口与「单个周期」快捷表单并排成一条操作带 */
+.target-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.target-head h2{margin:0}
+.target-head-hint{font-size:12px;color:#3f6fb5;background:#eaf1ff;border:1px solid #d5e3ff;border-radius:99px;padding:2px 10px;white-space:nowrap}
+.target-actions{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;padding:14px 16px;background:#f7f9fc;border:1px solid #e6ecf5;border-radius:10px}
+.target-actions-main{display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+.target-actions-main button{margin:0;font-size:13px;padding:8px 16px;border-radius:6px}
+.target-actions-hint{font-size:12px;color:var(--wb-muted)}
+.target-actions .sales-form{gap:10px 12px;padding-left:20px;border-left:1px dashed #dde5f0}
+.target-actions .sales-form label{font-size:12px;color:var(--wb-muted);gap:4px}
+.target-actions .sales-form input,.target-actions .sales-form select{height:32px;min-height:32px;padding:4px 9px;border-radius:6px;font-size:13px}
+.target-actions .sales-form select{max-width:180px}
+.target-actions .sales-form input[name=period]{width:150px}
+.target-actions .sales-form input[name=amount]{width:130px}
+.target-actions .sales-form button{font-size:13px;padding:7px 14px;border-radius:6px}
+@media(max-width:760px){.target-actions{gap:14px}.target-actions .sales-form{padding-left:0;border-left:0;border-top:1px dashed #dde5f0;padding-top:12px;width:100%}}
