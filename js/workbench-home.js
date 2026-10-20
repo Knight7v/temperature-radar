@@ -33,7 +33,7 @@
  const year=String(TY), prevYear=String(TY-1);
  const month=`${year}-${pad(TM)}`, monthStart=month+'-01';
  const daysInMonth=new Date(TY,TM,0).getDate();
- const state={range:'year',grain:'month',shop:'',brand:'',shops:[],targets:[],charts:{}};
+ const state={range:'year',grain:'month',shop:'',brand:'',shops:[],targets:[],charts:{},anchor:'',window:null};
 
  const filters=()=>{
   const p=[];
@@ -76,25 +76,68 @@
     plugins:{legend:{display:false},tooltip:{enabled:false}}}});
  }
 
- /* ---------- 趋势图 ---------- */
- function drawTrend(labels,curData,prevData,curName,prevName){
-  const el=q('ghTrend');
-  if(state.charts.trend)state.charts.trend.destroy();
-  state.charts.trend=new Chart(el,{type:'line',
-   data:{labels,datasets:[
-    {label:curName,data:curData,borderColor:'#0665ff',backgroundColor:'rgba(6,101,255,.12)',fill:true,tension:.25,spanGaps:false,borderWidth:2.2,pointRadius:3,pointBackgroundColor:'#fff',pointBorderWidth:1.8,pointHoverRadius:5},
-    {label:prevName,data:prevData,borderColor:'#b9c6da',borderDash:[4,3],fill:false,tension:.25,spanGaps:false,borderWidth:1.6,pointRadius:0,pointHoverRadius:4}
-   ]},
-   options:{responsive:true,maintainAspectRatio:false,animation:false,
-    interaction:{mode:'index',intersect:false},
-    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+'：'+(c.parsed.y==null?'未导入':c.parsed.y.toFixed(2)+' 万元')}}},
-    scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#93a1b5',font:{size:10},maxRotation:0,autoSkipPadding:14}},
-     y:{beginAtZero:true,grid:{color:'#eef2f8'},border:{display:false},ticks:{color:'#93a1b5',font:{size:10},callback:v=>Number(v).toLocaleString('zh-CN')}}}}});
-  // 卡片刚从 hidden 变可见时容器宽度可能还没结算，补一次 resize 避免图表按默认 300px 绘制
-  requestAnimationFrame(()=>{const c=state.charts.trend;if(c)try{c.resize();}catch{}});
- }
+/* ---------- 趋势图 ---------- */
+function drawTrend(labels,curData,prevData,curName,prevName){
+ const el=q('ghTrend');
+ if(state.charts.trend)state.charts.trend.destroy();
+ const blue='#0665ff';
+ // 只在最后一个有数据的点留一个标记，其余点不画：点太密会把曲线变成「串珠」
+ let lastIdx=-1;curData.forEach((v,i)=>{if(v!=null)lastIdx=i;});
+ const curPoints=curData.map((_,i)=>(i===lastIdx?3.6:0));
+ state.charts.trend=new Chart(el,{type:'line',
+  data:{labels,datasets:[
+   {label:curName,data:curData,borderColor:blue,fill:true,tension:.32,spanGaps:false,borderWidth:2.2,
+    borderCapStyle:'round',borderJoinStyle:'round',
+    backgroundColor:c=>{
+     const area=c.chart&&c.chart.chartArea;
+     if(!area)return 'rgba(6,101,255,.10)';
+     const g=c.chart.ctx.createLinearGradient(0,area.top,0,area.bottom);
+     g.addColorStop(0,'rgba(6,101,255,.22)');g.addColorStop(.55,'rgba(6,101,255,.06)');g.addColorStop(1,'rgba(6,101,255,0)');
+     return g;
+    },
+    pointRadius:curPoints,pointBackgroundColor:blue,pointBorderColor:'#fff',pointBorderWidth:2,
+    pointHitRadius:14,pointHoverRadius:5.5,pointHoverBorderWidth:2.5,pointHoverBorderColor:'#fff',pointHoverBackgroundColor:blue},
+   {label:prevName,data:prevData,borderColor:'#c2cee0',borderDash:[5,4],fill:false,tension:.32,spanGaps:false,borderWidth:1.6,
+    pointRadius:0,pointHitRadius:14,pointHoverRadius:4,pointHoverBorderWidth:2,pointHoverBorderColor:'#fff',pointHoverBackgroundColor:'#c2cee0'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,
+   interaction:{mode:'index',intersect:false},
+   plugins:{legend:{display:false},tooltip:{displayColors:true,boxWidth:8,boxHeight:8,boxPadding:3,usePointStyle:true,padding:9,cornerRadius:7,
+    callbacks:{label:c=>c.dataset.label+'：'+(c.parsed.y==null?'未导入':c.parsed.y.toFixed(2)+' 万元')}}},
+   scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#93a1b5',font:{size:10},maxRotation:0,autoSkipPadding:14}},
+    y:{beginAtZero:true,grid:{color:'#eef2f8'},border:{display:false},ticks:{color:'#93a1b5',font:{size:10},callback:v=>Number(v).toLocaleString('zh-CN')}}}}});
+ // 卡片刚从 hidden 变可见时容器宽度可能还没结算，补一次 resize 避免图表按默认 300px 绘制
+ requestAnimationFrame(()=>{const c=state.charts.trend;if(c)try{c.resize();}catch{}});
+}
 
- /* ---------- KPI ---------- */
+ /* ---------- 第一张 KPI：跟着时间周期走（本月 / 近7天 / 近30天 / 本年） ---------- */
+function renderPeriodKpi(cur,prev){
+ const r=state.range;
+ const label=r==='month'?'月累计销售额':r==='7'?'近 7 天销售额':r==='30'?'近 30 天销售额':'本年累计销售额';
+ const total=Number(cur&&cur.total||0),prevTotal=prev?Number(prev.total||0):0;
+ q('kPeriodLabel').textContent=label;
+ q('kPeriod').textContent=wan(total);
+ q('kPeriodYoy').innerHTML=yoyText(total,prevTotal).html;
+
+ let html='';
+ if(r==='month'){
+  const g=M.goal(state.targets,state.shops,month);
+  const rate=g.cents>0?total/g.cents:null;
+  html=`目标 <i class="num">${g.cents?int(g.cents/1e6):'待设置'}</i> 万 · 完成 <i class="num${rate!=null&&rate>=1?' up':''}">${pct1(rate)}</i>`;
+ }else if(r==='year'){
+  // 本年选中时区间合计就等于年累计（右侧那张卡已有目标达成），这里给日均和已过天数，避免两张卡看起来一模一样
+  const days=state.window?Math.round((Date.parse(state.window.end)-Date.parse(state.window.start))/86400000)+1:0;
+  html=`日均 <i class="num">${wan(days?total/days:0)}</i> 万 · 已过 ${days} 天`;
+ }else{
+  // 7/30 天没有独立目标，用「日均 vs 本月目标日均」做参照，避免给一个无法解释的完成率
+  const days=state.window?Math.round((Date.parse(state.window.end)-Date.parse(state.window.start))/86400000)+1:(r==='7'?7:30);
+  const g=M.goal(state.targets,state.shops,month);
+  html=`日均 <i class="num">${wan(days?total/days:0)}</i> 万 · 目标日均 <i class="num">${g.cents?wan(g.cents/daysInMonth):'—'}</i> 万`;
+ }
+ q('kPeriodGoal').innerHTML=html;
+}
+
+/* ---------- KPI ---------- */
  function yoyText(now,prev){
   if(!prev)return {html:'<span class="warnc">基数缺失</span>'};
   const r=now/prev-1;
@@ -112,15 +155,9 @@
     state.shops=shops||[];state.targets=targets||[];
     fillFilters();
    }
-   const prevSameEnd=`${prevYear}-${pad(TM)}-${pad(TD)}`;
-   const trend={...trendWindow()};
-
-   const [curS,prevYearS,prevSameS,trendS,trendPrevS,invS,wxS,qiS]=await Promise.allSettled([
+   // 第一轮：今年累计（用它确定「数据截止日」）+ 库存/气温/质检
+   const [curS,invS,wxS,qiS]=await Promise.allSettled([
     fetchData(`/api/sales?action=overview&start=${year}-01-01&end=${todayStr}&grain=month${filters()}`),
-    fetchData(`/api/sales?action=overview&start=${prevYear}-01-01&end=${prevYear}-12-31&grain=month${filters()}`),
-    fetchData(`/api/sales?action=overview&start=${prevYear}-01-01&end=${prevSameEnd}&grain=month${filters()}`),
-    fetchData(`/api/sales?action=overview&start=${trend.start}&end=${trend.end}&grain=${state.grain}${filters()}`),
-    fetchData(`/api/sales?action=overview&start=${trend.prevStart}&end=${trend.prevEnd}&grain=${state.grain}${filters()}`),
     fetchData('/api/inventory/overview'),
     session.authorizedFetch('/api/weather-summary').then(async r=>{
      if(r.status===503)return {unavailable:'天气数据源未配置'};
@@ -131,19 +168,24 @@
    ]);
 
    const cur=curS.status==='fulfilled'?curS.value:null;
-   const prevYearData=prevYearS.status==='fulfilled'?prevYearS.value:null;
+   state.anchor=cur&&cur.rows?cur.rows.reduce((d,r)=>r.lastDate>d?r.lastDate:d,''):'';
+   if(!state.anchor)state.anchor=todayStr;
+
+   // 第二轮：去年同期（截止日对齐，不按「今天」算，否则同比分母多两天）与趋势区间，两件事并行
+   const prevSameEnd=fmtDate(minusYear(new Date(state.anchor+'T00:00:00')));
+   const [prevSameS]=await Promise.allSettled([
+    fetchData(`/api/sales?action=overview&start=${prevYear}-01-01&end=${prevSameEnd}&grain=month${filters()}`),
+    refreshTrend()
+   ]);
    const prevSame=prevSameS.status==='fulfilled'?prevSameS.value:null;
 
    if(cur){
-    renderHeadline(cur,prevYearData,prevSame);
+    renderHeadline(cur,prevSame);
     renderRanks(cur);
    }else{
     q('ghCoverage').textContent='销售数据加载失败：'+(curS.reason&&curS.reason.message||'未知错误');
-    q('kMonth').textContent='—';q('kYear').textContent='—';
+    q('kPeriod').textContent='—';q('kYear').textContent='—';
    }
-
-   if(trendS.status==='fulfilled'&&trendS.value)renderTrend(trendS.value,trendPrevS.status==='fulfilled'?trendPrevS.value:null);
-   else{q('ghTrendEmpty').hidden=false;q('ghTrendEmpty').textContent='趋势数据加载失败';}
 
    renderTodo(invS.status==='fulfilled'?invS.value:null,qiS.status==='fulfilled'?qiS.value:null);
    renderWeather(wxS.status==='fulfilled'?wxS.value:null);
@@ -155,41 +197,39 @@
   }
  }
 
- /* 趋势区间：按筛选条范围 + 粒度算出起止，以及去年同期区间 */
- function trendWindow(){
-  const end=new Date(TY,TM-1,TD);
-  let start;
-  if(state.range==='month')start=new Date(TY,TM-1,1);
-  else if(state.range==='7'){start=new Date(end);start.setDate(end.getDate()-6);}
-  else if(state.range==='30'){start=new Date(end);start.setDate(end.getDate()-29);}
-  else start=new Date(TY,0,1);
-  if(state.grain==='month'){start=new Date(start.getFullYear(),start.getMonth(),1);}
-  return {start:fmtDate(start),end:fmtDate(end),prevStart:fmtDate(minusYear(start)),prevEnd:fmtDate(minusYear(end))};
- }
+/* 趋势区间：按筛选条范围 + 粒度算出起止，以及去年同期区间
+   终点优先用「数据截止日」，不用今天——数据没导的日子不该算进区间，否则近7天会有两天空白 */
+function trendWindow(){
+ const endStr=state.anchor||todayStr;
+ const [ay,am,ad]=endStr.split('-').map(Number);
+ const end=new Date(ay,am-1,ad);
+ let start;
+ if(state.range==='month')start=new Date(ay,am-1,1);
+ else if(state.range==='7'){start=new Date(end);start.setDate(end.getDate()-6);}
+ else if(state.range==='30'){start=new Date(end);start.setDate(end.getDate()-29);}
+ else start=new Date(ay,0,1);
+ if(state.grain==='month'){start=new Date(start.getFullYear(),start.getMonth(),1);}
+ if(start>end)start=new Date(end);
+ return {start:fmtDate(start),end:fmtDate(end),prevStart:fmtDate(minusYear(start)),prevEnd:fmtDate(minusYear(end))};
+}
 
- /* ---------- 顶部三张 KPI ---------- */
- function renderHeadline(cur,prevYearData,prevSame){
-  const curMonth=sumByPeriod(cur.rows).get(month)||0;
-  const prevMonth=prevSame?sumByPeriod(prevSame.rows).get(`${prevYear}-${pad(TM)}`)||0:0;
-  const yearTotal=Number(cur.total||0), prevYearTotal=prevSame?Number(prevSame.total||0):0;
+ /* ---------- 年累计 + 目标 KPI（第一张「区间销售额」卡由 renderPeriodKpi 负责） ---------- */
+function renderHeadline(cur,prevSame){
+ const curMonth=sumByPeriod(cur.rows).get(month)||0;
+ const yearTotal=Number(cur.total||0), prevYearTotal=prevSame?Number(prevSame.total||0):0;
 
-  q('kMonth').textContent=wan(curMonth);
-  q('kYear').textContent=wan(yearTotal);
+ q('kYear').textContent=wan(yearTotal);
+ const yYoy=yoyText(yearTotal,prevYearTotal);q('kYearYoy').innerHTML=yYoy.html;
 
-  const mYoy=yoyText(curMonth,prevMonth);q('kMonthYoy').innerHTML=mYoy.html;
-  const yYoy=yoyText(yearTotal,prevYearTotal);q('kYearYoy').innerHTML=yYoy.html;
+ // 目标
+ const mGoal=M.goal(state.targets,state.shops,month);
+ const yGoal=M.goal(state.targets,state.shops,year,cur.shopTotals);
+ const mRate=mGoal.cents>0?curMonth/mGoal.cents:null;
+ const yRate=yGoal.cents>0?yearTotal/yGoal.cents:null;
 
-  // 目标
-  const mGoal=M.goal(state.targets,state.shops,month);
-  const yGoal=M.goal(state.targets,state.shops,year,cur.shopTotals);
-  const mRate=mGoal.cents>0?curMonth/mGoal.cents:null;
-  const yRate=yGoal.cents>0?yearTotal/yGoal.cents:null;
-
-  q('kMonthTarget').textContent=mGoal.cents?int(mGoal.cents/1e6):'待设置';
-  q('kMonthRate').textContent=pct1(mRate);
-  q('kYearTarget').textContent=yGoal.cents?int(yGoal.cents/1e6):'待设置';
-  q('kYearRate').textContent=pct1(yRate);
-  q('kYearRate').className=yRate!=null&&yRate>=1?'num up':'num';
+ q('kYearTarget').textContent=yGoal.cents?int(yGoal.cents/1e6):'待设置';
+ q('kYearRate').textContent=pct1(yRate);
+ q('kYearRate').className=yRate!=null&&yRate>=1?'num up':'num';
 
   // 时间进度（以数据截止日为准）
   const latest=cur.rows.reduce((d,r)=>r.lastDate>d?r.lastDate:d,'')||todayStr;
@@ -198,7 +238,10 @@
 
   q('kRate').textContent=mRate==null?'—':(mRate*100).toFixed(1);
   q('kTime').textContent='时间进度 '+pct1(timeRate);
-  q('ghCoverage').textContent=`数据截至 ${latest} · 已覆盖 ${cur.covered||0} 个店铺日${cur.missing?` · 缺失 ${cur.missing} 个`:''}`;
+  // 覆盖提示只说到「数据截止日」，不把今天之前没导的两天算成「缺失」，否则和趋势图的缺失数对不上
+  const lagDays=Math.round((Date.parse(todayStr)-Date.parse(latest))/86400000);
+  const lagFrom=lagDays>0?new Date(Date.parse(latest)+86400000).toISOString().slice(5,10)+' 起未导入':'';
+  q('ghCoverage').textContent=`数据截至 ${latest}${lagFrom?`（${lagFrom}）`:''} · 已覆盖 ${cur.covered||0} 个店铺日`;
 
   const gap=mGoal.cents?mGoal.cents-curMonth:null;
   const diff=mRate==null?null:timeRate-mRate;
@@ -260,6 +303,7 @@
   q('lgPrev').textContent=prevName+'（同期）';
   q('ghTrendSub').textContent=`万元 · ${curName} vs ${prevName}`;
   drawTrend(periods.map(p=>periodLabel(p,grain)),curData,prevData,curName,prevName);
+  renderPeriodKpi(cur,prev);
 
   // 区间合计同比
   const curSum=curData.reduce((n,v)=>n+(v||0),0), prevSum=prevData.reduce((n,v)=>n+(v||0),0);
@@ -412,16 +456,20 @@
   q('ghRefresh').addEventListener('click',()=>loadDashboard());
  }
 
- async function refreshTrend(){
-  const t=trendWindow();
-  try{
-   const [cur,prev]=await Promise.all([
-    fetchData(`/api/sales?action=overview&start=${t.start}&end=${t.end}&grain=${state.grain}${filters()}`),
-    fetchData(`/api/sales?action=overview&start=${t.prevStart}&end=${t.prevEnd}&grain=${state.grain}${filters()}`)
-   ]);
-   renderTrend(cur,prev);
-  }catch(e){q('ghTrendEmpty').hidden=false;q('ghTrendEmpty').textContent=e.message||'趋势加载失败';}
+async function refreshTrend(){
+ const t=trendWindow();
+ state.window=t;
+ try{
+  const [cur,prev]=await Promise.all([
+   fetchData(`/api/sales?action=overview&start=${t.start}&end=${t.end}&grain=${state.grain}${filters()}`),
+   fetchData(`/api/sales?action=overview&start=${t.prevStart}&end=${t.prevEnd}&grain=${state.grain}${filters()}`)
+  ]);
+  renderTrend(cur,prev);
+ }catch(e){
+  q('ghTrendEmpty').hidden=false;q('ghTrendEmpty').textContent=e.message||'趋势加载失败';
+  q('kPeriod').textContent='—';q('kPeriodYoy').textContent='—';q('kPeriodGoal').textContent='数据加载失败';
  }
+}
 
  /* ---------- 启动 ---------- */
  try{
