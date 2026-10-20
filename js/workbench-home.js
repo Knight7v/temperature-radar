@@ -118,23 +118,30 @@ function renderPeriodKpi(cur,prev){
  q('kPeriodLabel').textContent=label;
  q('kPeriod').textContent=wan(total);
  q('kPeriodYoy').innerHTML=yoyText(total,prevTotal).html;
+ q('kPeriodPrev').textContent=prevTotal?`去年同期 ${wan(prevTotal)} 万`:'';
 
  let html='';
- if(r==='month'){
-  const g=M.goal(state.targets,state.shops,month);
-  const rate=g.cents>0?total/g.cents:null;
-  html=`目标 <i class="num">${g.cents?int(g.cents/1e6):'待设置'}</i> 万 · 完成 <i class="num${rate!=null&&rate>=1?' up':''}">${pct1(rate)}</i>`;
- }else if(r==='year'){
-  // 本年选中时区间合计就等于年累计（右侧那张卡已有目标达成），这里给日均和已过天数，避免两张卡看起来一模一样
-  const days=state.window?Math.round((Date.parse(state.window.end)-Date.parse(state.window.start))/86400000)+1:0;
-  html=`日均 <i class="num">${wan(days?total/days:0)}</i> 万 · 已过 ${days} 天`;
- }else{
-  // 7/30 天没有独立目标，用「日均 vs 本月目标日均」做参照，避免给一个无法解释的完成率
-  const days=state.window?Math.round((Date.parse(state.window.end)-Date.parse(state.window.start))/86400000)+1:(r==='7'?7:30);
-  const g=M.goal(state.targets,state.shops,month);
-  html=`日均 <i class="num">${wan(days?total/days:0)}</i> 万 · 目标日均 <i class="num">${g.cents?wan(g.cents/daysInMonth):'—'}</i> 万`;
- }
+ // 统一口径：日均 vs 目标日均（月目标/当月天数、年目标/365），四个区间都能横向比；目标完成率交给目标进度卡，避免两处重复
+ const days=state.window?Math.round((Date.parse(state.window.end)-Date.parse(state.window.start))/86400000)+1:(r==='7'?7:r==='30'?30:daysInMonth);
+ const g=r==='year'?M.goal(state.targets,state.shops,year,cur&&cur.shopTotals):M.goal(state.targets,state.shops,month);
+ const goalDaily=g.cents?(r==='year'?g.cents/365:g.cents/daysInMonth):null;
+ html=`日均 <i class="num">${wan(days?total/days:0)}</i> 万 · 目标日均 <i class="num">${goalDaily?wan(goalDaily):'—'}</i> 万`;
  q('kPeriodGoal').innerHTML=html;
+
+ // 当期贡献最高的店铺：给大数字一个「钱从哪来」的参照（按单店/单品牌筛选时不再显示）
+ const topEl=q('kPeriodTop');
+ const totals=cur&&cur.shopTotals;
+ if(topEl){
+  if(!state.shop&&!state.brand&&totals&&total>0){
+   const names=new Map((cur.rows||[]).map(r=>[r.shopId,r.shop]));
+   const list=Object.keys(totals).map(id=>({name:names.get(id)||'',cents:Number(totals[id])||0}))
+    .filter(x=>x.cents>0&&x.name).sort((a,b)=>b.cents-a.cents);
+   if(list.length>1){
+    const t=list[0],share=t.cents/total*100;
+    topEl.innerHTML=`贡献最高 <b>${esc(t.name)}</b> <i class="num">${share.toFixed(1)}%</i>`;
+   }else topEl.textContent='';
+  }else topEl.textContent='';
+ }
 }
 
 /* ---------- KPI ---------- */
@@ -171,23 +178,19 @@ function renderPeriodKpi(cur,prev){
    state.anchor=cur&&cur.rows?cur.rows.reduce((d,r)=>r.lastDate>d?r.lastDate:d,''):'';
    if(!state.anchor)state.anchor=todayStr;
 
-   // 第二轮：去年同期（截止日对齐，不按「今天」算，否则同比分母多两天）与趋势区间，两件事并行
-   const prevSameEnd=fmtDate(minusYear(new Date(state.anchor+'T00:00:00')));
-   const [prevSameS]=await Promise.allSettled([
-    fetchData(`/api/sales?action=overview&start=${prevYear}-01-01&end=${prevSameEnd}&grain=month${filters()}`),
-    refreshTrend()
-   ]);
-   const prevSame=prevSameS.status==='fulfilled'?prevSameS.value:null;
+   // 第二轮：趋势区间（窗口终点要用第一轮算出的截止日，所以不能并到第一轮）
+   await refreshTrend();
 
    if(cur){
-    renderHeadline(cur,prevSame);
+    renderHeadline(cur,cur.shopTotals);
     renderRanks(cur);
    }else{
     q('ghCoverage').textContent='销售数据加载失败：'+(curS.reason&&curS.reason.message||'未知错误');
-    q('kPeriod').textContent='—';q('kYear').textContent='—';
+    q('kPeriod').textContent='—';
    }
 
-   renderTodo(invS.status==='fulfilled'?invS.value:null,qiS.status==='fulfilled'?qiS.value:null);
+   renderInventory(invS.status==='fulfilled'?invS.value:null);
+   renderQuality(qiS.status==='fulfilled'?qiS.value:null);
    renderWeather(wxS.status==='fulfilled'?wxS.value:null);
    renderFresh(cur,invS.status==='fulfilled'?invS.value:null,qiS.status==='fulfilled'?qiS.value:null);
   }catch(e){
@@ -213,75 +216,65 @@ function trendWindow(){
  return {start:fmtDate(start),end:fmtDate(end),prevStart:fmtDate(minusYear(start)),prevEnd:fmtDate(minusYear(end))};
 }
 
- /* ---------- 年累计 + 目标 KPI（第一张「区间销售额」卡由 renderPeriodKpi 负责） ---------- */
-function renderHeadline(cur,prevSame){
+ /* ---------- 目标进度卡（月/年双半环 + 节奏说明 + 覆盖情况） ---------- */
+function renderHeadline(cur,shopTotals){
  const curMonth=sumByPeriod(cur.rows).get(month)||0;
- const yearTotal=Number(cur.total||0), prevYearTotal=prevSame?Number(prevSame.total||0):0;
+ const yearTotal=Number(cur.total||0);
 
- q('kYear').textContent=wan(yearTotal);
- const yYoy=yoyText(yearTotal,prevYearTotal);q('kYearYoy').innerHTML=yYoy.html;
-
- // 目标
  const mGoal=M.goal(state.targets,state.shops,month);
- const yGoal=M.goal(state.targets,state.shops,year,cur.shopTotals);
+ const yGoal=M.goal(state.targets,state.shops,year,shopTotals);
  const mRate=mGoal.cents>0?curMonth/mGoal.cents:null;
  const yRate=yGoal.cents>0?yearTotal/yGoal.cents:null;
 
- q('kYearTarget').textContent=yGoal.cents?int(yGoal.cents/1e6):'待设置';
- q('kYearRate').textContent=pct1(yRate);
- q('kYearRate').className=yRate!=null&&yRate>=1?'num up':'num';
+ // 时间进度（以数据截止日为准）
+ const latest=cur.rows.reduce((d,r)=>r.lastDate>d?r.lastDate:d,'')||todayStr;
+ const dayNum=Number(latest.slice(8,10))||TD;
+ const timeRate=dayNum/daysInMonth, remain=Math.max(0,daysInMonth-dayNum);
 
-  // 时间进度（以数据截止日为准）
-  const latest=cur.rows.reduce((d,r)=>r.lastDate>d?r.lastDate:d,'')||todayStr;
-  const dayNum=Number(latest.slice(8,10))||TD;
-  const timeRate=dayNum/daysInMonth, remain=Math.max(0,daysInMonth-dayNum);
+ // 覆盖提示只说到「数据截止日」，不把今天之前没导的两天算成「缺失」，否则和趋势图的缺失数对不上
+ const lagDays=Math.round((Date.parse(todayStr)-Date.parse(latest))/86400000);
+ const lagFrom=lagDays>0?new Date(Date.parse(latest)+86400000).toISOString().slice(5,10)+' 起未导入':'';
+ q('ghCoverage').textContent=`数据截至 ${latest}${lagFrom?`（${lagFrom}）`:''} · 已覆盖 ${cur.covered||0} 个店铺日`;
 
-  q('kRate').textContent=mRate==null?'—':(mRate*100).toFixed(1);
-  q('kTime').textContent='时间进度 '+pct1(timeRate);
-  // 覆盖提示只说到「数据截止日」，不把今天之前没导的两天算成「缺失」，否则和趋势图的缺失数对不上
-  const lagDays=Math.round((Date.parse(todayStr)-Date.parse(latest))/86400000);
-  const lagFrom=lagDays>0?new Date(Date.parse(latest)+86400000).toISOString().slice(5,10)+' 起未导入':'';
-  q('ghCoverage').textContent=`数据截至 ${latest}${lagFrom?`（${lagFrom}）`:''} · 已覆盖 ${cur.covered||0} 个店铺日`;
+ // 双半环
+ gauge('gMonth',mRate,'#0665ff');
+ gauge('gYear',yRate,'#0f9d58');
+ q('gMonthVal').innerHTML=mRate==null?'—':(mRate*100).toFixed(1)+'<small>%</small>';
+ q('gYearVal').innerHTML=yRate==null?'—':(yRate*100).toFixed(1)+'<small>%</small>';
+ q('gMonthVal').style.color='#0665ff';
+ q('gYearVal').style.color=yRate!=null&&yRate>=1?'#0f9d58':'#e0811a';
+ q('gMonthCap').textContent=mGoal.cents?`月 · ${wan(curMonth)} / ${int(mGoal.cents/1e6)} 万`:'月 · 目标未设置';
+ q('gYearCap').textContent=yGoal.cents?`年累计 ${wan(yearTotal)} / ${int(yGoal.cents/1e6)} 万`:'年 · 目标未设置';
 
-  const gap=mGoal.cents?mGoal.cents-curMonth:null;
-  const diff=mRate==null?null:timeRate-mRate;
-  q('kGap').innerHTML=diff==null?'<span class="warnc">目标未设置完整</span>'
-   :`${diff>0?'落后':'领先'} <span class="${diff>0?'warnc':'down'}">${(Math.abs(diff)*100).toFixed(1)}pt</span>${gap>0?` · 缺 <i class="num">${int(gap/1e6)}</i> 万`:''}`;
-  q('kNeed').innerHTML=(gap>0&&remain>0)
-   ?`剩余 ${remain} 天 · 日均需 <span class="warnc num">${wan(gap/remain)}</span> 万`
-   :(gap!=null&&gap<=0?`已超额 <i class="num">${int(-gap/1e6)}</i> 万`:'目标未设置完整');
-
-  // 目标进度卡
-  gauge('gMonth',mRate,'#0665ff');
-  gauge('gYear',yRate,'#0f9d58');
-  q('gMonthVal').innerHTML=mRate==null?'—':(mRate*100).toFixed(1)+'<small>%</small>';
-  q('gYearVal').innerHTML=yRate==null?'—':(yRate*100).toFixed(1)+'<small>%</small>';
-  q('gMonthVal').style.color='#0665ff';
-  q('gYearVal').style.color=yRate!=null&&yRate>=1?'#0f9d58':'#e0811a';
-  q('gMonthCap').textContent=mGoal.cents?`月 · ${wan(curMonth)} / ${int(mGoal.cents/1e6)} 万`:'月 · 目标未设置';
-  q('gYearCap').textContent=yGoal.cents?`年 · ${wan(yearTotal)} / ${int(yGoal.cents/1e6)} 万`:'年 · 目标未设置';
-
-  // 说明
-  if(mRate==null){
-   const miss=mGoal.missing&&mGoal.missing.length?'（缺 '+mGoal.missing.slice(0,2).join('、')+(mGoal.missing.length>2?' 等':'')+'）':'';
-   q('ghGoalNote').innerHTML=`本月目标覆盖 ${mGoal.configured}/${mGoal.shops} 家${miss}，无法计算完成率。<a class="gh-link" href="/sales.html#targets">去补齐目标</a>`;
-  }else{
-   const forecast=timeRate>0?curMonth/timeRate:null;
-   const monthGap=forecast!=null&&mGoal.cents>forecast?mGoal.cents-forecast:0;
-   q('ghGoalNote').innerHTML=`本月时间进度 ${(timeRate*100).toFixed(1)}%，目标完成 ${(mRate*100).toFixed(1)}%，<b>${diff>0?'落后':'领先'} ${(Math.abs(diff)*100).toFixed(1)} 个百分点</b>`
-    +(monthGap?`；按当前节奏，月底预计缺口约 <b>${int(monthGap/1e6)} 万</b>`:'；按当前节奏可完成本月目标');
-  }
-
-  // 覆盖情况
-  const monthTargets=state.targets.filter(t=>/^\d{4}-(0[1-9]|1[0-2])$/.test(t.period)&&t.period.slice(0,4)===year);
-  const byShop=new Map();
-  for(const t of monthTargets)byShop.set(t.shop_id,(byShop.get(t.shop_id)||0)+1);
-  const partial=[...byShop.values()].filter(n=>n<12).length;
-  const inc=state.targets.filter(t=>t.period===year&&Number(t.cents)===0).length;
-  q('gfCover').textContent=`${mGoal.configured} / ${mGoal.shops} 家`;
-  q('gfPartial').textContent=`${partial} 家`;
-  q('gfInc').textContent=`${inc} 家`;
+ // 一句话说清节奏：时间过到哪、完成到哪、差多少、剩几天要多少、月底预计缺口
+ const gap=mGoal.cents?mGoal.cents-curMonth:null;
+ const diff=mRate==null?null:timeRate-mRate;
+ if(mRate==null){
+  const miss=mGoal.missing&&mGoal.missing.length?'（缺 '+mGoal.missing.slice(0,2).join('、')+(mGoal.missing.length>2?' 等':'')+'）':'';
+  q('ghGoalNote').innerHTML=`本月目标覆盖 ${mGoal.configured}/${mGoal.shops} 家${miss}，无法计算完成率。<a class="gh-link" href="/sales.html#targets">去补齐目标</a>`;
+ }else{
+  const forecast=timeRate>0?curMonth/timeRate:null;
+  const monthGap=forecast!=null&&mGoal.cents>forecast?mGoal.cents-forecast:0;
+  const parts=[
+   `时间进度 <b>${(timeRate*100).toFixed(1)}%</b>`,
+   `完成 <b>${(mRate*100).toFixed(1)}%</b>`,
+   `${diff>0?'落后':'领先'} <b>${(Math.abs(diff)*100).toFixed(1)}pt</b>`,
+   `剩 ${remain} 天日均需 <b>${wan(gap>0?gap/remain:0)} 万</b>`,
+   monthGap?`月底预计缺口 <b>${int(monthGap/1e6)} 万</b>`:'按当前节奏可完成'
+  ];
+  q('ghGoalNote').innerHTML=parts.join(' · ');
  }
+
+ // 覆盖情况
+ const monthTargets=state.targets.filter(t=>/^\d{4}-(0[1-9]|1[0-2])$/.test(t.period)&&t.period.slice(0,4)===year);
+ const byShop=new Map();
+ for(const t of monthTargets)byShop.set(t.shop_id,(byShop.get(t.shop_id)||0)+1);
+ const partial=[...byShop.values()].filter(n=>n<12).length;
+ const inc=state.targets.filter(t=>t.period===year&&Number(t.cents)===0).length;
+ q('gfCover').textContent=`${mGoal.configured} / ${mGoal.shops} 家`;
+ q('gfPartial').textContent=`${partial} 家`;
+ q('gfInc').textContent=`${inc} 家`;
+}
 
  /* ---------- 趋势 ---------- */
  function renderTrend(cur,prev){
@@ -349,29 +342,51 @@ function renderHeadline(cur,prevSame){
   q('ghRankLag').textContent=noTarget?`${rows.length} 家中 ${noTarget} 家未设目标`:(behind?`${rows.length} 家中 ${behind} 家落后`:'各店均超时间进度');
  }
 
- /* ---------- 待处理 ---------- */
- function renderTodo(inv,qi){
-  const items=[];let latestSnap='';
-  if(inv&&inv.date){
-   latestSnap=inv.date;
-   const cnt=k=>(inv.rows||[]).filter(r=>(r.businessAlerts||[]).includes(k)).length;
-   const low=cnt('LOW_STOCK'),over=cnt('OVERSTOCK'),nosale=cnt('NO_SALES_30');
-   if(low)items.push({cls:'red',ic:'缺',title:`${low} 个 SKU 缺货`,desc:'预计可售天数低于「备货天数 + 安全天数」，需尽快补货',href:'/inventory.html',go:'处理'});
-   if(over||nosale)items.push({cls:'amber',ic:'积',title:`${over} 个 SKU 积压${nosale?` · ${nosale} 个 30 天无销`:''}`,desc:'预计可售天数超过上限或近 30 天无销量',href:'/inventory.html?view=all',go:'查看'});
-  }
-  if(qi&&qi.needsReview){
-   items.push({cls:'blue',ic:'质',title:`${qi.needsReview} 条会话待复核`,desc:`会话池 ${qi.sessions} 条 · 已评分 ${qi.reviewed} 条 · AI 分析 ${qi.analyzed} 条${qi.average!=null?` · 均分 ${qi.average}`:''}`,href:'/quality.html',go:'复核'});
-  }
-  if(latestSnap){
-   const gap=Math.round((Date.parse(todayStr)-Date.parse(latestSnap))/86400000);
-   if(gap>=2)items.push({cls:'gray',ic:'库',title:`库存快照 ${gap} 天未更新`,desc:`最后一次导入 ${latestSnap}，建议补录今天的分仓库存`,href:'/inventory.html',go:'导入'});
-  }
-  q('ghTodoSub').textContent=items.length?items.length+' 项待办':'暂无待办';
-  q('ghTodo').innerHTML=items.length?items.map(t=>`<a class="gh-todo-row" href="${t.href}"><span class="ic ${t.cls}">${t.ic}</span><span class="tx"><b>${esc(t.title)}</b><span>${esc(t.desc)}</span></span><span class="go">${t.go}</span></a>`).join('')
-   :'<p class="gh-empty">库存、质检都没有需要立刻处理的事项。</p>';
+ /* ---------- 库存监控（独立板块） ---------- */
+function renderInventory(inv){
+ const box=q('ghInventory');
+ if(!inv||!inv.date){
+  box.innerHTML='<p class="gh-empty">库存快照不可用，请先导入分仓库存。</p>';
+  q('ghInvSub').textContent='快照 —';
+  return;
  }
+ const rows=inv.rows||[],sum=inv.summary||{};
+ const cnt=k=>rows.filter(r=>(r.businessAlerts||[]).includes(k)).length;
+ const low=cnt('LOW_STOCK'),over=cnt('OVERSTOCK'),nosale=cnt('NO_SALES_30');
+ const wh=new Set(rows.map(r=>r.warehouse).filter(Boolean)).size;
+ const avail=Object.values(sum.availableByUnit||{}).reduce((n,v)=>n+Number(v||0),0);
+ const lag=Math.round((Date.parse(todayStr)-Date.parse(inv.date))/86400000);
 
- /* ---------- 气温机会 ---------- */
+ q('ghInvSub').textContent='快照 '+inv.date.slice(5);
+ const cell=(v,l,cls)=>`<div class="gh-metric ${cls||''}"><b class="num">${v}</b><span>${l}</span></div>`;
+ box.innerHTML='<div class="gh-metrics">'
+  +cell(low,'缺货','red')+cell(over,'积压','amber')+cell(nosale,'30 天无销','')
+  +'</div>'
+  +`<div class="gh-mod-line">${wh||'—'} 个仓 · ${sum.count||rows.length} 个 SKU · 可用 <i class="num">${int(avail)}</i> 件/套</div>`
+  +`<div class="gh-mod-note ${lag>=2?'warn':''}">${lag>=2?`快照已 ${lag} 天未更新，建议补录今天的分仓库存`:`快照 ${inv.date.slice(5)} 已是最新导入`}</div>`;
+}
+
+/* ---------- 客服质检（独立板块） ---------- */
+function renderQuality(qi){
+ const box=q('ghQuality');
+ if(!qi){
+  box.innerHTML='<p class="gh-empty">质检数据不可用或暂无查看权限。</p>';
+  q('ghQualSub').textContent='—';
+  return;
+ }
+ const d=qi.analyzedAt?String(qi.analyzedAt).slice(5,10):(qi.latest||'');
+ q('ghQualSub').textContent=d?'分析 '+d:'—';
+ const cell=(v,l,cls)=>`<div class="gh-metric ${cls||''}"><b class="num">${v}</b><span>${l}</span></div>`;
+ box.innerHTML='<div class="gh-metrics">'
+  +cell(qi.needsReview||0,'待复核','blue')
+  +cell(qi.average==null?'—':qi.average,'AI 均分','')
+  +cell(qi.gradeD||0,'D 级','red')
+  +'</div>'
+  +`<div class="gh-mod-line">会话池 <i class="num">${int(qi.sessions)}</i> 条 · 主管已评分 <i class="num">${int(qi.reviewed)}</i> 条 · AI 已分析 <i class="num">${int(qi.analyzed)}</i> 条</div>`
+  +`<div class="gh-mod-note ${qi.needsReview?'warn':''}">${qi.needsReview?`有 ${qi.needsReview} 条 AI 判定需人工确认，主管评分才是最终结果`:'暂无需人工复核的会话'}</div>`;
+}
+
+/* ---------- 气温机会 ---------- */
  function renderWeather(wx){
   const box=q('ghWeather');
   if(!wx||wx.unavailable||!wx.totalCities){

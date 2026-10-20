@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>经营总览 · 观海</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanhai"><link rel="stylesheet" href="/css/workbench-home.css?v=20261020-guanhai"></head><body class="workbench-body"><div id="workbenchShell"></div><main class="workbench-main gh-main"><p id="workbenchStatus" role="status">正在确认登录状态…</p><section id="ghHome" hidden>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>经营总览 · 观海</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanhai"><link rel="stylesheet" href="/css/workbench-home.css?v=20261020-home4"></head><body class="workbench-body"><div id="workbenchShell"></div><main class="workbench-main gh-main"><p id="workbenchStatus" role="status">正在确认登录状态…</p><section id="ghHome" hidden>
 
   <div class="gh-filters">
     <div class="gh-seg" id="ghRange" role="group" aria-label="时间范围"><button type="button" data-range="month">本月</button><button type="button" data-range="7">近7天</button><button type="button" data-range="30">近30天</button><button type="button" data-range="year" class="on">本年</button></div>
@@ -9,27 +9,19 @@
     <button type="button" class="gh-btn" id="ghRefresh">刷新</button>
   </div>
 
-  <div class="gh-kpis">
+  <div class="gh-top">
     <article class="gh-card gh-kpi accent">
-      <div class="gh-kpi-label" id="kPeriodLabel">月累计销售额</div>
+      <div class="gh-kpi-label" id="kPeriodLabel">本年累计销售额</div>
       <div class="gh-kpi-v"><strong class="num" id="kPeriod">—</strong><span>万元</span></div>
-      <div class="gh-kpi-meta"><div>同比 <span id="kPeriodYoy">—</span></div><div id="kPeriodGoal">目标 —</div></div>
+      <div class="gh-kpi-meta">
+        <div>同比 <span id="kPeriodYoy">—</span><em class="gh-kpi-prev" id="kPeriodPrev"></em></div>
+        <div id="kPeriodGoal">日均 —</div>
+        <div class="gh-kpi-top" id="kPeriodTop"></div>
+      </div>
     </article>
-    <article class="gh-card gh-kpi">
-      <div class="gh-kpi-label">年累计销售额</div>
-      <div class="gh-kpi-v"><strong class="num" id="kYear">—</strong><span>万元</span></div>
-      <div class="gh-kpi-meta"><div>同比 <span id="kYearYoy">—</span></div><div>目标 <i class="num" id="kYearTarget">—</i> 万 · 达成 <i class="num" id="kYearRate">—</i></div></div>
-    </article>
-    <article class="gh-card gh-kpi">
-      <div class="gh-kpi-label">本月目标进度</div>
-      <div class="gh-kpi-v"><strong class="num" id="kRate">—</strong><span>%</span><small id="kTime">时间进度 —</small></div>
-      <div class="gh-kpi-meta"><div id="kGap">—</div><div id="kNeed">—</div></div>
-    </article>
-  </div>
 
-  <div class="gh-row2">
     <article class="gh-card">
-      <div class="gh-card-h"><h3>目标进度</h3><div class="gh-right"><a class="gh-link" href="/sales.html#targets">目标设置</a></div></div>
+      <div class="gh-card-h"><h3>目标进度</h3><span class="gh-sub">月 / 年</span><div class="gh-right"><a class="gh-link" href="/sales.html#targets">目标设置</a></div></div>
       <div class="gh-goal-body">
         <div class="gh-gauge"><div class="gh-gauge-ring"><canvas id="gMonth" role="img" aria-label="本月目标完成进度"></canvas><b class="num" id="gMonthVal">—</b></div><div class="gh-gauge-cap" id="gMonthCap">—</div></div>
         <div class="gh-gauge"><div class="gh-gauge-ring"><canvas id="gYear" role="img" aria-label="全年目标完成进度"></canvas><b class="num" id="gYearVal">—</b></div><div class="gh-gauge-cap" id="gYearCap">—</div></div>
@@ -37,24 +29,31 @@
       <p class="gh-goal-note" id="ghGoalNote">正在计算目标进度…</p>
       <div class="gh-goal-foot"><div>目标覆盖<b id="gfCover">—</b></div><div>未填满 12 月<b id="gfPartial">—</b></div><div>增量业务<b id="gfInc">—</b></div></div>
     </article>
+  </div>
 
+  <div class="gh-row2">
     <article class="gh-card">
       <div class="gh-card-h"><h3>销售趋势</h3><span class="gh-sub" id="ghTrendSub">万元</span><div class="gh-right"><div class="gh-tabs" id="ghGrain" role="group" aria-label="趋势粒度"><button type="button" data-grain="month" class="on">月</button><button type="button" data-grain="week">周</button><button type="button" data-grain="day">天</button></div><a class="gh-link" href="/sales.html#overview">销售分析</a></div></div>
       <div class="gh-trend"><canvas id="ghTrend" role="img" aria-label="销售额趋势，与去年同期对比"></canvas><p class="gh-trend-empty" id="ghTrendEmpty" hidden>该区间暂无已导入销售数据</p></div>
       <div class="gh-legend"><span><i class="solid"></i><span id="lgCur">本年</span></span><span><i class="dash"></i><span id="lgPrev">去年同期</span></span><span class="gh-legend-yoy" id="lgYoy">—</span><span class="gh-legend-tail" id="lgTail">未导入的日期按空白留出</span></div>
     </article>
-  </div>
 
-  <div class="gh-row3">
     <article class="gh-card">
       <div class="gh-card-h"><h3>本月店铺达成</h3><span class="gh-sub">按达成率</span><div class="gh-right"><a class="gh-link" href="/sales.html#targets">全部</a></div></div>
       <div class="gh-ranks" id="ghRanks"><p class="gh-empty">正在读取店铺达成…</p></div>
       <div class="gh-rank-foot"><span id="ghRankBase">进度基准线 —</span><span id="ghRankLag">—</span></div>
     </article>
+  </div>
+
+  <div class="gh-row3">
+    <article class="gh-card">
+      <div class="gh-card-h"><h3>库存监控</h3><span class="gh-sub" id="ghInvSub">快照 —</span><div class="gh-right"><a class="gh-link" href="/inventory.html">库存看板</a></div></div>
+      <div class="gh-mod" id="ghInventory"><p class="gh-empty">正在读取库存预警…</p></div>
+    </article>
 
     <article class="gh-card">
-      <div class="gh-card-h"><h3>待处理</h3><span class="gh-sub" id="ghTodoSub">—</span><div class="gh-right"><a class="gh-link" href="/inventory.html">库存看板</a></div></div>
-      <div class="gh-todo" id="ghTodo"><p class="gh-empty">正在汇总各模块待办…</p></div>
+      <div class="gh-card-h"><h3>客服质检</h3><span class="gh-sub" id="ghQualSub">—</span><div class="gh-right"><a class="gh-link" href="/quality.html">去复核</a></div></div>
+      <div class="gh-mod" id="ghQuality"><p class="gh-empty">正在读取质检概况…</p></div>
     </article>
 
     <article class="gh-card">
@@ -64,4 +63,4 @@
   </div>
 
   <div class="gh-foot"><span>观海 v1.0 · 数据源：京东日报 / 喵速达订单明细 / 分仓库存 / 客服会话 / 和风天气</span><span class="gh-sep"></span><span id="ghFootFresh">—</span><span class="gh-spacer"></span><span id="ghFootNote">金额单位：万元（支付销售额，未扣退款）</span></div>
-</section></main><script src="/js/workbench-session.js?v=20261020-guanhai"></script><script src="/js/workbench-shell.js?v=20261020-guanhai"></script><script src="/assets/vendor/chart.umd.js"></script><script src="/js/sales-lifecycle.js?v=20261019-shopdates"></script><script src="/js/workbench-metrics.js?v=20261020-guanhai"></script><script src="/js/workbench-home.js?v=20261020-home2"></script></body></html>
+</section></main><script src="/js/workbench-session.js?v=20261020-guanhai"></script><script src="/js/workbench-shell.js?v=20261020-guanhai"></script><script src="/assets/vendor/chart.umd.js"></script><script src="/js/sales-lifecycle.js?v=20261019-shopdates"></script><script src="/js/workbench-metrics.js?v=20261020-guanhai"></script><script src="/js/workbench-home.js?v=20261020-home4"></script></body></html>

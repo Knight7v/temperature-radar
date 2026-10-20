@@ -18,7 +18,7 @@
 
 /* ---------- 通用卡片 ---------- */
 .gh-card{background:#fff;border:1px solid var(--wb-line);border-radius:10px;box-shadow:0 1px 2px #17233a08;min-width:0}
-.gh-card-h{display:flex;align-items:center;gap:8px;padding:9px 14px 0}
+.gh-card-h{display:flex;align-items:center;gap:8px;padding:8px 14px 0}
 .gh-card-h h3{margin:0;font-size:13px;font-weight:600;letter-spacing:.2px;color:#17233a}
 .gh-card-h .gh-sub{font-size:11.5px;color:#93a1b5;font-weight:400}
 .gh-card-h .gh-right{margin-left:auto;display:flex;align-items:center;gap:10px}
@@ -28,33 +28,37 @@
 .num{font-variant-numeric:tabular-nums}
 
 /* ---------- KPI ---------- */
-.gh-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.gh-kpi{padding:10px 14px 9px;position:relative;overflow:hidden}
+.gh-top{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.3fr);gap:10px}
+.gh-kpi{padding:11px 16px 12px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:2px}
 .gh-kpi-label{font-size:12px;color:#708097;white-space:nowrap}
 .gh-kpi-v{display:flex;align-items:baseline;gap:3px;margin-top:3px;line-height:1.15}
-.gh-kpi-v strong{font-size:26px;font-weight:700;letter-spacing:-.4px;color:#17233a}
+.gh-kpi-v strong{font-size:30px;font-weight:700;letter-spacing:-.6px;color:#17233a}
 .gh-kpi-v span{font-size:11.5px;color:#93a1b5}
 .gh-kpi-v small{font-size:11px;color:#93a1b5;margin-left:4px}
 .gh-kpi-meta{margin-top:5px;display:grid;gap:2px;font-size:11.5px;color:#708097}
 .gh-kpi-meta i{font-style:normal;color:#3a4a63}
+.gh-kpi-prev{font-style:normal;font-size:11px;color:#93a1b5;margin-left:6px}
+.gh-kpi-top{font-size:11.5px;color:#93a1b5}
+.gh-kpi-top:empty{display:none}
+.gh-kpi-top b{font-weight:600;color:#3a4a63;margin-right:5px}
 .gh-kpi.accent{background:linear-gradient(180deg,#f7faff,#fff 62%)}
 .gh-kpi.accent::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#0665ff,#6f9bff)}
 .up{color:#d93a3a}.down{color:#0f9d58}.warnc{color:#e0811a}.badc{color:#d93a3a}
 
 /* ---------- 第二行：目标 + 趋势 ---------- */
-.gh-row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.05fr);gap:10px;margin-top:10px}
-.gh-goal-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 14px 0}
+.gh-row2{display:grid;grid-template-columns:minmax(0,2.05fr) minmax(0,1fr);gap:10px;margin-top:10px}
+.gh-goal-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:5px 14px 0}
 .gh-gauge{text-align:center;min-width:0}
-.gh-gauge-ring{position:relative;width:100%;max-width:170px;height:74px;margin:0 auto}
+.gh-gauge-ring{position:relative;width:100%;max-width:170px;height:86px;margin:0 auto}
 .gh-gauge-ring canvas{width:100%!important;height:100%!important}
-.gh-gauge-ring b{position:absolute;left:0;right:0;bottom:2px;font-size:20px;font-weight:700;color:var(--wb-blue);line-height:1}
+.gh-gauge-ring b{position:absolute;left:0;right:0;bottom:1px;font-size:19px;font-weight:700;color:var(--wb-blue);line-height:1}
 .gh-gauge-ring b small{font-size:11px;font-weight:400;color:#93a1b5;margin-left:1px}
-.gh-gauge-cap{font-size:11.5px;color:#708097;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gh-goal-note{margin:10px 14px 8px;padding:7px 10px;border-radius:7px;background:#fdf6ea;border:1px solid #f6e2c2;font-size:11.5px;color:#8a5a12;line-height:1.6}
+.gh-gauge-cap{font-size:11.5px;color:#708097;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gh-goal-note{margin:7px 14px 6px;padding:5px 9px;border-radius:7px;background:#fdf6ea;border:1px solid #f6e2c2;font-size:11px;color:#8a5a12;line-height:1.5}
 .gh-goal-note b{color:#b93b3b}
-.gh-goal-foot{display:flex;gap:10px;padding:0 14px 10px;font-size:11.5px;color:#708097}
-.gh-goal-foot div{flex:1;min-width:0;background:#f7f9fc;border-radius:6px;padding:6px 8px}
-.gh-goal-foot b{display:block;font-size:13px;color:#17233a;margin-top:1px}
+.gh-goal-foot{display:flex;gap:8px;padding:0 14px 9px;font-size:11px;color:#708097}
+.gh-goal-foot div{flex:1;min-width:0;background:#f7f9fc;border-radius:6px;padding:4px 8px;display:flex;align-items:baseline;gap:5px;justify-content:space-between}
+.gh-goal-foot b{display:inline;font-size:12px;color:#17233a;margin:0;white-space:nowrap}
 
 .gh-tabs{display:flex;background:#f2f5fa;border-radius:6px;padding:2px;gap:1px}
 .gh-tabs button{border:0;background:transparent;font-size:11.5px;padding:3px 9px;border-radius:4px;color:#708097;cursor:pointer}
@@ -72,8 +76,8 @@
 
 /* ---------- 第三行 ---------- */
 .gh-row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
-.gh-ranks{padding:4px 6px 2px}
-.gh-rank{display:grid;grid-template-columns:18px minmax(0,1fr) 84px 40px;align-items:center;gap:8px;padding:5px 8px;border-radius:6px}
+.gh-ranks{padding:2px 6px 2px}
+.gh-rank{display:grid;grid-template-columns:18px minmax(0,1fr) 84px 40px;align-items:center;gap:8px;padding:3.5px 8px;border-radius:6px}
 .gh-rank:hover{background:#f8fafd}
 .gh-rank .no{font-size:11px;color:#93a1b5;text-align:center}
 .gh-rank .no.top{color:#fff;background:#e0811a;border-radius:4px;font-weight:600;font-size:10.5px;line-height:16px}
@@ -86,37 +90,38 @@
 .gh-rank .bar u{position:absolute;top:-2px;bottom:-2px;width:1px;background:#9fb0c8;opacity:.85}
 .gh-rank .pct{font-size:12px;text-align:right;color:#17233a}
 .gh-rank .pct.lag{color:#c94a4a}
-.gh-rank-foot{display:flex;justify-content:space-between;padding:6px 14px 8px;margin-top:2px;border-top:1px dashed var(--wb-line);font-size:11px;color:#93a1b5}
+.gh-rank-foot{display:flex;justify-content:space-between;padding:5px 14px 7px;margin-top:2px;border-top:1px dashed var(--wb-line);font-size:11px;color:#93a1b5}
 
-.gh-todo{padding:4px 10px 10px;display:grid;gap:8px}
-.gh-todo-row{display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid var(--wb-line);border-radius:7px;background:#fff;text-decoration:none;color:inherit}
-.gh-todo-row:hover{border-color:#c9d6ea;background:#fbfcfe}
-.gh-todo-row .ic{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;font-size:12px;flex:0 0 auto;font-weight:600}
-.gh-todo-row .ic.red{background:#fdeeee;color:#c24545}
-.gh-todo-row .ic.amber{background:#fff6e8;color:#b6761e}
-.gh-todo-row .ic.blue{background:#eef3ff;color:#2a5bd7}
-.gh-todo-row .ic.gray{background:#f2f5fa;color:#7d8ca3}
-.gh-todo-row .tx{flex:1;min-width:0}
-.gh-todo-row .tx b{display:block;font-size:12.5px;font-weight:600;color:#3a4a63}
-.gh-todo-row .tx span{display:block;font-size:11px;color:#93a1b5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gh-todo-row .go{font-size:11.5px;color:var(--wb-blue);flex:0 0 auto}
+.gh-mod{padding:9px 14px 12px}
+.gh-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:9px}
+.gh-metric{background:#f7f9fc;border-radius:8px;padding:8px 6px;text-align:center;min-width:0}
+.gh-metric b{display:block;font-size:22px;font-weight:700;line-height:1.1;color:#17233a;letter-spacing:-.4px}
+.gh-metric span{display:block;font-size:11px;color:#708097;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gh-metric.red{background:#fdf0f0}.gh-metric.red b{color:#c24545}
+.gh-metric.amber{background:#fff7ea}.gh-metric.amber b{color:#b6761e}
+.gh-metric.blue{background:#eef3ff}.gh-metric.blue b{color:#2a5bd7}
+.gh-mod-line{font-size:11.5px;color:#708097;padding:0 1px}
+.gh-mod-line i{font-style:normal;color:#3a4a63}
+.gh-mod-note{margin-top:7px;font-size:11px;line-height:1.55;color:#93a1b5;background:#f8fafd;border-radius:6px;padding:6px 8px}
+.gh-mod-note.warn{color:#a8700f;background:#fdf6ea}
+.gh-mod-note.warn::before{content:"⚠ ";font-size:10px}
 
 /* ---------- 气温 ---------- */
-.gh-weather{padding:6px 14px 12px}
+.gh-weather{padding:5px 14px 10px}
 .gh-wx-top{display:flex;align-items:flex-end;gap:8px}
 .gh-wx-top strong{font-size:25px;line-height:1.1;font-weight:700;color:#c9541f}
 .gh-wx-top span{font-size:11.5px;color:#708097;padding-bottom:3px}
-.gh-wx-cities{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 10px}
+.gh-wx-cities{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 8px}
 .gh-wx-city{font-size:11.5px;padding:2px 8px;border-radius:5px;background:#fff3ea;color:#a8501c;border:1px solid #f8ddc8}
 .gh-wx-city b{font-weight:600}
 .gh-wx-week{display:flex;align-items:flex-end;gap:8px;padding:6px 8px;background:#fbfcfe;border:1px solid #eef2f8;border-radius:7px}
 .gh-wx-week-h{font-size:11px;color:#708097;white-space:nowrap;line-height:1.5;width:52px;flex:0 0 auto}
-.gh-wx-bars{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:5px;align-items:end;height:58px}
+.gh-wx-bars{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:5px;align-items:end;height:50px}
 .gh-wx-bars div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:2px}
 .gh-wx-bars b{font-size:10px;color:#a8501c;font-weight:600;line-height:1}
 .gh-wx-bars i{display:block;width:100%;max-width:16px;border-radius:3px 3px 1px 1px;background:linear-gradient(180deg,#f0a06a,#f8cdaf);min-height:4px}
 .gh-wx-bars span{font-size:9.5px;color:#93a1b5;line-height:1}
-.gh-wx-tip{margin-top:9px;font-size:11px;color:#708097;line-height:1.6;background:#f8fafd;border-radius:6px;padding:7px 9px}
+.gh-wx-tip{margin-top:7px;font-size:10.5px;color:#708097;line-height:1.5;background:#f8fafd;border-radius:6px;padding:6px 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .gh-wx-tip b{color:#3a4a63}
 
 /* ---------- 底脚 ---------- */
@@ -125,8 +130,9 @@
 .gh-foot .gh-spacer{flex:1}
 
 @media(max-width:1180px){
-  .gh-kpis{grid-template-columns:1fr}
+  .gh-top{grid-template-columns:1fr}
   .gh-row2,.gh-row3{grid-template-columns:1fr}
+  .gh-kpi{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:12px}
   .gh-trend{height:180px}
   .gh-legend-tail{display:none}
   .gh-filters{position:static}
