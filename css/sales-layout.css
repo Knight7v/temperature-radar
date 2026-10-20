@@ -47,3 +47,12 @@
 #shopList td{overflow:hidden;text-overflow:ellipsis}
 #shopList td input,#shopList td select,#shopList td input[type=date]{width:100%;min-width:0;box-sizing:border-box}
 #shopList input[type=date]::-webkit-calendar-picker-indicator{margin-left:0;padding:0}
+
+/* 目标设置：年度目标 = 12 个月度目标合计，改为派生只读值 */
+.target-controls .target-annual input[readonly]{background:#f2f6fb;border:1px solid #dbe4f0;color:#1f3a5f;font-weight:650;cursor:default}
+#annualGrowth[readonly]{background:#f2f6fb;color:#5a6f8c;cursor:default}
+.target-hint{font-size:12px;color:#3f6fb5;background:#eaf1ff;border:1px solid #d5e3ff;border-radius:99px;padding:3px 10px;white-space:nowrap}
+#targetTotals{line-height:1.9;font-size:13px}
+#targetTotals:empty{display:none}
+.target-dialog .sales-table td input[data-month]{text-align:right}
+.target-hint.warn{background:#fff5e8;border-color:#ffe1bd;color:#a4621a}
