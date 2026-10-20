@@ -43,6 +43,13 @@ module.exports=apiHandler(async(req,res)=>{
    const scores=rows.filter(row=>row.status==='reviewed').map(row=>Number(row.score));
    return res.json({data:{date,sessions:rows.length,reviewed:scores.length,pending:rows.length-scores.length,average:scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length*100)/100:null}});
   }
+  if(action==='stats'){
+   // 首页驾驶舱用：会话池与 AI 分析概况（不返回单条会话内容）。不带时间窗——质检数据是分批导入的，
+   // 按「最近 N 天」统计会在两批导入之间把数字清零，反而误导。
+   const base=(await db.query("SELECT count(*)::int AS sessions, count(*) FILTER (WHERE status='reviewed')::int AS reviewed, count(*) FILTER (WHERE status<>'reviewed')::int AS pending, max(left(started_at,10)) AS latest FROM quality_sessions WHERE tenant_id=$1",[tenant])).rows[0]||{};
+   const ai=(await db.query("SELECT count(*)::int AS analyzed, count(*) FILTER (WHERE needs_review)::int AS needs_review, count(*) FILTER (WHERE provisional)::int AS provisional, count(*) FILTER (WHERE grade='D')::int AS grade_d, round(avg(score)::numeric,2) AS average, max(created_at) AS analyzed_at FROM quality_ai_results WHERE tenant_id=$1",[tenant])).rows[0]||{};
+   return res.json({data:{latest:base.latest||null,sessions:base.sessions||0,reviewed:base.reviewed||0,pending:base.pending||0,analyzed:ai.analyzed||0,needsReview:ai.needs_review||0,provisional:ai.provisional||0,gradeD:ai.grade_d||0,average:ai.average==null?null:Number(ai.average),analyzedAt:ai.analyzed_at||null}});
+  }
   if(action==='export'){
    const date=String(req.query.date||new Date().toISOString().slice(0,10));if(!/^20\d{2}-\d{2}-\d{2}$/.test(date))fail('日期格式无效');
    const rows=(await db.query("SELECT agent,started_at,ended_at,review->>'score' AS score,review->>'note' AS note FROM quality_sessions WHERE tenant_id=$1 AND status='reviewed' AND left(started_at,10)=$2 ORDER BY started_at,ordinal",[tenant,date])).rows;

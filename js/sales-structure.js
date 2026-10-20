@@ -73,7 +73,7 @@
  try{
   const identity=await session.getIdentity();state.role=identity.user.role;
   WorkbenchShell.mountShell({container:get('shell'),activeModule:'sales-structure-'+current,identity,onLogout:async()=>{await session.logout();location.replace('/login.html');}});
-  get('breadcrumbCategory').textContent=labels[current];get('pageTitle').textContent=labels[current]+'销售结构';document.title=labels[current]+'销售结构 · 公司工作台';
+  get('breadcrumbCategory').textContent=labels[current];get('pageTitle').textContent=labels[current]+'销售结构';document.title=labels[current]+'销售结构 · 观海';
   document.querySelectorAll('.ss-category-tabs a').forEach(link=>{if(link.dataset.category===current)link.setAttribute('aria-current','page');});
   get('greePanels').hidden=current!=='gree-ac';get('otherPanel').hidden=current==='gree-ac';
   get('platformControl').hidden=current!=='gree-ac';

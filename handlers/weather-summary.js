@@ -26,6 +26,23 @@ async function computeSummary() {
   const heatFocus = ADICore.buildHeatFocusSummary(cityData);
   const heatRise = ADICore.buildHeatRiseSummary(cityData);
 
+  // 首页驾驶舱用：高温重点城市带温度与未来 7 天最高温，用于画温度条、给铺货建议。
+  const hotCities = cityData
+    .filter((c) => c.level === 'outbreak' || c.level === 'action')
+    .sort((a, b) => (b.adiScore || 0) - (a.adiScore || 0))
+    .slice(0, 6)
+    .map((c) => {
+      const forecast = (c.future7Days || []).map((d) => d.dayMax).filter((v) => Number.isFinite(v));
+      return {
+        name: c.cityName,
+        maxTemp: Number.isFinite(c.maxTemp) ? c.maxTemp : null,
+        adi: Math.round(c.adiScore || 0),
+        level: c.level,
+        forecast,
+        hotDays: forecast.filter((t) => t >= 35).length,
+      };
+    });
+
   return {
     updatedAt: new Date().toISOString(),
     totalCities: cityData.length,
@@ -33,6 +50,7 @@ async function computeSummary() {
     outbreak: heatFocus.stats.outbreak || 0,
     action: heatFocus.stats.action || 0,
     topCities: (heatFocus.outbreakCities || []).map((c) => c.name).concat(heatFocus.actionCities || []).slice(0, 6),
+    hotCities,
     risingCount: (heatRise.risingCities || []).length,
     risingCities: (heatRise.risingCities || []).slice(0, 6).map((c) => c.name),
     failed,
