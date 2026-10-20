@@ -63,8 +63,8 @@ button,select{font:inherit;color:inherit}
 /* ---------- 布局 ---------- */
 main{padding:10px 20px 12px;max-width:1580px;margin:0 auto}
 .grid{display:grid;gap:10px}
-.kpis{grid-template-columns:repeat(6,1fr)}
-.row2{grid-template-columns:minmax(0,2.05fr) minmax(0,1fr);margin-top:10px}
+.kpis{grid-template-columns:repeat(3,1fr)}
+.row2{grid-template-columns:minmax(0,1fr) minmax(0,2.05fr);margin-top:10px}
 .row3{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 2px #17233a08}
 .card-h{display:flex;align-items:center;gap:8px;padding:9px 14px 0}
@@ -82,7 +82,7 @@ main{padding:10px 20px 12px;max-width:1580px;margin:0 auto}
 .kpi-label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);white-space:nowrap}
 .kpi-label b{font-weight:400;color:var(--muted-2);font-size:11px}
 .kpi-v{display:flex;align-items:baseline;gap:3px;margin-top:4px;line-height:1.15}
-.kpi-v strong{font-size:23px;font-weight:700;letter-spacing:-.4px}
+.kpi-v strong{font-size:26px;font-weight:700;letter-spacing:-.4px}
 .kpi-v span{font-size:11.5px;color:var(--muted)}
 .kpi-v small{font-size:11px;color:var(--muted-2)}
 .kpi-meta{margin-top:5px;display:grid;gap:2px;font-size:11.5px;color:var(--muted)}
@@ -109,20 +109,20 @@ main{padding:10px 20px 12px;max-width:1580px;margin:0 auto}
 
 /* ---------- 目标 ---------- */
 .goal-body{padding:2px 14px 8px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.gauge{text-align:center;padding-top:2px}
-.gauge svg{width:100%;height:70px}
-.gauge .cap{font-size:11.5px;color:var(--muted);margin-top:-4px}
-.gauge .val{font-size:19px;font-weight:700;margin-top:-4px}
+.gauge{text-align:center;padding-top:6px}
+.gauge svg{width:100%;height:84px}
+.gauge .cap{font-size:11.5px;color:var(--muted);margin-top:-2px}
+.gauge .val{font-size:21px;font-weight:700;margin-top:-2px}
 .gauge .val small{font-size:11px;font-weight:400;color:var(--muted-2)}
-.goal-note{margin:0 14px 8px;padding:7px 10px;border-radius:7px;background:#fdf6ea;border:1px solid #f6e2c2;font-size:11.5px;color:#8a5a12;line-height:1.6}
+.goal-note{margin:2px 14px 10px;padding:8px 10px;border-radius:7px;background:#fdf6ea;border:1px solid #f6e2c2;font-size:11.5px;color:#8a5a12;line-height:1.6}
 .goal-note b{color:#b93b3b}
-.goal-foot{display:flex;gap:10px;padding:0 14px 10px;font-size:11.5px;color:var(--muted)}
-.goal-foot div{flex:1;background:#f7f9fc;border-radius:6px;padding:6px 8px}
+.goal-foot{display:flex;gap:10px;padding:0 14px 12px;font-size:11.5px;color:var(--muted)}
+.goal-foot div{flex:1;background:#f7f9fc;border-radius:6px;padding:7px 8px}
 .goal-foot b{display:block;font-size:13px;color:var(--ink);margin-top:2px}
 
 /* ---------- 榜单 ---------- */
 .rank-wrap{padding:2px 6px 6px}
-.rank{display:grid;grid-template-columns:18px minmax(0,1fr) 78px 34px;align-items:center;gap:8px;padding:3px 8px;border-radius:6px}
+.rank{display:grid;grid-template-columns:18px minmax(0,1fr) 78px 34px;align-items:center;gap:8px;padding:5px 8px;border-radius:6px}
 .rank:hover{background:#f8fafd}
 .rank .no{font-size:11px;color:var(--muted-2);text-align:center}
 .rank .no.top{color:#fff;background:#e0811a;border-radius:4px;font-weight:600;font-size:10.5px;line-height:16px}
@@ -138,8 +138,8 @@ main{padding:10px 20px 12px;max-width:1580px;margin:0 auto}
 .rank-foot{display:flex;justify-content:space-between;padding:6px 10px 0;margin-top:4px;border-top:1px dashed var(--line);font-size:11px;color:var(--muted-2)}
 
 /* ---------- 待办 ---------- */
-.todo{padding:4px 10px 8px;display:grid;gap:6px}
-.todo-row{display:flex;align-items:center;gap:9px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.todo{padding:4px 10px 10px;display:grid;gap:8px}
+.todo-row{display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fff}
 .todo-row .ic{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;font-size:12px;flex:0 0 auto}
 .todo-row .ic.red{background:var(--bad-soft);color:#c24545}
 .todo-row .ic.amber{background:var(--warn-soft);color:#b6761e}
@@ -160,7 +160,7 @@ main{padding:10px 20px 12px;max-width:1580px;margin:0 auto}
 .wx-city b{font-weight:600}
 .wx-week{display:flex;align-items:flex-end;gap:10px;margin:4px 0 10px;padding:6px 8px;background:#fbfcfe;border:1px solid var(--line-2);border-radius:7px}
 .wx-week-h{font-size:11px;color:var(--muted);white-space:nowrap;padding-bottom:2px;line-height:1.5;width:56px}
-.wx-bars{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:54px}
+.wx-bars{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:68px}
 .wx-bars div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:2px}
 .wx-bars b{font-size:10px;color:#a8501c;font-weight:600;line-height:1}
 .wx-bars i{display:block;width:100%;max-width:16px;border-radius:3px 3px 1px 1px;background:linear-gradient(180deg,#f0a06a,#f8cdaf);min-height:4px}
@@ -173,7 +173,7 @@ main{padding:10px 20px 12px;max-width:1580px;margin:0 auto}
 .foot .sep{width:1px;height:10px;background:var(--line)}
 .foot .spacer{flex:1}
 @media(max-width:1180px){
-  .kpis{grid-template-columns:repeat(3,1fr)}
+  .kpis{grid-template-columns:1fr}
   .row2,.row3{grid-template-columns:1fr}
   .nav{display:none}
 }
@@ -219,7 +219,7 @@ main{padding:10px 20px 12px;max-width:1580px;margin:0 auto}
 </div>
 
 <main>
-  <!-- 第一屏：6 个 KPI -->
+  <!-- 第一屏：3 个核心 KPI -->
   <section class="grid kpis">
     <article class="card kpi accent">
       <div class="kpi-label">月累计销售额</div>
@@ -249,56 +249,10 @@ main{padding:10px 20px 12px;max-width:1580px;margin:0 auto}
         <div>13 天 · 日均需 <span class="warnc num">96.07</span> 万</div>
       </div>
     </article>
-
-    <article class="card kpi">
-      <div class="kpi-label">库存预警 <b>快照 10-15</b></div>
-      <div class="kpi-v"><strong class="num">39</strong><span>项</span><small>待处理</small></div>
-      <div class="chipbar">
-        <span class="chip red">缺货 3</span>
-        <span class="chip amber">积压 15</span>
-        <span class="chip">30天无销 21</span>
-      </div>
-      <div class="kpi-meta" style="margin-top:6px"><div>快照已 <span class="warnc">5 天未更新</span></div></div>
-    </article>
-
-    <article class="card kpi">
-      <div class="kpi-label">质检待复核 <b>10-19</b></div>
-      <div class="kpi-v"><strong class="num">1</strong><span>条</span><small>分析 10 / 池 106</small></div>
-      <div class="kpi-meta">
-        <div>均分 <i class="warnc num">60.74</i> · D 级 <i class="badc num">4</i></div>
-        <div>高频：<i>平台高压线 ×3</i></div>
-      </div>
-    </article>
-
-    <article class="card kpi">
-      <div class="kpi-label">气温机会区 <b>131 城</b></div>
-      <div class="kpi-v"><strong class="num">8</strong><span>个</span><small>高温重点</small></div>
-      <div class="kpi-meta">
-        <div>温州·漳州·赣州·丽水</div>
-        <div>升温 0 个 · 备货建议 4 区</div>
-      </div>
-    </article>
   </section>
 
-  <!-- 趋势 + 目标 -->
+  <!-- 目标进度 + 趋势（左窄右宽） -->
   <section class="grid row2">
-    <article class="card">
-      <div class="card-h">
-        <h3>销售趋势</h3><span class="sub">万元 · 2026 vs 2025 同期</span>
-        <div class="right">
-          <div class="tabs"><span class="on">月</span><span>周</span><span>天</span></div>
-          <a class="link" href="#">销售分析</a>
-        </div>
-      </div>
-      <div class="trend-body"><svg id="trend" viewBox="0 0 860 176" role="img" aria-label="2026 与 2025 月度销售趋势"></svg></div>
-      <div class="legend">
-        <span><i class="solid"></i>2026 年</span>
-        <span><i class="dash"></i>2025 年</span>
-        <span><i class="area"></i>同比 <b class="up" style="font-weight:600">+178.6%</b></span>
-        <span style="margin-left:auto;color:var(--muted-2)">11–12 月未导入，按空白留出</span>
-      </div>
-    </article>
-
     <article class="card">
       <div class="card-h">
         <h3>目标进度</h3>
@@ -321,6 +275,23 @@ main{padding:10px 20px 12px;max-width:1580px;margin:0 auto}
         <div>目标覆盖<b>8 / 8 家</b></div>
         <div>未填满 12 月<b>7 家</b></div>
         <div>增量业务<b>1 家</b></div>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card-h">
+        <h3>销售趋势</h3><span class="sub">万元 · 2026 vs 2025 同期</span>
+        <div class="right">
+          <div class="tabs"><span class="on">月</span><span>周</span><span>天</span></div>
+          <a class="link" href="#">销售分析</a>
+        </div>
+      </div>
+      <div class="trend-body"><svg id="trend" viewBox="0 0 860 210" role="img" aria-label="2026 与 2025 月度销售趋势"></svg></div>
+      <div class="legend">
+        <span><i class="solid"></i>2026 年</span>
+        <span><i class="dash"></i>2025 年</span>
+        <span><i class="area"></i>同比 <b class="up" style="font-weight:600">+178.6%</b></span>
+        <span style="margin-left:auto;color:var(--muted-2)">11–12 月未导入，按空白留出</span>
       </div>
     </article>
   </section>
@@ -415,7 +386,7 @@ const SHOPS=[
 /* ---------------- 趋势图 ---------------- */
 (function(){
   const svg=document.getElementById('trend');
-  const W=860,H=176,L=46,R=18,T=12,B=22;
+  const W=860,H=210,L=46,R=18,T=12,B=24;
   const max=6000,innerW=W-L-R,innerH=H-T-B;
   const x=i=>L+(innerW/(CUR.length-1))*i;
   const y=v=>T+innerH-(v/max)*innerH;
