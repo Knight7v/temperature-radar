@@ -44,3 +44,6 @@ backups/
 .env*
 .agents/
 skills-lock.json
+
+# AI 生成的背景图(本地产物,不入库)
+assets/design/generated/

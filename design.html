@@ -1,1 +1,146 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>视觉设计 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><style>.design-grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;margin-top:24px}.design-panel{padding:24px;background:white;border:1px solid var(--wb-line);border-radius:16px}.design-panel label{display:grid;gap:7px;margin-bottom:18px}.design-panel input,.design-panel select{width:100%}.preview{background:#eef1f6;display:grid;place-items:center;padding:24px;border-radius:12px}.preview canvas{width:100%;max-width:650px;height:auto;box-shadow:0 12px 32px #17243815}.design-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.design-heading span{color:#66768a;font-size:12px}#designMessage{min-height:24px}@media(max-width:950px){.design-grid{grid-template-columns:1fr}}</style></head><body class="workbench-body"><div id="designShell"></div><main class="workbench-main"><div class="workbench-eyebrow">VISUAL STUDIO</div><h1>商品主图工作室</h1><p class="workbench-muted">保留商品本来的样子，让卖点清晰呈现。</p><div class="design-grid"><section class="design-panel"><h2>素材与文案</h2><label>商品图片<input id="productFile" type="file" accept="image/png,image/jpeg,image/webp"></label><p class="workbench-muted">支持 PNG、JPG、WebP，最大 15 MB。建议使用白底图或透明底图；不自动抠图。</p><label>商品名称<input id="productName" maxlength="36" placeholder="例如：格力云之海空调"></label><label>卖点 1<input id="selling1" maxlength="24" placeholder="例如：舒适送风"></label><label>卖点 2<input id="selling2" maxlength="24" placeholder="例如：静音运行"></label><label>卖点 3<input id="selling3" maxlength="24" placeholder="例如：简约外观"></label><label>版式<select id="layout"><option value="center">商品居中</option><option value="split">左文右图</option></select></label><label>图片尺寸<select id="size"><option value="800">800 × 800</option><option value="1200" selected>1200 × 1200</option><option value="1600">1600 × 1600</option></select></label><label>背景<select id="background"><option value="#ffffff">纯净白</option><option value="#f0f5fa">雾蓝</option><option value="#f7f4ed">暖米色</option></select></label></section><section class="design-panel"><div class="design-heading"><h2>实时预览</h2><span>模板预览 · 非 AI 生成</span></div><div class="preview"><canvas id="artwork" width="1200" height="1200" aria-label="商品主图预览"></canvas></div><p id="designMessage" role="status">上传商品图片后即可下载。图片仅在本机浏览器处理。</p><button id="downloadDesign" class="workbench-primary" disabled>下载 PNG</button></section></div></main><script src="/js/workbench-session.js?v=20261020-guanxingtai"></script><script src="/js/workbench-shell.js?v=20261020-guanxingtai"></script><script src="/js/design.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg">
+<title>视觉设计 · 观星台</title>
+<link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai">
+<link rel="stylesheet" href="/css/design-studio.css?v=20261020-design1">
+<style>
+.design-heading{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.design-heading h2{font-size:15px;margin:0}
+.design-heading span{color:#66768a;font-size:12px}
+.ds-stage{padding:22px}
+</style>
+</head>
+<body class="workbench-body">
+<div id="designShell"></div>
+<main class="workbench-main">
+  <div class="workbench-eyebrow">VISUAL STUDIO</div>
+  <h1>商品主图工作室</h1>
+  <p class="workbench-muted">商品保持真实原样，背景和文案按平台规范自动排版。</p>
+
+  <div class="ds-layout">
+    <aside class="ds-panel">
+      <div class="ds-modes" role="group" aria-label="选择用途">
+        <button type="button" data-mode="first" aria-pressed="true">京东首图<small>合规白底</small></button>
+        <button type="button" data-mode="scene" aria-pressed="false">场景副图<small>AI 背景</small></button>
+        <button type="button" data-mode="promo" aria-pressed="false">活动图<small>强营销</small></button>
+      </div>
+      <p class="ds-hint" id="modeHint"></p>
+
+      <div class="ds-field">
+        <span>商品图片</span>
+        <input id="productFile" type="file" accept="image/png,image/jpeg,image/webp">
+        <small class="ds-hint" id="fileHint">支持 PNG、JPG、WebP，最大 15 MB。白底图或透明底图效果最好。</small>
+      </div>
+      <div class="ds-field">
+        <span>商品名称</span>
+        <input id="productName" maxlength="36" placeholder="例如：格力云之海 1.5 匹挂机">
+      </div>
+
+      <div id="textFields">
+        <div class="ds-field"><span>卖点 1</span><input id="selling1" maxlength="20" placeholder="例如：一级能效"></div>
+        <div class="ds-field"><span>卖点 2</span><input id="selling2" maxlength="20" placeholder="例如：静音 18 分贝"></div>
+        <div class="ds-field"><span>卖点 3</span><input id="selling3" maxlength="20" placeholder="例如：自清洁"></div>
+      </div>
+
+      <hr class="ds-divider">
+      <h2>背景</h2>
+      <p class="ds-hint" id="bgLocked">京东首图必须是纯白背景（RGB 255,255,255），这里已锁定，不需要选背景。</p>
+
+      <div id="bgTools" hidden>
+        <div class="ds-row" style="margin-bottom:10px">
+          <button type="button" id="bgTabScenes" aria-pressed="true">场景库（免费用）</button>
+          <button type="button" id="bgTabAi" aria-pressed="false">AI 生成</button>
+        </div>
+
+        <div id="scenePane">
+          <div class="ds-scenes" id="scenes"></div>
+          <p class="ds-hint" id="sceneHint">选一个场景做底，商品图会叠在上面。</p>
+        </div>
+
+        <div id="aiPane" hidden>
+          <div class="ds-field">
+            <span>场景描述</span>
+            <textarea id="direction" maxlength="200" placeholder="例如：客厅傍晚暖光，墙面留出挂机位置，整体偏奶油风"></textarea>
+          </div>
+          <div class="ds-field">
+            <span>生成模型</span>
+            <select id="model"></select>
+          </div>
+          <div class="ds-row">
+            <button type="button" id="generateBtn">生成背景</button>
+            <button type="button" id="draftBtn">帮我写描述</button>
+            <button type="button" id="verifyBtn">测试连接</button>
+          </div>
+          <div class="ds-progress" id="genProgress" data-active="0"><span></span></div>
+          <p class="ds-hint" id="aiHint"></p>
+        </div>
+      </div>
+
+      <hr class="ds-divider">
+      <h2>版式</h2>
+      <div class="ds-field">
+        <span>导出尺寸</span>
+        <select id="size">
+          <option value="800">800 × 800（京东最低标准）</option>
+          <option value="1200" selected>1200 × 1200（推荐）</option>
+          <option value="1600">1600 × 1600（高清）</option>
+        </select>
+      </div>
+      <div class="ds-field">
+        <span>商品占比 <b id="ratioValue">78%</b></span>
+        <input id="ratio" type="range" min="40" max="92" value="78" step="1">
+      </div>
+      <div class="ds-field">
+        <span>商品位置</span>
+        <select id="anchor">
+          <option value="center">居中</option>
+          <option value="top">偏上（下方留文字）</option>
+          <option value="bottom">偏下</option>
+        </select>
+      </div>
+      <div class="ds-field" id="tintField" hidden>
+        <span>底部文字底色</span>
+        <select id="tint">
+          <option value="auto">跟随背景</option>
+          <option value="dark">深色半透明</option>
+          <option value="light">浅色半透明</option>
+          <option value="none">不加底色</option>
+        </select>
+      </div>
+      <div class="ds-field" id="cardField" hidden>
+        <span>商品底板</span>
+        <select id="cardStyle">
+          <option value="auto">自动（白底图垫白卡，透明图直接叠）</option>
+          <option value="card">始终垫白卡</option>
+          <option value="none">不垫（仅限已抠好的透明 PNG）</option>
+        </select>
+      </div>
+    </aside>
+
+    <section class="ds-panel ds-preview">
+      <div class="design-heading">
+        <h2>预览</h2>
+        <span id="previewNote">本地合成 · 不上传原图</span>
+      </div>
+      <div class="ds-stage">
+        <canvas id="artwork" width="1200" height="1200" aria-label="商品主图预览"></canvas>
+      </div>
+      <div class="ds-checks" id="checks"></div>
+      <p class="ds-status" id="status" role="status">先上传商品图片。</p>
+      <div class="ds-row">
+        <button type="button" id="downloadPng" class="workbench-primary" disabled>下载 PNG</button>
+        <button type="button" id="downloadJpg" disabled>下载 JPG（更小）</button>
+      </div>
+    </section>
+  </div>
+</main>
+<script src="/js/workbench-session.js?v=20261020-guanxingtai"></script>
+<script src="/js/workbench-shell.js?v=20261020-guanxingtai"></script>
+<script src="/js/design-ai.js?v=20261020-design1"></script>
+<script src="/js/design.js?v=20261020-design1"></script>
+</body>
+</html>

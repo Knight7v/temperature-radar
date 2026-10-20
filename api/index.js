@@ -11,6 +11,7 @@ const handlers=Object.freeze({
  '/api/auth/users':()=>require('../handlers/auth/users'),
  '/api/cron-inventory':()=>require('../handlers/cron-inventory'),
  '/api/cron-push':()=>require('../handlers/cron-push'),
+ '/api/design':()=>require('../handlers/design'),
  '/api/inventory/export':()=>require('../handlers/inventory/export'),
  '/api/inventory/followups':()=>require('../handlers/inventory/followups'),
  '/api/inventory/import-confirm':()=>require('../handlers/inventory/import-confirm'),
