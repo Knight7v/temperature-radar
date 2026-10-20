@@ -1,12 +1,93 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>客服质检 · 公司工作台</title><link rel="stylesheet" href="/css/workbench.css"><link rel="stylesheet" href="/css/quality.css"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>客服质检 · 公司工作台</title><link rel="stylesheet" href="/css/workbench.css"><link rel="stylesheet" href="/css/quality.css?v=20261019-redesign"></head>
 <body class="workbench-body"><div id="shell"></div><main class="workbench-main quality-main">
-<div class="workbench-eyebrow">SERVICE QUALITY</div><h1>客服质检</h1><p class="workbench-muted">先识别咨询类别，再按适用规则寻找证据；主管核对背景并确定最终评分。</p>
-<section class="qc-card" aria-labelledby="import-title"><div class="qc-section-head"><div><h2 id="import-title">导入聊天记录</h2><p>支持 UTF-8 编码的 .log、.txt 文件，单文件最大 3 MB。先预览异常，再确认导入。</p></div></div>
-<div class="qc-toolbar"><label>聊天记录文件<input id="file" type="file" accept=".log,.txt,text/plain"></label><label>导入店铺<select id="importShop"><option value="">自动识别 / 待关联</option></select></label><label>客服名称关键词<input id="agentHint" type="text" value="格力旗舰店" maxlength="60" aria-describedby="hint-help"></label><label>抽检比例<select id="rate"><option value="5">5%</option><option value="10">10%</option><option value="15" selected>15%</option><option value="20">20%</option><option value="30">30%</option><option value="50">50%</option><option value="100">全部</option></select></label><button id="preview" class="workbench-primary" type="button">校验与预览</button></div><p id="hint-help" class="qc-note">用于区分客服与顾客发言；请填写日志里客服名称共有的文字。导入店铺用于准确关联店铺、品牌和客服组别；未选择时只在名称唯一匹配时自动关联。</p><p id="status" role="status">请选择聊天记录文件。</p>
-<div id="previewBox" hidden><div id="previewStats" class="qc-stats"></div><p id="sampleStats" class="qc-sample-stats"></p><p id="previewWarning" class="qc-note"></p><div id="previewExamples" class="qc-examples"></div><button id="confirm" class="workbench-primary" type="button">确认导入会话</button></div></section>
-<section class="qc-card" aria-labelledby="list-title"><div class="qc-section-head"><div><h2 id="list-title">抽检会话</h2><p id="listSummary">正在加载…</p></div><button id="reload" type="button">刷新</button></div>
-<div class="qc-filters"><label>抽检范围<select id="filterScope"><option value="sampled">已抽检</option><option value="all">全部会话</option></select></label><label>状态<select id="filterStatus"><option value="all">全部状态</option><option value="pending">待复核</option><option value="draft">草稿</option><option value="reviewed">已复核</option></select></label><label>店铺<select id="filterShop"><option value="all">全部店铺</option><option value="unlinked">未关联店铺</option></select></label><label>品牌<select id="filterBrand"><option value="all">全部品牌</option><option value="格力">格力</option><option value="海尔">海尔</option><option value="未识别">未识别</option></select></label><label>客服组别<select id="filterGroup"><option value="all">全部组别</option><option value="格力组">格力组</option><option value="海尔组">海尔组</option><option value="未识别">未识别</option></select></label><label>明显异常<select id="filterWarning"><option value="all">全部会话</option><option value="flagged">仅高风险提醒</option></select></label><label>客服<input id="filterAgent" type="search" placeholder="输入客服名称"></label><label>会话日期<input id="filterDate" type="date"></label><button id="search" type="button">查询</button><button id="export" type="button">导出当日已复核结果</button></div>
-<div class="qc-table-wrap"><table class="qc-table"><thead><tr><th>开始时间</th><th>店铺</th><th>品牌</th><th>客服组别</th><th>客服</th><th>咨询分类</th><th>消息</th><th>机器预评分</th><th>异常提醒</th><th>状态</th><th>主管评分</th><th>操作</th></tr></thead><tbody id="rows"></tbody></table></div><div class="qc-page"><button id="prevPage" type="button">上一页</button><span id="pageLabel"></span><button id="nextPage" type="button">下一页</button></div></section>
-<section id="detail" class="qc-card" hidden aria-labelledby="detail-title"><div class="qc-section-head"><div><h2 id="detail-title">会话复核</h2><p id="detailMeta"></p></div><button id="closeDetail" type="button">收起</button></div><div class="qc-classification"><h3>先确认咨询分类</h3><p class="qc-note">机器根据顾客提问给出候选类别，主管可修正；类别决定需要填写哪些评分项。无法判断时选择“待分类”。</p><div id="consultationCategories" class="qc-category-list"></div><p id="consultationMetrics" class="qc-note"></p><div id="consultationChecks" class="qc-check-list"></div><div id="consultationSignals"></div></div><div id="machinePanel" class="qc-machine-panel"></div><div id="anomalies" class="qc-alert" hidden></div><div class="qc-review-grid"><div><h3>聊天原文（已脱敏）</h3><div id="messages" class="qc-messages"></div></div><div><h3>机器找到的证据</h3><p class="qc-note">证据和机器预评分用于辅助复核；主管评分为最终结果。</p><div id="evidence"></div><h3>主管规则评分</h3><div id="ratings"></div><label class="qc-note-label">复核备注<textarea id="reviewNote" rows="4" maxlength="2000" placeholder="记录核对依据、需外部核实事项或改进建议"></textarea></label><div class="qc-review-actions"><button id="saveDraft" type="button">保存草稿</button><button id="finishReview" class="workbench-primary" type="button">完成复核</button></div><p id="reviewStatus" role="status"></p></div></div></section>
-</main><script src="/js/workbench-session.js?v=20261016-replenishment"></script><script src="/js/workbench-shell.js?v=20261016-replenishment"></script><script src="/js/quality.js"></script></body></html>
+<div class="workbench-eyebrow">SERVICE QUALITY</div><h1>客服质检</h1><p class="workbench-muted">AI 逐条判定并取证，主管只处理它标记出的问题会话；分数按 70/30 固定公式计算，人不重复打分。</p>
+
+<details class="qc-card qc-fold" id="importCard">
+  <summary class="qc-fold-head">
+    <span class="qc-fold-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>
+    <span class="qc-fold-text"><strong>导入聊天记录</strong><em id="importSummary">支持 UTF-8 的 .log / .txt，单文件最大 3 MB</em></span>
+    <span class="qc-fold-state">展开</span>
+  </summary>
+  <div class="qc-fold-body">
+    <div class="qc-toolbar"><label>聊天记录文件<input id="file" type="file" accept=".log,.txt,text/plain"></label><label>导入店铺<select id="importShop"><option value="">自动识别 / 待关联</option></select></label><label>客服名称关键词<input id="agentHint" type="text" value="格力旗舰店" maxlength="60" aria-describedby="hint-help"></label><label>抽检比例<select id="rate"><option value="5">5%</option><option value="10">10%</option><option value="15" selected>15%</option><option value="20">20%</option><option value="30">30%</option><option value="50">50%</option><option value="100">全部</option></select></label><button id="preview" class="workbench-primary" type="button">校验与预览</button></div>
+    <p id="hint-help" class="qc-note">用于区分客服与顾客发言；请填写日志里客服名称共有的文字。导入店铺用于准确关联店铺、品牌和客服组别；未选择时只在名称唯一匹配时自动关联。</p>
+    <p id="status" role="status">请选择聊天记录文件。</p>
+    <div id="previewBox" hidden><div id="previewStats" class="qc-stats"></div><p id="sampleStats" class="qc-sample-stats"></p><p id="previewWarning" class="qc-note"></p><div id="previewExamples" class="qc-examples"></div><button id="confirm" class="workbench-primary" type="button">确认导入会话</button></div>
+  </div>
+</details>
+
+<section class="qc-card" id="boardCard" aria-label="质检工作台">
+  <div class="qc-board">
+    <div class="qc-kpis">
+      <div class="qc-kpi hot" id="kpiReview" role="button" tabindex="0"><span>待我复核</span><strong>—</strong><em>条</em></div>
+      <div class="qc-kpi" id="kpiPending" role="button" tabindex="0"><span>未分析</span><strong>—</strong><em>条</em></div>
+      <div class="qc-kpi" id="kpiDone" role="button" tabindex="0"><span>今日已复核</span><strong>—</strong><em>条</em></div>
+      <div class="qc-kpi bad" id="kpiRisk"><span>高风险（D 级）</span><strong>—</strong><em>条</em></div>
+    </div>
+    <div class="qc-board-acts">
+      <label class="qc-inline">分析日期<input id="aiDate" type="date"></label>
+      <select id="aiLimit" class="qc-inline-select" aria-label="本次分析数量"><option value="5">5 条</option><option value="10" selected>10 条</option><option value="20">20 条</option><option value="50">50 条</option></select>
+      <button id="aiBatch" class="workbench-primary" type="button">批量 AI 分析</button>
+      <button id="exportBtn" type="button">导出</button>
+    </div>
+  </div>
+  <div class="qc-board-foot"><span id="aiBadge" class="qc-ai-chip">正在检查 API 状态…</span><span id="aiStatus" class="qc-note" role="status"></span></div>
+</section>
+
+<section class="qc-card" id="aiCard" aria-labelledby="ai-title">
+  <div class="qc-section-head"><div><h2 id="ai-title">AI 分析明细</h2><p>质检的核心结论：整体水平、问题集中在谁、具体是哪一条。</p></div></div>
+
+  <div class="qc-ai-sec">
+    <h3><i>1</i>结论概览</h3>
+    <div id="aiOverview" class="qc-ov"><p class="qc-note">正在加载…</p></div>
+  </div>
+
+  <div class="qc-ai-sec">
+    <h3><i>2</i>按客服</h3>
+    <div id="aiAgents" class="qc-table-wrap"></div>
+  </div>
+
+  <div class="qc-ai-sec">
+    <h3><i>3</i>每条会话</h3>
+    <div class="qc-ai-toolbar">
+      <div class="qc-seg" id="aiTabs" role="tablist">
+        <button type="button" data-tab="pending" class="on" role="tab">待复核 <b id="cntPending">0</b></button>
+        <button type="button" data-tab="all" role="tab">全部 <b id="cntAll">0</b></button>
+        <button type="button" data-tab="reviewed" role="tab">已复核 <b id="cntDone">0</b></button>
+      </div>
+      <input id="filterAgent" type="search" class="qc-inline-select" placeholder="客服名称" aria-label="按客服筛选">
+      <button id="search" type="button">查询</button>
+      <span id="aiSessionsMeta" class="qc-note"></span>
+    </div>
+    <div id="aiSessions" class="qc-table-wrap"></div>
+    <div id="aiPager" class="qc-pager"></div>
+  </div>
+</section>
+
+<section class="qc-card" id="reviewCard" hidden aria-labelledby="review-title">
+  <div class="qc-section-head">
+    <div><h2 id="review-title">单条复核</h2><p id="reviewMeta"></p></div>
+    <div class="qc-review-tags"><span id="reviewAiTag" class="qc-pill">—</span><button id="closeDetail" type="button">收起</button></div>
+  </div>
+  <div class="qc-split">
+    <div class="qc-pane">
+      <h3>聊天原文（已脱敏）<small>AI 引用的句子已标黄</small></h3>
+      <div id="messages" class="qc-chat"></div>
+    </div>
+    <div class="qc-pane">
+      <h3>AI 逐项判定<small>不认同的直接改判，其余不用动</small></h3>
+      <div id="aiCriteria" class="qc-crit"></div>
+      <label class="qc-note-label">复核备注<textarea id="reviewNote" rows="3" maxlength="2000" placeholder="记录改判原因或需外部核实的事项"></textarea></label>
+    </div>
+  </div>
+  <div class="qc-review-foot">
+    <button id="confirmReview" class="workbench-primary" type="button">确认并下一条</button>
+    <div id="reviewScore" class="qc-review-score"></div>
+    <span id="reviewStatus" class="qc-note" role="status"></span>
+    <div class="qc-foot-gap"></div>
+    <span id="reviewProgress" class="qc-note"></span>
+  </div>
+</section>
+
+</main><script src="/js/workbench-session.js?v=20261016-replenishment"></script><script src="/js/workbench-shell.js?v=20261019-roles"></script><script src="/js/quality.js?v=20261019-roles"></script></body></html>

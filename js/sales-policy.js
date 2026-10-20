@@ -1,4 +1,5 @@
 (function(root){
+ const Life=(typeof module==='object'&&module.exports)?require('./sales-lifecycle'):root.SalesLifecycle;
  function reject(message){throw Object.assign(new Error(message),{status:422});}
  // 平台导出文件里的店铺名 → 工作台店铺档案里的正式名称。
  // 喵速达（天猫）后端导出固定写「羚稀官方旗舰店」，实际是本公司的「喵速达电器官方旗舰店」。
@@ -28,7 +29,8 @@
  function selectShops(shops,query){
   const status=query.status||'current';
   if(!['current','all','运营中','闭店中','已闭店','unknown'].includes(status))reject('店铺状态筛选无效');
-  return shops.filter(s=>(status==='all'||(status==='current'?s.data.status!=='已闭店':status==='unknown'?!s.data.status:s.data.status===status))&&(!query.shop||s.id===query.shop)&&['brand','platform','owner','executor'].every(k=>!query[k]||s.data[k]===query[k]));
+  const day=Life.today(),stateOf=shop=>Life.effectiveStatus(shop,day);
+  return shops.filter(s=>(status==='all'||(status==='current'?Life.operatingInRange(s,day,day):status==='unknown'?(!s.data.status&&!s.data.openDate&&!s.data.closeDate):stateOf(s)===status))&&(!query.shop||s.id===query.shop)&&['brand','platform','owner','executor'].every(k=>!query[k]||s.data[k]===query[k]));
  }
  const api={resolveShop,selectShops,canonicalShopName,findShopByName};if(typeof module==='object')module.exports=api;else root.SalesPolicy=api;
 })(globalThis);

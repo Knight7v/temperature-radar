@@ -10,7 +10,7 @@ async function book(rows){
 }
 const order=(no,status,buyer,amount,qty,spec,when)=>(['羚稀官方旗舰店',when,status,no,buyer,amount,qty,spec]);
 
-test('喵速达订单明细：一单两行只算一次，剔除关闭与外机',async()=>{
+test('喵速达订单明细：只认已签收，一单两行只算一次，剔除关闭/未签收与外机',async()=>{
  const buf=await book([
   order('A1','已签收','买家甲','5799.0',1,'内机','2026-10-01 10:00:00'),
   order('A1','已签收','买家甲','5799.0',1,'外机','2026-10-01 10:00:00'),
@@ -24,21 +24,40 @@ test('喵速达订单明细：一单两行只算一次，剔除关闭与外机',
  assert.equal(r.shopName,'羚稀官方旗舰店');
  assert.equal(r.rows.length,1);
  assert.equal(r.rows[0].date,'2026-10-01');
- assert.equal(r.rows[0].cents,579900+419900);
- assert.equal(r.rows[0].orders,2);
- assert.equal(r.rows[0].customers,2);
+ // 只有 A1 内机算钱，C3 是「仓库已接单」不再计入
+ assert.equal(r.rows[0].cents,579900);
+ assert.equal(r.rows[0].orders,1);
+ assert.equal(r.rows[0].customers,1);
+ assert.equal(r.stats.rowsSkipped,4);
+ assert.equal(r.stats.skippedOrders,2);
  assert.equal(r.stats.rowsClosed,2);
  assert.equal(r.stats.closedOrders,1);
- // 关闭判定优先于外机判定，所以关闭单的外机行计入 rowsClosed 而非 rowsOuter
- assert.equal(r.stats.rowsOuter,2);
+ assert.equal(r.stats.rowsOuter,1);
  assert.equal(r.stats.orphanOuter,0);
+ assert.deepEqual(r.stats.byStatus,{'已签收':2,'关闭':2,'仓库已接单':2});
 });
 
-test('商品名称含“外机”不影响判内机，只有规格列精确为外机才剔除',async()=>{
- const buf=await book([order('D4','已出库','买家丁','3299.0',1,'内机','2026-10-03 09:00:00')]);
+test('已出库、待下发仓库、退款等非已签收状态全部剔除',async()=>{
+ const buf=await book([
+  order('D4','已出库','买家丁','3299.0',1,'内机','2026-10-03 09:00:00'),
+  order('E5','待下发仓库','买家戊','3599.0',1,'内机','2026-10-03 10:00:00'),
+  order('F6','退款成功','买家己','2899.0',1,'内机','2026-10-03 11:00:00'),
+  order('G7','已签收','买家庚','4599.0',1,'内机','2026-10-03 12:00:00')
+ ]);
  const r=await parseFile(buf);
  assert.equal(r.rows.length,1);
- assert.equal(r.rows[0].cents,329900);
+ assert.equal(r.rows[0].cents,459900);
+ assert.equal(r.stats.orders,1);
+ assert.equal(r.stats.rowsSkipped,3);
+ assert.equal(r.stats.skippedOrders,3);
+});
+
+test('全部订单都未签收时明确报错，不产出空数据',async()=>{
+ const buf=await book([
+  order('H8','已出库','买家辛','3299.0',1,'内机','2026-10-04 09:00:00'),
+  order('I9','待下发仓库','买家壬','3599.0',1,'内机','2026-10-04 10:00:00')
+ ]);
+ await assert.rejects(()=>parseFile(buf),/没有已签收的有效订单/);
 });
 
 test('只有外机行而没有内机行的订单会报警，不被静默吞掉',async()=>{

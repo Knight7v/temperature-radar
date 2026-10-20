@@ -4,7 +4,9 @@ const {requireInventoryUser}=require('../lib/inventory/access');
 const {getInventoryPool,transact}=require('../lib/db/inventory-client');
 const {ensureSalesStructureSchema}=require('../lib/sales/structure-schema');
 const {CATEGORIES,parseStructureUpload,buildStructureReport,filterStructureShops,resolveSettlementShops,combineStructureRows}=require('../lib/sales/structure');
+const Life=require('../js/sales-lifecycle');
 function fail(message,status=422){throw Object.assign(Error(message),{status});}
+const operatesInYear=(shop,year)=>Life.operatingInRange(shop,`${year}-01-01`,`${year}-12-31`);
 function today(){return new Date().toLocaleDateString('sv-SE',{timeZone:'Asia/Shanghai'});}
 function categoryOf(req){const category=String(req.query.category||'gree-ac');if(!CATEGORIES[category])fail('销售结构类别无效');return category;}
 async function matchingShops(pool,tenant,category){const result=await pool.query("SELECT id,data FROM sales_shops WHERE tenant_id=$1 AND data->>'brand'=$2 ORDER BY data->>'name'",[tenant,CATEGORIES[category].brand]);return result.rows;}
@@ -17,12 +19,13 @@ module.exports=apiHandler(async(req,res)=>{
    res.setHeader('Content-Type','text/csv; charset=utf-8');res.setHeader('Content-Disposition','attachment; filename="sales-structure-template.csv"');
    return res.end('\uFEFF日期,店铺ID,SKU,销量件数,机型档位,是否柜机\n');
   }
-  const allShops=await matchingShops(pool,tenant,category);
+  const asOf=today(),year=Number(req.query.year||asOf.slice(0,4));
+  if(!Number.isInteger(year)||year<2020||year>Number(asOf.slice(0,4)))fail('统计年份无效');
+  // 只在统计年份内经营过的店铺才出现在下拉与报表里（未开店 / 已闭店按经营期判断）。
+  const allShops=(await matchingShops(pool,tenant,category)).filter(shop=>operatesInYear(shop,year));
   if(action==='meta')return res.json({data:{category,label:CATEGORIES[category].label,role:user.role,shops:allShops}});
   if(action!=='report')fail('操作不存在',404);
   const shops=filterStructureShops(allShops,category,req.query.platform);
-  const asOf=today(),year=Number(req.query.year||asOf.slice(0,4));
-  if(!Number.isInteger(year)||year<2020||year>Number(asOf.slice(0,4)))fail('统计年份无效');
   const shop=String(req.query.shop||'');if(shop&&!shops.some(item=>item.id===shop))fail('店铺不属于当前类别');
   const start=`${year}-01-01`,end=asOf<`${year}-12-31`?asOf:`${year}-12-31`;
   const params=[tenant,category,start,end,shop||null,shops.map(item=>item.id)];

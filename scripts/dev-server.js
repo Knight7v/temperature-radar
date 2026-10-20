@@ -1,6 +1,8 @@
 // Local development only. Public files are explicitly scoped; secrets/source are never served.
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),port=Number(process.argv[process.argv.indexOf('--port')+1])||4173;
+// 请求体上限：销售订单明细导出常有 4~20MB，太小会返回空 413，前端 r.json() 直接报错。
+const MAX_UPLOAD=32*1024*1024;
 const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml'};
 // 本地环境变量：读取 .env.local / .env（手写最小解析，不新增依赖；已被 shell 注入的值不覆盖）。
 // 注意：这个文件不会被 HTTP 服务暴露（下面的白名单只允许 .html 与 js/css/assets）。
@@ -23,7 +25,7 @@ http.createServer(async(req,res)=>{
   try{
    if(!/^\/api\/[a-z0-9/-]+$/.test(url.pathname))throw Error('Not found');
    const file=path.join(root,'api/index.js');
-   const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>3*1024*1024+1024){res.writeHead(413);return res.end();}chunks.push(chunk);}
+   const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>MAX_UPLOAD){res.writeHead(413,{'Content-Type':'application/json'});return res.end(JSON.stringify({error:'文件超过 '+(MAX_UPLOAD/1024/1024)+'MB 上限，请拆分后再导入'}));}chunks.push(chunk);}
    const bytes=Buffer.concat(chunks);req.body=(req.headers['content-type']||'').includes('application/json')?(bytes.length?JSON.parse(bytes):{}):bytes;
    req.query=Object.fromEntries(url.searchParams);res.status=c=>(res.statusCode=c,res);res.json=b=>{res.setHeader('Content-Type','application/json');res.end(JSON.stringify(b));};res.send=b=>res.end(b);
    return await require(file)(req,res);

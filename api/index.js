@@ -21,6 +21,7 @@ const handlers=Object.freeze({
  '/api/inventory/replenishment':()=>require('../handlers/inventory/replenishment'),
  '/api/inventory/rules':()=>require('../handlers/inventory/rules'),
  '/api/push':()=>require('../handlers/push'),
+ '/api/quality-ai':()=>require('../handlers/quality-ai'),
  '/api/quality-analysis-v2':()=>require('../handlers/quality-analysis-v2'),
  '/api/quality-sampling-v2':()=>require('../handlers/quality-sampling-v2'),
  '/api/quality-sampling':()=>require('../handlers/quality-sampling'),

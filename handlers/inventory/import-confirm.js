@@ -1,2 +1,2 @@
 const {apiHandler,requireMethod}=require('../../lib/http');const {requireInventoryUser}=require('../../lib/inventory/access');const {createSnapshotService}=require('../../lib/inventory/snapshot-service');
-module.exports=apiHandler(async(req,res)=>{if(!requireMethod(req,res,'POST'))return;const ctx=await requireInventoryUser(req,['admin','operator']);const out=await createSnapshotService().confirmImport(ctx,req.body||{});res.status(200).json({success:true,data:out});});
+module.exports=apiHandler(async(req,res)=>{if(!requireMethod(req,res,'POST'))return;const ctx=await requireInventoryUser(req,['admin','operator','supply_chain']);const out=await createSnapshotService().confirmImport(ctx,req.body||{});res.status(200).json({success:true,data:out});});
