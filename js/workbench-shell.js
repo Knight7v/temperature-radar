@@ -4,8 +4,9 @@
   container.classList.add('workbench-shell');document.body.classList.add('workbench-horizontal');
   const nav=document.createElement('aside');nav.className='workbench-nav';nav.id='workbenchNavigation';
   const logo=document.createElement('a');logo.href='/workbench.html';logo.className='workbench-brand';
-  logo.setAttribute('aria-label','观海 · 电商经营工作台 · 返回经营总览');
-  logo.innerHTML='<span class="workbench-brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4.5 21c4-5.6 7.8-5.6 11.5 0s7.5 5.6 11.5 0" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M4.5 13.2c4-5.6 7.8-5.6 11.5 0s7.5 5.6 11.5 0" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.2" stroke-linecap="round"/></svg></span><span class="workbench-brand-text"><strong>观海</strong><em>电商经营工作台</em></span>';
+  logo.setAttribute('aria-label','观星台 · 电商经营工作台 · 返回经营总览');
+  // 标识：四角星（观测）+ 梯形台基，取「观星台」之意；纯路径无外部依赖，18px 下仍可辨认
+  logo.innerHTML='<span class="workbench-brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 3.1c.82 5.5 2.78 7.46 8.3 8.3-5.52.84-7.48 2.8-8.3 8.3-.82-5.5-2.78-7.46-8.3-8.3 5.52-.84 7.48-2.8 8.3-8.3z" fill="#fff"/><path d="M10.2 21.4h11.6l3.3 3.9H6.9z" fill="#fff"/></svg></span><span class="workbench-brand-text"><strong>观星台</strong><em>电商经营工作台</em></span>';
   nav.append(logo);
   const cap=document.createElement('p');cap.className='workbench-nav-label';cap.textContent='业务空间';nav.append(cap);
   const submenuOpen={sales:false,design:false,weather:false};const saveSubmenus=()=>{};
