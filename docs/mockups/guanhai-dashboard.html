@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>观海 · 经营总览（高保真视觉稿）</title>
+<style>
+:root{
+  --bg:#f1f4f9; --card:#fff; --line:#e6ecf5; --line-2:#eef2f8;
+  --ink:#17233a; --ink-2:#3a4a63; --muted:#708097; --muted-2:#93a1b5;
+  --blue:#2f6bff; --blue-d:#1a56e8; --blue-soft:#eef3ff;
+  --up:#d93a3a; --down:#0f9d58; --warn:#e0811a; --warn-soft:#fff6e8;
+  --bad:#d93a3a; --bad-soft:#fdeeee;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:13px/1.45 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-feature-settings:"tnum"; -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+button,select{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- 顶栏 ---------- */
+.topbar{position:sticky;top:0;z-index:20;height:52px;display:flex;align-items:center;gap:18px;padding:0 20px;background:#fff;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.brand-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#2f6bff,#0b3fc4);display:grid;place-items:center;box-shadow:0 4px 10px #2f6bff33}
+.brand-mark svg{width:20px;height:20px}
+.brand-t{display:flex;align-items:baseline;gap:8px}
+.brand-t strong{font-size:18px;letter-spacing:1.5px;font-weight:700}
+.brand-t em{font-style:normal;font-size:11px;color:var(--muted-2);letter-spacing:.5px}
+.nav{display:flex;align-items:center;gap:2px;height:100%;flex:1 1 auto;min-width:0;overflow:hidden}
+.nav a{position:relative;height:100%;display:flex;align-items:center;padding:0 11px;font-size:13px;color:var(--ink-2);white-space:nowrap;border-radius:0}
+.nav a i{font-style:normal;font-size:9px;color:var(--muted-2);margin-left:3px}
+.nav a:hover{color:var(--blue)}
+.nav a.on{color:var(--blue);font-weight:600}
+.nav a.on::after{content:"";position:absolute;left:11px;right:11px;bottom:-1px;height:2px;background:var(--blue);border-radius:2px}
+.top-right{display:flex;align-items:center;gap:14px;flex:0 0 auto;font-size:12px;color:var(--muted)}
+.fresh{display:inline-flex;align-items:center;gap:6px;background:#f7f9fc;border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:11.5px}
+.dot{width:6px;height:6px;border-radius:50%;background:#c8d2e0;display:inline-block}
+.dot.ok{background:#0f9d58}.dot.warn{background:#e0811a}
+.usr{display:flex;align-items:center;gap:6px;color:var(--ink-2)}
+.usr em{font-style:normal;font-size:11px;color:var(--muted-2);background:#f2f5fa;border-radius:4px;padding:1px 6px}
+
+/* ---------- 筛选条 ---------- */
+.filters{display:flex;align-items:center;gap:10px;padding:8px 20px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:52px;z-index:19}
+.seg-group{display:flex;background:#f2f5fa;border-radius:7px;padding:2px;gap:2px}
+.seg-group button{border:0;background:transparent;padding:4px 11px;border-radius:5px;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+.seg-group button.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 1px 4px #17233a14}
+.filters label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.filters select{border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 24px 4px 8px;font-size:12.5px;color:var(--ink-2);height:28px;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath d='M2 4l3 3 3-3' fill='none' stroke='%23708097' stroke-width='1.4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center}
+.filters .spacer{flex:1}
+.filters .hint{font-size:11.5px;color:var(--muted-2)}
+.btn{border:1px solid var(--line);background:#fff;border-radius:6px;height:28px;padding:0 12px;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+.btn:hover{border-color:#c9d6ea}
+
+/* ---------- 布局 ---------- */
+main{padding:10px 20px 12px;max-width:1580px;margin:0 auto}
+.grid{display:grid;gap:10px}
+.kpis{grid-template-columns:repeat(6,1fr)}
+.row2{grid-template-columns:minmax(0,2.05fr) minmax(0,1fr);margin-top:10px}
+.row3{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 2px #17233a08}
+.card-h{display:flex;align-items:center;gap:8px;padding:9px 14px 0}
+.card-h h3{margin:0;font-size:13px;font-weight:600;letter-spacing:.2px}
+.card-h .sub{font-size:11.5px;color:var(--muted-2);font-weight:400}
+.card-h .right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.link{font-size:12px;color:var(--blue);display:inline-flex;align-items:center;gap:3px}
+.link::after{content:"›";font-size:14px;line-height:1;transform:translateY(-1px)}
+.tabs{display:flex;background:#f2f5fa;border-radius:6px;padding:2px;gap:1px}
+.tabs span{font-size:11.5px;padding:3px 9px;border-radius:4px;color:var(--muted);cursor:pointer}
+.tabs span.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 1px 3px #17233a14}
+
+/* ---------- KPI ---------- */
+.kpi{padding:10px 13px 9px;position:relative;overflow:hidden}
+.kpi-label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);white-space:nowrap}
+.kpi-label b{font-weight:400;color:var(--muted-2);font-size:11px}
+.kpi-v{display:flex;align-items:baseline;gap:3px;margin-top:4px;line-height:1.15}
+.kpi-v strong{font-size:23px;font-weight:700;letter-spacing:-.4px}
+.kpi-v span{font-size:11.5px;color:var(--muted)}
+.kpi-v small{font-size:11px;color:var(--muted-2)}
+.kpi-meta{margin-top:5px;display:grid;gap:2px;font-size:11.5px;color:var(--muted)}
+.kpi-meta i{font-style:normal;color:var(--ink-2)}
+.up{color:var(--up)}.down{color:var(--down)}.warnc{color:var(--warn)}.badc{color:var(--bad)}
+.arrow{font-size:9px;vertical-align:1px}
+.kpi .spark{position:absolute;right:10px;top:34px;opacity:.55}
+.kpi.accent{background:linear-gradient(180deg,#f7faff,#fff 60%)}
+.kpi.accent::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#2f6bff,#6f9bff)}
+.chipbar{display:inline-flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.chip{font-size:10.5px;padding:1px 6px;border-radius:4px;background:#f2f5fa;color:var(--muted)}
+.chip.red{background:var(--bad-soft);color:#b83a3a}
+.chip.amber{background:var(--warn-soft);color:#a4621a}
+.chip.blue{background:var(--blue-soft);color:#2a5bd7}
+
+/* ---------- 趋势 ---------- */
+.trend-body{padding:6px 8px 2px}
+.trend-body svg{display:block;width:100%;height:auto}
+.legend{display:flex;align-items:center;gap:16px;padding:0 14px 8px;font-size:11.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:2px;border-radius:2px;margin-right:6px;vertical-align:2px}
+.legend i.solid{background:var(--blue)}
+.legend i.dash{background:repeating-linear-gradient(90deg,#b9c6da 0 4px,transparent 4px 7px)}
+.legend i.area{width:10px;height:8px;border-radius:2px;background:#dbe6ff}
+
+/* ---------- 目标 ---------- */
+.goal-body{padding:2px 14px 8px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.gauge{text-align:center;padding-top:2px}
+.gauge svg{width:100%;height:70px}
+.gauge .cap{font-size:11.5px;color:var(--muted);margin-top:-4px}
+.gauge .val{font-size:19px;font-weight:700;margin-top:-4px}
+.gauge .val small{font-size:11px;font-weight:400;color:var(--muted-2)}
+.goal-note{margin:0 14px 8px;padding:7px 10px;border-radius:7px;background:#fdf6ea;border:1px solid #f6e2c2;font-size:11.5px;color:#8a5a12;line-height:1.6}
+.goal-note b{color:#b93b3b}
+.goal-foot{display:flex;gap:10px;padding:0 14px 10px;font-size:11.5px;color:var(--muted)}
+.goal-foot div{flex:1;background:#f7f9fc;border-radius:6px;padding:6px 8px}
+.goal-foot b{display:block;font-size:13px;color:var(--ink);margin-top:2px}
+
+/* ---------- 榜单 ---------- */
+.rank-wrap{padding:2px 6px 6px}
+.rank{display:grid;grid-template-columns:18px minmax(0,1fr) 78px 34px;align-items:center;gap:8px;padding:3px 8px;border-radius:6px}
+.rank:hover{background:#f8fafd}
+.rank .no{font-size:11px;color:var(--muted-2);text-align:center}
+.rank .no.top{color:#fff;background:#e0811a;border-radius:4px;font-weight:600;font-size:10.5px;line-height:16px}
+.rank .nm{font-size:12.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank .nm em{font-style:normal;font-size:10px;color:var(--muted-2);margin-left:4px}
+.rank .bar{position:relative;height:6px;background:#eef2f8;border-radius:3px;overflow:hidden}
+.rank .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--blue)}
+.rank .bar i.warn{background:#e8a13c}
+.rank .bar i.bad{background:#e06a6a}
+.rank .bar u{position:absolute;top:-2px;bottom:-2px;width:1px;background:#9fb0c8;opacity:.8}
+.rank .pct{font-size:12px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+.rank .pct.badc2{color:#c94a4a}
+.rank-foot{display:flex;justify-content:space-between;padding:6px 10px 0;margin-top:4px;border-top:1px dashed var(--line);font-size:11px;color:var(--muted-2)}
+
+/* ---------- 待办 ---------- */
+.todo{padding:4px 10px 8px;display:grid;gap:6px}
+.todo-row{display:flex;align-items:center;gap:9px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.todo-row .ic{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;font-size:12px;flex:0 0 auto}
+.todo-row .ic.red{background:var(--bad-soft);color:#c24545}
+.todo-row .ic.amber{background:var(--warn-soft);color:#b6761e}
+.todo-row .ic.blue{background:var(--blue-soft);color:#2a5bd7}
+.todo-row .ic.gray{background:#f2f5fa;color:#7d8ca3}
+.todo-row .tx{flex:1;min-width:0}
+.todo-row .tx b{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.todo-row .tx span{display:block;font-size:11px;color:var(--muted-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.todo-row .go{font-size:11.5px;color:var(--blue);flex:0 0 auto}
+
+/* ---------- 气温 ---------- */
+.weather{padding:4px 14px 12px}
+.wx-top{display:flex;align-items:flex-end;gap:10px}
+.wx-top strong{font-size:25px;line-height:1.1;font-weight:700;color:#c9541f}
+.wx-top span{font-size:11.5px;color:var(--muted);padding-bottom:3px}
+.wx-cities{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 10px}
+.wx-city{font-size:11.5px;padding:3px 8px;border-radius:5px;background:#fff3ea;color:#a8501c;border:1px solid #f8ddc8}
+.wx-city b{font-weight:600}
+.wx-week{display:flex;align-items:flex-end;gap:10px;margin:4px 0 10px;padding:6px 8px;background:#fbfcfe;border:1px solid var(--line-2);border-radius:7px}
+.wx-week-h{font-size:11px;color:var(--muted);white-space:nowrap;padding-bottom:2px;line-height:1.5;width:56px}
+.wx-bars{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:54px}
+.wx-bars div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:2px}
+.wx-bars b{font-size:10px;color:#a8501c;font-weight:600;line-height:1}
+.wx-bars i{display:block;width:100%;max-width:16px;border-radius:3px 3px 1px 1px;background:linear-gradient(180deg,#f0a06a,#f8cdaf);min-height:4px}
+.wx-bars span{font-size:9.5px;color:var(--muted-2);line-height:1}
+.wx-tip{font-size:11px;color:var(--muted);line-height:1.6;background:#f8fafd;border-radius:6px;padding:7px 9px}
+.wx-tip b{color:var(--ink-2)}
+
+/* ---------- 底部 ---------- */
+.foot{margin-top:10px;display:flex;align-items:center;gap:14px;font-size:11.5px;color:var(--muted-2);padding:0 2px}
+.foot .sep{width:1px;height:10px;background:var(--line)}
+.foot .spacer{flex:1}
+@media(max-width:1180px){
+  .kpis{grid-template-columns:repeat(3,1fr)}
+  .row2,.row3{grid-template-columns:1fr}
+  .nav{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#">
+    <span class="brand-mark">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M4.5 21c4-5.6 7.8-5.6 11.5 0s7.5 5.6 11.5 0" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M4.5 13.2c4-5.6 7.8-5.6 11.5 0s7.5 5.6 11.5 0" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <span class="brand-t"><strong>观海</strong><em>电商经营工作台</em></span>
+  </a>
+  <nav class="nav">
+    <a class="on">经营总览</a>
+    <a>数据分析管理 <i>▾</i></a>
+    <a>库存监控预警 <i>▾</i></a>
+    <a>库存补货</a>
+    <a>客服管理 <i>▾</i></a>
+    <a>视觉设计 <i>▾</i></a>
+    <a>气温监控预警</a>
+    <a>用户与权限</a>
+  </nav>
+  <div class="top-right">
+    <span class="fresh"><i class="dot warn"></i>销售 10-18 · 库存 10-15 · 质检 10-19</span>
+    <span class="usr">admin<em>管理员</em></span>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="seg-group"><button class="on">本月</button><button>近7天</button><button>近30天</button><button>本年</button></div>
+  <label>店铺<select><option>全部店铺（8 家在营）</option><option>格力旗舰店</option><option>喵速达电器官方旗舰店</option></select></label>
+  <label>品牌<select><option>全部品牌</option><option>格力</option><option>海尔</option></select></label>
+  <label>对比<select><option>同比（2025 同期）</option><option>环比（上月同期）</option></select></label>
+  <span class="spacer"></span>
+  <span class="hint">数据截至 2026-10-18 · 已覆盖 809 个店铺日</span>
+  <button class="btn">导出</button>
+  <button class="btn primary">刷新</button>
+</div>
+
+<main>
+  <!-- 第一屏：6 个 KPI -->
+  <section class="grid kpis">
+    <article class="card kpi accent">
+      <div class="kpi-label">月累计销售额</div>
+      <div class="kpi-v"><strong class="num">881.07</strong><span>万元</span></div>
+      <div class="kpi-meta">
+        <div>同比 <span class="up"><span class="arrow">▲</span> 156.1%</span></div>
+        <div>目标 <i class="num">2,130</i> 万 · 完成 <i class="num">41.4%</i></div>
+      </div>
+    </article>
+
+    <article class="card kpi">
+      <div class="kpi-label">年累计销售额</div>
+      <div class="kpi-v"><strong class="num">24,327.67</strong><span>万元</span></div>
+      <div class="kpi-meta">
+        <div>同比 <span class="up"><span class="arrow">▲</span> 178.6%</span></div>
+        <div>目标 <i class="num">21,480</i> 万 · 达成 <i class="up">113.2%</i></div>
+      </div>
+    </article>
+
+    <article class="card kpi">
+      <div class="kpi-label">本月目标进度</div>
+      <div class="kpi-v">
+        <strong class="num">41.4</strong><span>%</span><small>时间已过 64.5%</small>
+      </div>
+      <div class="kpi-meta">
+        <div>落后 <span class="warnc">23.1pt</span> · 缺 <i class="num">1,249</i> 万</div>
+        <div>13 天 · 日均需 <span class="warnc num">96.07</span> 万</div>
+      </div>
+    </article>
+
+    <article class="card kpi">
+      <div class="kpi-label">库存预警 <b>快照 10-15</b></div>
+      <div class="kpi-v"><strong class="num">39</strong><span>项</span><small>待处理</small></div>
+      <div class="chipbar">
+        <span class="chip red">缺货 3</span>
+        <span class="chip amber">积压 15</span>
+        <span class="chip">30天无销 21</span>
+      </div>
+      <div class="kpi-meta" style="margin-top:6px"><div>快照已 <span class="warnc">5 天未更新</span></div></div>
+    </article>
+
+    <article class="card kpi">
+      <div class="kpi-label">质检待复核 <b>10-19</b></div>
+      <div class="kpi-v"><strong class="num">1</strong><span>条</span><small>分析 10 / 池 106</small></div>
+      <div class="kpi-meta">
+        <div>均分 <i class="warnc num">60.74</i> · D 级 <i class="badc num">4</i></div>
+        <div>高频：<i>平台高压线 ×3</i></div>
+      </div>
+    </article>
+
+    <article class="card kpi">
+      <div class="kpi-label">气温机会区 <b>131 城</b></div>
+      <div class="kpi-v"><strong class="num">8</strong><span>个</span><small>高温重点</small></div>
+      <div class="kpi-meta">
+        <div>温州·漳州·赣州·丽水</div>
+        <div>升温 0 个 · 备货建议 4 区</div>
+      </div>
+    </article>
+  </section>
+
+  <!-- 趋势 + 目标 -->
+  <section class="grid row2">
+    <article class="card">
+      <div class="card-h">
+        <h3>销售趋势</h3><span class="sub">万元 · 2026 vs 2025 同期</span>
+        <div class="right">
+          <div class="tabs"><span class="on">月</span><span>周</span><span>天</span></div>
+          <a class="link" href="#">销售分析</a>
+        </div>
+      </div>
+      <div class="trend-body"><svg id="trend" viewBox="0 0 860 176" role="img" aria-label="2026 与 2025 月度销售趋势"></svg></div>
+      <div class="legend">
+        <span><i class="solid"></i>2026 年</span>
+        <span><i class="dash"></i>2025 年</span>
+        <span><i class="area"></i>同比 <b class="up" style="font-weight:600">+178.6%</b></span>
+        <span style="margin-left:auto;color:var(--muted-2)">11–12 月未导入，按空白留出</span>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card-h">
+        <h3>目标进度</h3>
+        <div class="right"><a class="link" href="#">目标设置</a></div>
+      </div>
+      <div class="goal-body">
+        <div class="gauge">
+          <svg id="gMonth" viewBox="0 0 120 74" aria-hidden="true"></svg>
+          <div class="val num" style="color:#2f6bff">41.4<small>%</small></div>
+          <div class="cap">月 · 881.07 / 2,130 万</div>
+        </div>
+        <div class="gauge">
+          <svg id="gYear" viewBox="0 0 120 74" aria-hidden="true"></svg>
+          <div class="val num" style="color:#0f9d58">113.2<small>%</small></div>
+          <div class="cap">年 · 24,327.67 / 21,480 万</div>
+        </div>
+      </div>
+      <p class="goal-note">本月时间已过 64.5%，目标只完成 41.4%，<b>落后 23.1 个百分点</b>；按当前节奏，月底预计缺口约 <b>1,134 万</b>。</p>
+      <div class="goal-foot">
+        <div>目标覆盖<b>8 / 8 家</b></div>
+        <div>未填满 12 月<b>7 家</b></div>
+        <div>增量业务<b>1 家</b></div>
+      </div>
+    </article>
+  </section>
+
+  <!-- 榜单 / 待办 / 气温 -->
+  <section class="grid row3">
+    <article class="card">
+      <div class="card-h"><h3>本月店铺达成</h3><span class="sub">按达成率</span><div class="right"><a class="link" href="#">全部</a></div></div>
+      <div class="rank-wrap" id="ranks"></div>
+      <div class="rank-foot"><span>进度基准线 64.5%（时间进度）</span><span>8 家中 7 家落后</span></div>
+    </article>
+
+    <article class="card">
+      <div class="card-h"><h3>待处理</h3><span class="sub">3 个模块</span><div class="right"><a class="link" href="#">全部</a></div></div>
+      <div class="todo">
+        <a class="todo-row" href="#">
+          <span class="ic red">缺</span>
+          <span class="tx"><b>3 个 SKU 缺货</b><span>格力 1.5P 挂机 · 温州仓 · 可售 &lt; 3 天</span></span>
+          <span class="go">处理</span>
+        </a>
+        <a class="todo-row" href="#">
+          <span class="ic amber">积</span>
+          <span class="tx"><b>15 个 SKU 积压 · 21 个 30 天无销</b><span>合计占用 4,280 台，库龄 &gt; 45 天</span></span>
+          <span class="go">查看</span>
+        </a>
+        <a class="todo-row" href="#">
+          <span class="ic blue">质</span>
+          <span class="tx"><b>1 条会话待复核 · 4 条 D 级</b><span>「平台高压线」出现 3 次，需业务确认话术</span></span>
+          <span class="go">复核</span>
+        </a>
+        <a class="todo-row" href="#">
+          <span class="ic gray">库</span>
+          <span class="tx"><b>库存快照 5 天未更新</b><span>最后一次导入 2026-10-15，建议补录</span></span>
+          <span class="go">导入</span>
+        </a>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card-h"><h3>气温机会</h3><span class="sub">未来 7 天</span><div class="right"><a class="link" href="#">详情</a></div></div>
+      <div class="weather">
+        <div class="wx-top"><strong class="num">8</strong><span>个高温重点关注区 / 131 城</span></div>
+        <div class="wx-cities">
+          <span class="wx-city"><b>温州</b> 36℃</span>
+          <span class="wx-city"><b>漳州</b> 35℃</span>
+          <span class="wx-city"><b>赣州</b> 35℃</span>
+          <span class="wx-city"><b>丽水</b> 34℃</span>
+          <span class="wx-city"><b>江门</b> 34℃</span>
+          <span class="wx-city"><b>惠州</b> 33℃</span>
+        </div>
+        <div class="wx-week">
+          <div class="wx-week-h">温州 · 未来 7 天</div>
+          <div class="wx-bars">
+            <div><b>36°</b><i style="height:100%"></i><span>今天</span></div>
+            <div><b>36°</b><i style="height:100%"></i><span>21</span></div>
+            <div><b>35°</b><i style="height:88%"></i><span>22</span></div>
+            <div><b>34°</b><i style="height:76%"></i><span>23</span></div>
+            <div><b>33°</b><i style="height:64%"></i><span>24</span></div>
+            <div><b>32°</b><i style="height:52%"></i><span>25</span></div>
+            <div><b>31°</b><i style="height:40%"></i><span>26</span></div>
+          </div>
+        </div>
+        <div class="wx-tip"><b>建议：</b>温州、漳州、赣州高温持续 3 天以上，1.5P 挂机可提前 2 天向华东／华南仓铺货。</div>
+      </div>
+    </article>
+  </section>
+
+  <div class="foot">
+    <span>观海 v0.1 · 数据源：京东日报 / 喵速达订单明细 / 分仓库存 / 客服会话 / 和风天气</span>
+    <span class="sep"></span>
+    <span>销售 10-18</span><span class="sep"></span><span>库存 10-15</span><span class="sep"></span><span>质检 10-19</span><span class="sep"></span><span>气温 10-20 14:11</span>
+    <span class="spacer"></span>
+    <span>高保真视觉稿 · 仅供评审</span>
+  </div>
+</main>
+
+<script>
+/* ---------------- 数据（取自真实库） ---------------- */
+const CUR=[1479.28,697.10,1450.29,2383.04,5025.01,5738.70,3468.29,1988.70,1216.19,881.07,null,null];
+const LAST=[16.09,31.19,309.45,757.41,1209.95,2058.59,2087.48,1105.32,489.11,666.94,424.35,279.84];
+const SHOPS=[
+  {n:'格力旗舰店',v:353.18,t:700,r:50.4},
+  {n:'格力空调直营旗舰店',v:151.09,t:600,r:25.2},
+  {n:'格力空调换新旗舰店',v:119.60,t:300,r:39.9},
+  {n:'海尔空调优选旗舰店',v:117.11,t:250,r:46.8},
+  {n:'海尔长缨星河专卖店',v:75.01,t:100,r:75.0},
+  {n:'海尔星河专卖店',v:38.73,t:100,r:38.7},
+  {n:'格力空调正品专卖店',v:18.56,t:0,r:null},
+  {n:'喵速达电器官方旗舰店',v:7.79,t:80,r:9.7}
+];
+
+/* ---------------- 趋势图 ---------------- */
+(function(){
+  const svg=document.getElementById('trend');
+  const W=860,H=176,L=46,R=18,T=12,B=22;
+  const max=6000,innerW=W-L-R,innerH=H-T-B;
+  const x=i=>L+(innerW/(CUR.length-1))*i;
+  const y=v=>T+innerH-(v/max)*innerH;
+  const ns='http://www.w3.org/2000/svg';
+  const el=(t,a={})=>{const n=document.createElementNS(ns,t);for(const k in a)n.setAttribute(k,a[k]);return n;};
+  // 网格 + Y 轴
+  for(let v=0;v<=6000;v+=1500){
+    svg.append(el('line',{x1:L,y1:y(v),x2:W-R,y2:y(v),stroke:'#eef2f8','stroke-width':1}));
+    const t=el('text',{x:L-8,y:y(v)+3.5,'text-anchor':'end',fill:'#93a1b5','font-size':10});t.textContent=v===0?'0':v.toLocaleString();svg.append(t);
+  }
+  // X 轴
+  CUR.forEach((_,i)=>{const t=el('text',{x:x(i),y:H-8,'text-anchor':'middle',fill:'#93a1b5','font-size':10});t.textContent=(i+1)+'月';svg.append(t);});
+  // 2025 虚线
+  const d2025=LAST.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ');
+  svg.append(el('path',{d:d2025,fill:'none',stroke:'#b9c6da','stroke-width':1.6,'stroke-dasharray':'4 3','stroke-linecap':'round'}));
+  // 2026 面积 + 线（截至 10 月）
+  const pts=CUR.map((v,i)=>v==null?null:[x(i),y(v)]).filter(Boolean);
+  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  svg.append(el('path',{d:line+' L'+pts.at(-1)[0].toFixed(1)+' '+(T+innerH)+' L'+pts[0][0].toFixed(1)+' '+(T+innerH)+' Z',fill:'url(#gArea)',stroke:'none'}));
+  const defs=el('defs');const lg=el('linearGradient',{id:'gArea',x1:0,y1:0,x2:0,y2:1});
+  lg.append(el('stop',{offset:'0','stop-color':'#2f6bff','stop-opacity':.20}));
+  lg.append(el('stop',{offset:'1','stop-color':'#2f6bff','stop-opacity':0}));defs.append(lg);svg.append(defs);
+  svg.append(el('path',{d:line,fill:'none',stroke:'#2f6bff','stroke-width':2.4,'stroke-linecap':'round','stroke-linejoin':'round'}));
+  // 数据点
+  pts.forEach((p,i)=>{
+    svg.append(el('circle',{cx:p[0],cy:p[1],r:i===pts.length-1?4:2.6,fill:'#fff',stroke:'#2f6bff','stroke-width':i===pts.length-1?2.6:1.8}));
+  });
+  // 最新点气泡
+  const lastP=pts.at(-1),bw=74,bh=24,bx=Math.min(lastP[0]-bw/2,W-R-bw),by=lastP[1]-bh-12;
+  const g=el('g');
+  g.append(el('rect',{x:bx,y:by,width:bw,height:bh,rx:5,fill:'#17233a'}));
+  g.append(el('path',{d:`M${lastP[0]-4} ${by+bh} L${lastP[0]} ${by+bh+5} L${lastP[0]+4} ${by+bh} Z`,fill:'#17233a'}));
+  const tt=el('text',{x:bx+bw/2,y:by+16,'text-anchor':'middle',fill:'#fff','font-size':11,'font-weight':600});tt.textContent='881.07 万';g.append(tt);svg.append(g);
+})();
+
+/* ---------------- 半环仪表 ---------------- */
+function gauge(id,pct,color,track){
+  const svg=document.getElementById(id);
+  const cx=60,cy=62,r=46,len=Math.PI*r;
+  const path=`M${cx-r} ${cy} A${r} ${r} 0 0 1 ${cx+r} ${cy}`;
+  const mk=(stroke,w,dash)=>{const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',path);p.setAttribute('fill','none');p.setAttribute('stroke',stroke);p.setAttribute('stroke-width',w);p.setAttribute('stroke-linecap','round');if(dash)p.setAttribute('stroke-dasharray',dash);return p;};
+  svg.append(mk(track,9));
+  svg.append(mk(color,9,`${len*Math.min(pct,1)} ${len}`));
+}
+gauge('gMonth',0.414,'#2f6bff','#e6edf9');
+gauge("gYear",1,'#0f9d58','#e6edf9'); // 113% 视觉封顶，数字仍显示 113.2%
+
+/* ---------------- 店铺榜 ---------------- */
+(function(){
+  const box=document.getElementById('ranks');
+  const base=64.5;
+  SHOPS.forEach((s,i)=>{
+    const row=document.createElement('div');row.className='rank';
+    const no=document.createElement('span');no.className='no'+(i<3?' top':'');no.textContent=i+1;
+    const nm=document.createElement('span');nm.className='nm';nm.textContent=s.n;
+    if(s.r==null){const em=document.createElement('em');em.textContent='增量';nm.append(em);}
+    const bar=document.createElement('span');bar.className='bar';
+    const fill=document.createElement('i');
+    const pct=s.r==null?0:Math.min(s.r,100);
+    fill.style.width=pct+'%';
+    if(s.r!=null){fill.className=s.r<32?'bad':s.r<base?'warn':'';}
+    bar.append(fill);
+    const tick=document.createElement('u');tick.style.left=base+'%';bar.append(tick);
+    const p=document.createElement('span');p.className='pct';
+    p.textContent=s.r==null?'—':s.r.toFixed(1)+'%';
+    if(s.r!=null&&s.r<base)p.classList.add('badc2');
+    row.append(no,nm,bar,p);box.append(row);
+  });
+})();
+</script>
+</body>
+</html>
