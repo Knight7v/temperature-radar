@@ -47,3 +47,10 @@ skills-lock.json
 
 # AI 生成的背景图(本地产物,不入库)
 assets/design/generated/
+
+# 远程访问：隧道二进制(38MB,首次启动自动下载)与动态公网地址
+scripts/bin/
+公网地址.txt
+
+# 本地账号凭据（密码不入库）
+本地账号.txt
