@@ -68,6 +68,11 @@
     mode: 'first',
     meta: null,
     product: null,
+    // 抠图后的透明底商品图（canvas）。为空表示用原图，场景模式下会自动垫白卡。
+    cutout: null,
+    matte: null,
+    // 原图的边界分析结果，抠图失败退回原图时要用
+    rawAnalysis: null,
     productLayer: null,
     analysis: null,
     scene: null,
@@ -78,8 +83,13 @@
     // true 表示输入框里已经是 AI 扩写好的英文提示词，生成时直接当 prompt 用
     drafted: false,
     busy: false,
-    exportBytes: 0
+    exportBytes: 0,
+    library: null,
+    usage: null
   };
+
+  // 用途 → 素材库用途枚举。大促图单独一类，方便以后按活动翻。
+  const PURPOSE_BY_MODE = { first: 'first', scene: 'scene', promo: 'promo', deal: 'deal' };
 
   const $ = id => q(id);
   const num = id => Number($(id).value);
@@ -145,10 +155,191 @@
     renderScenes();
     draw();
     const cost = data.elapsedMs ? `，耗时 ${(data.elapsedMs / 1000).toFixed(1)} 秒` : '';
-    status(`背景已生成${cost}。商品仍是你的原图，没有被 AI 改动。`, 'ok');
+    const switched = data.fallback ? `（原选的模型没响应，已自动换成 ${data.model}）` : '';
+    const money = data.cost ? `，这一张约 ${data.cost.toFixed(2)} 元` : '';
+    status(`背景已生成${cost}${money}${switched}。商品仍是你的原图，没有被 AI 改动。`, data.fallback ? 'warn' : 'ok');
+    refreshUsage();
   }
 
-  // ---------- 商品图 ----------
+  // ---------- 用量与素材库 ----------
+
+  async function refreshUsage() {
+    try {
+      state.usage = await api.usage();
+      renderUsage();
+    } catch {
+      // 记账读不到不影响出图
+    }
+  }
+
+  function renderUsage() {
+    const node = $('usageNote');
+    const usage = state.usage;
+    if (!node) return;
+    if (!usage) {
+      node.textContent = '';
+      return;
+    }
+    node.textContent = `${usage.month} 已出 ${usage.images} 张 · ${usage.cost.toFixed(2)} 元 / 预算 ${usage.budget} 元`;
+    node.dataset.tone = usage.used >= 0.8 ? 'warn' : '';
+  }
+
+  function purposeOf(mode) {
+    return PURPOSE_BY_MODE[mode] || 'scene';
+  }
+
+  async function saveAsset() {
+    if (!state.product) return;
+    const skuNode = $('sku');
+    const sku = skuNode.value.trim();
+    const title = $('productName').value.trim() || $('dTitle').value.trim();
+    if (!sku && !title) {
+      status('先填「型号 / SKU」或商品名称，否则以后在素材库里搜不到这张图。', 'warn');
+      skuNode.focus();
+      return;
+    }
+    $('saveAssetBtn').disabled = true;
+    status('正在存进素材库…', 'busy');
+    try {
+      // 存 JPEG 而不是 PNG：成品已经铺满背景，没有透明信息，JPEG 体积只有 PNG 的三分之一
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      const result = await api.assetSave({
+        dataUrl,
+        sku,
+        title,
+        purpose: purposeOf(state.mode),
+        width: num('size'),
+        height: num('size'),
+        source: 'local',
+        cost: 0
+      });
+      status(
+        result.duplicate ? '这张图之前已经存过了（内容完全一样），没有重复占空间。' : '已存进素材库，以后可以按型号找回来复用。',
+        'ok'
+      );
+      if (state.library) state.library.refresh();
+    } catch (error) {
+      status(`存进素材库失败：${error.message}`, 'error');
+    } finally {
+      $('saveAssetBtn').disabled = false;
+    }
+  }
+
+  function initLibrary() {
+    const container = q('libraryDrawer');
+    state.library = DesignLibrary.create({
+      api,
+      onNotify: (text, tone) => status(text, tone),
+      onPickBackground: async asset => {
+        try {
+          const image = await DesignAI.loadImage(asset.url);
+          state.sceneImage = image;
+          state.scene = null;
+          state.generated = { url: asset.url, prompt: asset.prompt, model: asset.model };
+          renderScenes();
+          draw();
+          state.library.close();
+          if (!MODES[state.mode].needBackground) {
+            status('背景已套用。当前是「京东首图」，首图必须纯白底，切到「场景副图」才会用上这张背景。', 'warn');
+          } else {
+            status(`已套用素材库里的背景${asset.sku ? `（${asset.sku}）` : ''}。`, 'ok');
+          }
+        } catch {
+          status('这张背景加载失败，可能文件已被清理。', 'error');
+        }
+      }
+    });
+    state.library.setMeta(state.meta?.library || null);
+    state.library.mount(container);
+  }
+
+  // ---------- 商品图与抠图 ----------
+
+  const tick = () => new Promise(resolve => setTimeout(resolve, 30));
+
+  // 把抠图结果接到画布上：productLayer 换成透明底，analysis 更新成 alpha 模式，
+  // 下游的「白卡展台」「商品占比」判断全部自动跟着变，不用到处改 if。
+  function useCutout(canvas) {
+    state.cutout = canvas;
+    state.productLayer = canvas;
+    state.analysis = DesignAI.analyze(canvas) || { mode: 'alpha', bbox: null };
+    if (state.analysis.mode !== 'alpha') state.analysis = { ...(state.analysis || {}), mode: 'alpha' };
+  }
+
+  function useRaw(reason, score) {
+    state.cutout = null;
+    state.matte = reason ? { score: score || 0, reasons: [reason] } : null;
+    const source = state.product;
+    state.productLayer = DesignAI.cropToContent(source, state.rawAnalysis) || source;
+    state.analysis = state.rawAnalysis;
+    $('matteScore').textContent = score ? `· 已改用原图（抠图 ${score} 分）` : '· 已改用原图';
+    $('matteHint').textContent = reason
+      ? `${reason}。已自动改用原图并垫白色展示台——白电换一张纯白底棚拍图通常就能抠干净。`
+      : '已改用原图。场景模式下会自动垫一张白色圆角展台，不会露出方方正正的白块。';
+  }
+
+  function useCutoutNote(result) {
+    const score = result.score;
+    $('matteScore').textContent = `· 边缘 ${score} 分`;
+    if (result.already) {
+      $('matteHint').textContent = '这张本来就是透明底，直接使用，没有再处理一遍。';
+      return;
+    }
+    const tips = result.reasons.length ? `小提示：${result.reasons.join('；')}。` : '';
+    $('matteHint').textContent =
+      score >= 85
+        ? `边缘干净（${score} 分），可以直接用。${tips}`
+        : score >= 70
+          ? `可以用${result.reasons.length ? `，${tips}` : '，导出前建议放大看一眼边缘。'}`
+          : `${tips}边缘分数偏低，建议导出后检查一圈白色的地方；不满意就换一张纯白底图。`;
+  }
+
+  async function runMatte() {
+    if (!state.product) return;
+    const original = state.rawAnalysis;
+    if (original && original.mode === 'alpha') {
+      useCutout(DesignAI.cropToContent(state.product, original) || state.product);
+      state.matte = { score: 100, reasons: [] };
+      useCutoutNote({ score: 100, reasons: [], already: true });
+      draw();
+      status('这张已经是透明底，不需要抠图。', 'ok');
+      return;
+    }
+
+    status('正在本机抠图，稍等一秒（原图不会上传）…', 'busy');
+    await tick();
+    let result;
+    try {
+      result = DesignMatte.matteImage(state.product);
+    } catch (error) {
+      useRaw(`抠图失败（${error.message}）`, 0);
+      draw();
+      status('抠图没成功，已改用原图。', 'warn');
+      return;
+    }
+
+    if (!result.ok) {
+      useRaw(result.reasons[0] || '这张图抠不出来', result.score);
+      draw();
+      status('这张图不适合自动抠图，已改用原图 + 白色展示台。', 'warn');
+      return;
+    }
+
+    // 分数太低时自动退回原图：与其交一张边缘缺口的主图，不如老老实实垫白卡。
+    if (result.score < 55) {
+      useRaw(result.reasons[0] || '边缘质量太低', result.score);
+      draw();
+      status(`抠图质量只有 ${result.score} 分，已自动改用原图 + 白色展示台。`, 'warn');
+      return;
+    }
+
+    useCutout(result.canvas);
+    state.matte = { score: result.score, reasons: result.reasons, stats: result.stats };
+    useCutoutNote(result);
+    draw();
+    const cost = result.stats && result.stats.ms ? `，耗时 ${result.stats.ms} 毫秒` : '';
+    status(`已抠成透明底（边缘 ${result.score} 分${cost}）。商品仍是你的原图，只是去掉了背景。`, result.score >= 70 ? 'ok' : 'warn');
+  }
 
   async function loadProduct(file) {
     if (!file) return;
@@ -161,28 +352,18 @@
       const image = await DesignAI.loadImage(url);
       state.product = image;
       // 检测主体边界：既能算准占比，也能顺手把拍图时多余的白边裁掉
-      state.analysis = DesignAI.analyze(image);
-      state.productLayer = DesignAI.cropToContent(image, state.analysis) || image;
+      state.rawAnalysis = DesignAI.analyze(image);
+      state.cutout = null;
+      state.productLayer = DesignAI.cropToContent(image, state.rawAnalysis) || image;
+      state.analysis = state.rawAnalysis;
       $('downloadPng').disabled = false;
       $('downloadJpg').disabled = false;
+      $('saveAssetBtn').disabled = false;
+      $('rematteBtn').disabled = false;
+      $('rawBtn').disabled = false;
       draw();
-
-      // 大促图对商品底的处理和别的模式不一样，单独说清楚
-      if (state.mode === 'deal') {
-        if (state.analysis && state.analysis.mode === 'alpha') {
-          status(`图片已就绪：透明底，商品会直接悬在背景上，效果最好（${image.width}×${image.height}）。`, 'ok');
-        } else {
-          status('检测到白底图，已自动垫一块白色展示台。想做出「悬浮在场景里」的效果，请换透明底 PNG。', 'ok');
-        }
-        return;
-      }
-
-      if (state.analysis) {
-        const kind = state.analysis.mode === 'alpha' ? '透明底' : '纯色底';
-        status(`图片已就绪：识别为${kind}，已自动裁掉多余留白（原图 ${image.width}×${image.height}）。`, 'ok');
-      } else {
-        status('图片已就绪。没识别出透明底或纯白底，占比只能按整张图估算，建议用白底图或透明底图。', 'warn');
-      }
+      // 上传后立刻抠：多一步「点按钮」用户就会忘，默认效果最好是透明底
+      await runMatte();
     } catch {
       status('图片读取失败，请换一张试试。', 'error');
     } finally {
@@ -628,7 +809,59 @@
     $('draftBtn').disabled = !state.meta.textModel;
     if (!state.meta.textModel) $('draftBtn').title = '需要先配置 DeepSeek Key';
 
+    // 型号下拉：直接来自产品知识库，选完自动带出商品名称
+    const skuList = $('skuList');
+    skuList.replaceChildren();
+    (state.meta.productModels || []).forEach(item => {
+      skuList.append(new Option(`${item.model}${item.name ? ` ${item.name}` : ''}`.trim(), item.model));
+    });
+
+    state.usage = state.meta.usage || null;
+    renderUsage();
+    $('assetCount').textContent = String(state.meta.library?.total || 0);
+
+    // 配了 AI 抠图服务才显示「精修」按钮：这个动作会把商品图传到外部服务，
+    // 不能让用户在不知情的情况下点下去，所以按钮名字里直接写明。
+    if (state.meta.matting && state.meta.matting.ai) {
+      const refine = document.createElement('button');
+      refine.type = 'button';
+      refine.id = 'refineBtn';
+      refine.textContent = 'AI 精修（上传原图）';
+      refine.title = `使用${state.meta.matting.engine || '外部服务'}重新抠图，适合边缘复杂的图`;
+      refine.onclick = () => refineMatte(refine);
+      document.querySelector('.ds-matte-bar')?.append(refine);
+    }
+
     renderScenes();
+  }
+
+  // AI 精修：只有本机算法抠不干净、且管理员配了服务时才会用到。
+  // 结果同样交给 useCutout，所以后面的占比、展台、校验逻辑不用区分来源。
+  async function refineMatte(button) {
+    if (!state.product) return;
+    const source = state.cutout || state.product;
+    button.disabled = true;
+    status('正在把商品图送去精修抠图…', 'busy');
+    try {
+      const dataUrl = source.toDataURL ? source.toDataURL('image/png') : '';
+      if (!dataUrl) throw Error('当前商品图无法导出');
+      const data = await api.refineMatte({ dataUrl });
+      const image = await DesignAI.loadImage(data.dataUrl);
+      const canvas = document.createElement('canvas');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      canvas.getContext('2d').drawImage(image, 0, 0);
+      useCutout(canvas);
+      state.matte = { score: 90, reasons: [], engine: data.engine };
+      $('matteScore').textContent = '· AI 精修';
+      $('matteHint').textContent = `已用${data.engine || 'AI 服务'}重新抠图。导出前放大看一眼边缘确认。`;
+      draw();
+      status('AI 精修完成，可以直接导出。', 'ok');
+    } catch (error) {
+      status(`精修失败：${error.message}。本机抠图的结果仍然可用。`, 'error');
+    } finally {
+      button.disabled = false;
+    }
   }
 
   function bind() {
@@ -637,6 +870,30 @@
     });
 
     $('productFile').onchange = () => loadProduct($('productFile').files[0]);
+
+    $('rematteBtn').onclick = () => runMatte();
+    $('rawBtn').onclick = () => {
+      if (!state.product) return;
+      useRaw('');
+      draw();
+      status('已改用原图。场景模式下会垫一块白色圆角展台。', 'ok');
+    };
+    $('saveAssetBtn').onclick = saveAsset;
+    $('openLibraryBtn').onclick = () => {
+      if (state.library) state.library.open();
+    };
+
+    // 从产品知识库选型号后，顺手把商品名称填上，少打一遍字也少一次写错的机会
+    $('sku').addEventListener('change', () => {
+      const value = $('sku').value.trim().toUpperCase();
+      if (!value) return;
+      const hit = (state.meta?.productModels || []).find(item => String(item.model || '').toUpperCase() === value);
+      if (hit && hit.name && !$('productName').value.trim()) {
+        $('productName').value = hit.name.slice(0, 36);
+        draw();
+      }
+    });
+
     ['productName', 'selling1', 'selling2', 'selling3', 'size', 'ratio', 'anchor', 'tint'].forEach(id => {
       $(id).addEventListener('input', () => {
         if (id === 'ratio') $('ratioValue').textContent = `${num('ratio')}%`;
@@ -703,11 +960,26 @@
           platform: 'jd',
           ratio: 'square',
           hasText: true,
-          sceneId: ''
+          sceneId: '',
+          sku: $('sku').value.trim()
         });
         await applyGenerated(data);
       } catch (error) {
-        status(`生成失败：${error.message}`, 'error');
+        // 出不了图也要给下一步：场景库是现成的、免费的，别让人卡在报错上
+        const retryable = ['DESIGN_ALL_FAILED', 'DESIGN_UPSTREAM', 'DESIGN_TIMEOUT', 'DESIGN_RATE_LIMIT'].includes(error.code) ||
+          error.status === 502 || error.status === 504;
+        status(
+          retryable
+            ? `生成失败：${error.message} 可以先切到「场景库」用内置背景出图，不花钱也不耽误时间。`
+            : `生成失败：${error.message}`,
+          'error'
+        );
+        if (retryable) {
+          $('scenePane').hidden = false;
+          $('aiPane').hidden = true;
+          $('bgTabScenes').setAttribute('aria-pressed', 'true');
+          $('bgTabAi').setAttribute('aria-pressed', 'false');
+        }
       } finally {
         busy(false);
       }
@@ -770,5 +1042,6 @@
   bind();
   applyMode('first');
   await loadMeta();
+  initLibrary();
   draw();
 })();

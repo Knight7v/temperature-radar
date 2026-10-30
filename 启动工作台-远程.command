@@ -87,6 +87,23 @@ if command -v docker >/dev/null 2>&1; then
 fi
 
 # ---------- 5. 工作台服务 ----------
+# 旧服务如果是更早的代码，新接口会报「接口不存在」，这里先停掉再起，不直接复用
+if lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+  REUSE_FRESH="$(curl --noproxy '*' -s -m 3 "http://127.0.0.1:${PORT}/api/_status" 2>/dev/null | sed -n 's/.*"fresh":\([a-z]*\).*/\1/p')"
+  if [ "$REUSE_FRESH" != "true" ]; then
+    echo "后台服务还是旧代码，正在重启…"
+    lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | xargs -n1 kill 2>/dev/null
+    for _ in {1..20}; do
+      lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1 || break
+      sleep 0.3
+    done
+    if lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+      lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | xargs -n1 kill -9 2>/dev/null
+      sleep 0.5
+    fi
+    echo "   旧服务已停止"
+  fi
+fi
 if lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   echo "✅ 工作台服务已在运行，直接复用"
 else

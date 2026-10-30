@@ -11,7 +11,7 @@ const {validateReview}=require('../lib/quality/review');
 const {CATEGORIES,analyzeConversation,checksForCategories}=require('../lib/quality/intent');
 const fail=(message,status=422)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>{if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value||'')))fail('ID 无效');return value;};
-const stats=sample=>({total:sample.total,target:sample.target,selected:sample.selected.length,requestedRate:sample.requestedRate,actualRate:sample.actualRate,agentCount:sample.agentCount,coverageRaisedSample:sample.coverageRaisedSample});
+const stats=sample=>({total:sample.total,target:sample.target,selected:sample.selected.length,requestedRate:sample.requestedRate,actualRate:sample.actualRate,agentCount:sample.agentCount,coverageRaisedSample:sample.coverageRaisedSample,quota:sample.quota,cap:sample.cap,capApplied:sample.capApplied});
 const policy=[
  {code:'abusive-language',points:40,label:'客服明确侮辱性用语',condition:'匹配明确侮辱用语，主管必须核对语境'},
  {code:'slow-reply',points:5,label:'人工回复间隔 ≥ 2 分钟',condition:'最长顾客消息至后续人工回复间隔 120–299 秒'},
@@ -47,7 +47,12 @@ module.exports=apiHandler(async(req,res)=>{
    if(!record){const row=(await client.query('SELECT id,summary FROM quality_imports WHERE tenant_id=$1 AND source_hash=$2',[tenant,preview.source_hash])).rows[0];return{importId:row.id,duplicate:true,sampling:row.summary.sampling||null};}
    const rows=preview.data.sessions.map(session=>({...session,sampled:selected.has(session.ordinal),assignment:assignment||resolveAssignment(session,catalog),machine:scoreConversation(session)}));
    await client.query("INSERT INTO quality_sessions(tenant_id,import_id,ordinal,agent,started_at,ended_at,data) SELECT $1,$2,(item->>'ordinal')::int,item->>'agent',item->>'startedAt',item->>'endedAt',item FROM jsonb_array_elements($3::jsonb) item",[tenant,record.id,JSON.stringify(rows)]);
-   return{importId:record.id,duplicate:false,sampling:stats(sample)};
+   /* 这批记录发生在哪一天：取众数，前端导入完成后把「分析日期」切到这一天，
+      否则刚导完还在看上一批，主管会以为导入没成功 */
+   const dayCount=new Map();
+   for(const session of preview.data.sessions){const day=String(session.startedAt||'').slice(0,10);if(/^20\d{2}-\d{2}-\d{2}$/.test(day))dayCount.set(day,(dayCount.get(day)||0)+1);}
+   const latestDate=[...dayCount.entries()].sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+   return{importId:record.id,duplicate:false,sampling:stats(sample),latestDate};
   });return res.json({data:result});
  }
  if(req.method==='GET'&&action==='list'){

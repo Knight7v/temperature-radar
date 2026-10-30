@@ -144,10 +144,25 @@ module.exports = apiHandler(async (req, res) => {
         args.push(date);
         where += ` AND left(s.started_at,10)=$${args.length}`;
       }
-      // analyzed=1：只看已出 AI 结果的会话，并按分数升序（最差的排前面）
-      const analyzedOnly = String(req.query.analyzed || '') === '1';
+      // analyzed=1 只看已出结果的；analyzed=0 只看还没分析的；不传则不限
+      // judgeable=false（京小智的答案在导出里是占位符）不算「待分析」——它永远分析不出可信结论
+      const analyzedMode = String(req.query.analyzed || '');
+      const analyzedFilter = analyzedMode === '1' ? ' AND a.score IS NOT NULL' : analyzedMode === '0' ? " AND a.score IS NULL AND coalesce(s.data->>'judgeable','true') <> 'false'" : '';
+      // scope=sampled（默认）：只看本次抽检入库的会话；all：全库
+      const scope = String(req.query.scope || 'sampled');
+      if (!['sampled', 'all'].includes(scope)) fail('范围筛选无效');
+      // needsOnly=1：只留「需要人判断」的——没分析、低于 85 分、或存在不合格/待复核项
+      const needsOnly = String(req.query.needsOnly || '') === '1';
       const level = String(req.query.level || '').toLowerCase();
       const reviewStatus = String(req.query.status || '');
+      // 默认只看本次抽检的；但已经出过 AI 结论的必须一律可见——
+      // 历史导入里有早期没打抽检标记的数据，藏起来会让「待复核」凭空少一批
+      if (scope === 'sampled') where += " AND (s.data->>'sampled'='true' OR a.score IS NOT NULL)";
+      if (needsOnly) {
+        where += ` AND (a.score IS NULL OR a.score < 85 OR EXISTS (
+            SELECT 1 FROM jsonb_array_elements(coalesce(a.data->'criteria','[]'::jsonb)) c
+             WHERE c->>'status' IN ('fail','pending')))`;
+      }
       if (level && !['a', 'b', 'c', 'd'].includes(level)) fail('等级筛选无效');
       if (reviewStatus && !['pending', 'reviewed', 'draft'].includes(reviewStatus)) fail('状态筛选无效');
       if (reviewStatus) {
@@ -167,6 +182,7 @@ module.exports = apiHandler(async (req, res) => {
         await db.query(
           `SELECT s.id AS session_id,s.agent,s.started_at,s.status AS review_status,a.score,a.grade,a.provisional,a.needs_review,a.created_at,
                   s.review->>'score' AS review_score,
+                  s.data->>'sampled' AS sampled,
                   (SELECT count(*) FROM quality_ai_results r WHERE r.tenant_id=s.tenant_id AND r.session_id=s.id) AS runs,
                   (SELECT coalesce(jsonb_agg(jsonb_build_object('label',c->>'label','status',c->>'status') ORDER BY c->>'label'),'[]'::jsonb)
                      FROM jsonb_array_elements(coalesce(a.data->'criteria','[]'::jsonb)) c
@@ -175,25 +191,24 @@ module.exports = apiHandler(async (req, res) => {
              FROM quality_sessions s
              LEFT JOIN LATERAL (SELECT score,grade,provisional,needs_review,created_at,data FROM quality_ai_results x
                                  WHERE x.tenant_id=s.tenant_id AND x.session_id=s.id ORDER BY created_at DESC LIMIT 1) a ON true
-            WHERE ${where}${analyzedOnly ? ' AND a.score IS NOT NULL' : ''}
-            ORDER BY ${analyzedOnly ? 'a.score ASC, s.started_at DESC' : 's.started_at DESC, s.ordinal DESC'}
+            WHERE ${where}${analyzedFilter}
+            ORDER BY a.score ASC NULLS LAST, s.started_at DESC, s.ordinal DESC
             LIMIT 50 OFFSET $${args.length + 1}`,
           [...args, (page - 1) * 50]
         )
       ).rows;
-      const total = analyzedOnly
-        ? Number(
-            (
-              await db.query(
-                `SELECT count(*)::int AS total FROM quality_sessions s
-                   LEFT JOIN LATERAL (SELECT score FROM quality_ai_results x
-                                       WHERE x.tenant_id=s.tenant_id AND x.session_id=s.id ORDER BY created_at DESC LIMIT 1) a ON true
-                  WHERE ${where} AND a.score IS NOT NULL`,
-                args
-              )
-            ).rows[0].total
+      // 计数必须带同样的 LATERAL：level / needsOnly 都引用了 a.score、a.data
+      const total = Number(
+        (
+          await db.query(
+            `SELECT count(*)::int AS total FROM quality_sessions s
+               LEFT JOIN LATERAL (SELECT score,data FROM quality_ai_results x
+                                   WHERE x.tenant_id=s.tenant_id AND x.session_id=s.id ORDER BY x.created_at DESC LIMIT 1) a ON true
+              WHERE ${where}${analyzedFilter}`,
+            args
           )
-        : Number((await db.query(`SELECT count(*)::int AS total FROM quality_sessions s WHERE ${where}`, args)).rows[0].total);
+        ).rows[0].total
+      );
       return res.json({ data: { rows, total, page } });
     }
     if (action === 'stats') {
@@ -253,17 +268,34 @@ module.exports = apiHandler(async (req, res) => {
         )
       ).rows;
       const poolArgs = [tenant];
-      let poolWhere = "tenant_id=$1 AND data->>'sampled'='true'";
+      let poolWhere = 's.tenant_id=$1';
       if (date) {
         poolArgs.push(date);
-        poolWhere += ` AND left(started_at,10)=$${poolArgs.length}`;
+        poolWhere += ` AND left(s.started_at,10)=$${poolArgs.length}`;
       }
+      // 可见范围 = 本次抽检 ∪ 已出结论。抽检里已分析多少单独算，
+      // 否则用「全库已分析」去减「抽检总数」会算出错误的缺口
       const pool = (
         await db.query(
-          `SELECT count(*)::int AS total,
-                  count(*) FILTER (WHERE status='reviewed')::int AS reviewed,
-                  count(*) FILTER (WHERE status='pending')::int AS pending
-             FROM quality_sessions WHERE ${poolWhere}`,
+          `WITH base AS (
+             SELECT s.id,s.status,s.data->>'sampled' AS sampled,
+                    coalesce(s.data->>'judgeable','true') AS judgeable,
+                    EXISTS(SELECT 1 FROM quality_ai_results r WHERE r.tenant_id=s.tenant_id AND r.session_id=s.id) AS has_ai
+               FROM quality_sessions s WHERE ${poolWhere})
+           SELECT count(*) FILTER (WHERE sampled='true' OR has_ai)::int AS total,
+                  count(*) FILTER (WHERE sampled='true')::int AS sampled,
+                  -- 分子分母都要扣掉「京小智回复未导出」的会话：分母扣了分子没扣，
+                  -- 覆盖率会算出 103%、104% 这种明显不可能的数
+                  count(*) FILTER (WHERE sampled='true' AND has_ai AND judgeable <> 'false')::int AS sampled_analyzed,
+                  count(*) FILTER (WHERE sampled='true' AND judgeable='false')::int AS sampled_skipped,
+                  -- 待分析单独算「抽检了、没结论、且不是机器人占位符」的那些。
+                  -- 用「抽检 - 已分析」去减会把这批永远分析不出来的会话算成待办，主管永远做不完
+                  count(*) FILTER (WHERE sampled='true' AND judgeable <> 'false' AND NOT has_ai)::int AS sampled_todo,
+                  -- 后面三个只统计「真能评的」会话，机器人占位符既不进待复核也不进已复核
+                  count(*) FILTER (WHERE (sampled='true' OR has_ai) AND has_ai AND judgeable <> 'false')::int AS analyzed,
+                  count(*) FILTER (WHERE (sampled='true' OR has_ai) AND judgeable <> 'false' AND status='reviewed')::int AS reviewed,
+                  count(*) FILTER (WHERE (sampled='true' OR has_ai) AND has_ai AND judgeable <> 'false' AND status='pending')::int AS pending
+             FROM base`,
           poolArgs
         )
       ).rows[0];
@@ -292,7 +324,32 @@ module.exports = apiHandler(async (req, res) => {
       const reviewedToday = Number(
         (await db.query("SELECT count(*)::int AS n FROM quality_sessions WHERE tenant_id=$1 AND reviewed_at >= date_trunc('day', now())", [tenant])).rows[0].n
       );
-      return res.json({ data: { date: date || 'all', summary, agents, topIssues, pool, reviewedToday } });
+      /* 最近一次导入的那批会话是哪一天 —— 前端拿它当「分析日期」的默认值。
+         一份导出日志≈一天，所以取该批次会话日期的众数（个别会话跨零点也不会带偏）。 */
+      const latestRow = (
+        await db.query(
+          `WITH last_import AS (
+             SELECT id,filename,created_at FROM quality_imports
+              WHERE tenant_id=$1 ORDER BY created_at DESC, id DESC LIMIT 1)
+           SELECT li.id AS import_id,li.filename,li.created_at,
+                  (SELECT mode() WITHIN GROUP (ORDER BY left(s.started_at,10))
+                     FROM quality_sessions s WHERE s.tenant_id=$1 AND s.import_id=li.id) AS session_date,
+                  (SELECT count(*)::int FROM quality_sessions s
+                    WHERE s.tenant_id=$1 AND s.import_id=li.id) AS sessions
+             FROM last_import li`,
+          [tenant]
+        )
+      ).rows[0];
+      const latest = latestRow
+        ? {
+            importId: latestRow.import_id,
+            filename: latestRow.filename,
+            importedAt: latestRow.created_at,
+            date: latestRow.session_date || '',
+            sessions: Number(latestRow.sessions) || 0,
+          }
+        : null;
+      return res.json({ data: { date: date || 'all', summary, agents, topIssues, pool, reviewedToday, latest } });
     }
     fail('操作不存在', 404);
   }
@@ -328,6 +385,9 @@ module.exports = apiHandler(async (req, res) => {
       grade: score.grade,
       gradeLabel: score.gradeLabel,
       overrides: applied,
+      // 盲评样本：主管在看不到 AI 分数的前提下独立判过，用于定期校准 AI 准确性
+      blind: body.blind === true,
+      blindRevealed: body.blindRevealed === true,
       note: String(body.note || '').trim().slice(0, 2000),
       reviewedAt: new Date().toISOString()
     };
@@ -359,6 +419,17 @@ module.exports = apiHandler(async (req, res) => {
       args.push(date);
       where += ` AND left(started_at,10)=$${args.length}`;
     }
+    // 按「本次导入」圈定范围：抽检结论必须覆盖全部抽中样本，否则样本只抽到聊天记录、没抽到结论
+    if (body.importId) {
+      args.push(uuid(body.importId));
+      where += ` AND import_id=$${args.length}`;
+    }
+    // 只分析被抽中的会话（未抽中的记录入库但不参与质检结论）
+    if (body.sampledOnly) where += " AND data->>'sampled'='true'";
+    // 京小智的答复在导出里是「暂不支持展示」的占位符，分析出来也是假分，别白花钱
+    where += " AND coalesce(data->>'judgeable','true') <> 'false'";
+    // 京小智的答复在导出里是「暂不支持展示」，内容缺失时打分只会得到假分数，直接跳过
+    where += " AND coalesce(data->>'judgeable','true') <> 'false'";
     if (body.skipAnalyzed !== false) {
       args.push(RUBRIC_VERSION);
       where += ` AND NOT EXISTS (SELECT 1 FROM quality_ai_results r WHERE r.tenant_id=quality_sessions.tenant_id AND r.session_id=quality_sessions.id AND r.rubric_version=$${args.length})`;
@@ -368,8 +439,10 @@ module.exports = apiHandler(async (req, res) => {
       args.push(ids);
       where += ` AND id = ANY($${args.length}::uuid[])`;
     }
+    // 先算「还剩多少条没分析」，前端据此决定要不要继续下一批（一批最多 50 条）
+    const remaining = Number((await db.query(`SELECT count(*)::int AS n FROM quality_sessions WHERE ${where}`, args)).rows[0].n);
     const rows = (await db.query(`SELECT id,ordinal,agent,started_at,ended_at,data FROM quality_sessions WHERE ${where} ORDER BY started_at DESC, ordinal DESC LIMIT ${limit}`, args)).rows;
-    if (!rows.length) return res.json({ data: { total: 0, ok: 0, failed: 0, results: [] } });
+    if (!rows.length) return res.json({ data: { total: 0, ok: 0, failed: 0, remaining: 0, results: [] } });
 
     const outcomes = await analyzeBatch(rows.map(toSession), {
       concurrency: Math.max(1, Math.min(4, Number(body.concurrency) || 3))
@@ -389,7 +462,7 @@ module.exports = apiHandler(async (req, res) => {
       ok += 1;
       results.push({ sessionId: rows[i].id, ok: true, resultId: saved.id, score: outcome.analysis.score.score, grade: outcome.analysis.score.grade });
     }
-    return res.json({ data: { total: rows.length, ok, failed, results } });
+    return res.json({ data: { total: rows.length, ok, failed, remaining: Math.max(0, remaining - ok), results } });
   }
 
   if (action === 'delete') {

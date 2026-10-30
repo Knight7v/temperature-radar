@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机型性能PK · 视觉稿 v1（待审核）</title>
+<!--
+  实用工具 / 产品知识库 / 机型性能PK —— 视觉稿 v1
+  用途：评审视觉风格与对比字段，评审通过后接入产品知识库数据 + 本地 canvas 出图
+  规则沿用视觉设计铁律：AI 只生成背景，商品图用真实原图，文字/表格本地 canvas 合成
+-->
+<style>
+  :root{
+    --ink:#1a2233; --ink2:#5a6478; --line:#e3e8f0;
+    --card:#ffffff; --bg:#f4f6fb;
+    --red:#e60012; --blue:#2f6bff; --navy:#0e2352;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink); padding:28px 20px 60px;
+  }
+  .wrap{max-width:1280px;margin:0 auto;}
+
+  /* ============ 文档头 ============ */
+  .doc-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+  .doc-head h1{font-size:22px;font-weight:800;}
+  .doc-badge{background:#fff4f4;color:var(--red);border:1px solid #ffd6d6;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;}
+  .doc-sub{color:var(--ink2);font-size:13px;margin-bottom:26px;line-height:1.7;}
+  .doc-sub b{color:var(--ink);}
+  section{margin-bottom:44px;}
+  .sec-title{font-size:16px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+  .sec-title .no{width:22px;height:22px;border-radius:6px;background:var(--navy);color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center;}
+  .sec-desc{color:var(--ink2);font-size:13px;margin-bottom:14px;}
+
+  /* ============ 一、功能页布局示意（浅色，工作台内页风格） ============ */
+  .page-mock{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:0 1px 3px rgba(20,35,80,.06);}
+  .pm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+  .pm-head h2{font-size:18px;font-weight:800;}
+  .pm-head p{color:var(--ink2);font-size:13px;margin-top:4px;}
+  .pm-actions{display:flex;gap:10px;}
+  .btn{border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .btn-primary{background:linear-gradient(135deg,#ff5a3c,var(--red));color:#fff;box-shadow:0 4px 12px rgba(230,0,18,.25);}
+  .btn-ghost{background:#fff;color:var(--ink2);border:1px solid var(--line);}
+  .picker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .pick-slot{border:1.5px dashed #c9d4ea;border-radius:12px;padding:12px 14px;background:#fafbfe;min-height:76px;}
+  .pick-slot.empty{display:flex;align-items:center;justify-content:center;color:#9aa7c2;font-size:13px;gap:6px;}
+  .pick-slot.filled{border:1.5px solid var(--blue);background:#f2f6ff;position:relative;}
+  .pick-slot .ps-series{font-weight:800;font-size:15px;}
+  .pick-slot .ps-model{color:var(--ink2);font-size:12px;margin-top:3px;font-family:ui-monospace,Menlo,monospace;}
+  .tier-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:6px;}
+  .tier-1{background:#e8f1ff;color:#1d5fd6;} .tier-2{background:#e6f7ee;color:#0d8a4f;}
+  .tier-3{background:#fff3e0;color:#c96a00;} .tier-4{background:#f3e8ff;color:#7a3cf0;}
+  .ps-close{position:absolute;top:8px;right:10px;color:#9aa7c2;cursor:pointer;font-size:14px;line-height:1;}
+  .pm-note{margin-top:14px;color:var(--ink2);font-size:12.5px;display:flex;gap:14px;flex-wrap:wrap;}
+  .pm-note span{display:inline-flex;align-items:center;gap:5px;}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+
+  /* ============ 二、生成图片视觉稿（深色海报） ============ */
+  .poster-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+  .pt-label{font-size:13px;color:var(--ink2);font-weight:600;margin-right:2px;}
+  .seg{display:flex;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .seg button{border:none;background:#fff;padding:7px 16px;font-size:13px;cursor:pointer;color:var(--ink2);font-weight:600;font-family:inherit;}
+  .seg button.on{background:var(--navy);color:#fff;}
+  .poster-scroll{overflow-x:auto;padding-bottom:8px;}
+  .poster{
+    width:1180px;max-width:100%;margin:0 auto;border-radius:18px;position:relative;overflow:hidden;
+    background:linear-gradient(168deg,#12295e 0%,#0a1734 46%,#0d2050 100%);
+    padding:44px 40px 34px;color:#fff;
+    box-shadow:0 18px 50px rgba(10,25,60,.35);
+  }
+  .poster::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(600px 300px at 82% -5%, rgba(64,120,255,.28), transparent 65%),
+      radial-gradient(500px 260px at 8% 108%, rgba(38,80,190,.25), transparent 60%),
+      linear-gradient(115deg, transparent 42%, rgba(90,140,255,.07) 50%, transparent 58%);
+  }
+  .p-title{position:relative;text-align:center;font-size:46px;font-weight:900;letter-spacing:6px;
+    color:#ff3526;text-shadow:0 0 26px rgba(255,53,38,.5),0 2px 0 rgba(0,0,0,.25);}
+  .p-sub{position:relative;text-align:center;color:#8fa8d8;font-size:14px;letter-spacing:3px;margin-top:8px;margin-bottom:28px;}
+  .p-grid{position:relative;display:grid;gap:7px;}
+  .cell{border-radius:9px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:44px;}
+  .cell.label{background:transparent;align-items:flex-start;justify-content:center;text-align:left;
+    font-size:14px;font-weight:700;color:#dbe6ff;letter-spacing:1px;}
+  .cell.data{background:rgba(28,60,128,.5);}
+  .cell.data.alt{background:rgba(22,48,104,.42);}
+  .cell.hero{background:rgba(47,108,246,.30);box-shadow:inset 0 0 0 1.5px rgba(122,168,255,.45);}
+  .cell.val{font-size:14.5px;line-height:1.45;color:#eef3ff;font-weight:500;padding:8px 10px;}
+  .cell.val small{display:block;color:#9db4e4;font-size:11px;font-weight:400;margin-top:2px;}
+  /* 表头机型卡 */
+  .m-card{width:100%;border-radius:12px;padding:12px 8px 11px;background:linear-gradient(180deg,#2f6cf0,#1c47c8);
+    box-shadow:0 6px 16px rgba(28,71,200,.4);position:relative;}
+  .m-card .m-name{font-size:16.5px;font-weight:800;letter-spacing:.5px;}
+  .m-card .m-tag{font-size:10.5px;color:#cddcff;margin-top:3px;letter-spacing:1px;}
+  .cell.hero .m-card{background:linear-gradient(180deg,#ff8a1e,#ff3d00);box-shadow:0 6px 18px rgba(255,90,0,.45);}
+  .cell.hero .m-tag{color:#ffe1c8;}
+  .hero-flag{position:absolute;top:-9px;right:-6px;background:#ffd54d;color:#7a3c00;font-size:10.5px;font-weight:900;
+    padding:2px 8px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.3);}
+  /* 机型图 */
+  .cell.img-cell{background:rgba(16,38,86,.5);padding:14px 6px 10px;}
+  .cell.hero.img-cell{background:rgba(47,108,246,.22);}
+  /* 型号行 */
+  .cell.model-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:#aec2ec;letter-spacing:0;}
+  /* 推荐理由行 */
+  .cell.reason{font-size:16px;font-weight:900;color:#ff6a4d;line-height:1.35;text-shadow:0 0 12px rgba(255,80,50,.35);}
+  .cell.hero.reason{color:#ffd54d;font-size:16.5px;text-shadow:0 0 14px rgba(255,190,60,.45);}
+  .p-foot{position:relative;margin-top:30px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .gree-logo{display:inline-flex;align-items:center;gap:10px;}
+  .gree-logo .gl-box{border:2.5px solid #fff;border-radius:8px;padding:3px 12px;font-style:italic;font-weight:900;
+    font-size:22px;letter-spacing:2px;font-family:Georgia,"Times New Roman",serif;}
+  .gree-logo .gl-cn{font-size:20px;font-weight:800;letter-spacing:6px;}
+  .gree-slogan{color:#8fa8d8;font-size:13px;letter-spacing:5px;}
+  .poster-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;justify-content:center;}
+  .meta-chip{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 14px;font-size:12.5px;color:var(--ink2);}
+  .meta-chip b{color:var(--ink);}
+  .poster-tip{margin-top:12px;text-align:center;color:var(--ink2);font-size:12.5px;line-height:1.8;}
+  .poster-tip b{color:var(--ink);}
+
+  /* ============ 三、字段提取表 ============ */
+  .tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px;}
+  .tbl th{background:#f0f3fa;text-align:left;padding:11px 14px;font-size:13px;color:var(--ink2);font-weight:700;border-bottom:1px solid var(--line);white-space:nowrap;}
+  .tbl td{padding:11px 14px;border-bottom:1px solid #eef1f7;vertical-align:top;line-height:1.55;}
+  .tbl tr:last-child td{border-bottom:none;}
+  .tbl td.rowname{font-weight:800;white-space:nowrap;}
+  .src{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:10px;white-space:nowrap;}
+  .src-ok{background:#e6f7ee;color:#0d8a4f;}
+  .src-part{background:#fff3e0;color:#c96a00;}
+  .src-manual{background:#f3e8ff;color:#7a3cf0;}
+  .src-img{background:#e8f1ff;color:#1d5fd6;}
+  .cov{color:var(--ink2);font-size:12.5px;}
+  .next-box{margin-top:16px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:16px 18px;font-size:13.5px;line-height:2;}
+  .next-box b{color:var(--ink);}
+  .next-box .nb-t{font-weight:800;margin-bottom:4px;font-size:14px;}
+
+  @media (max-width:900px){
+    .picker-grid{grid-template-columns:repeat(2,1fr);}
+    .p-title{font-size:34px;letter-spacing:3px;}
+  }
+  @media (max-width:600px){
+    .picker-grid{grid-template-columns:1fr;}
+    body{padding:18px 12px 40px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 文档头 -->
+  <div class="doc-head">
+    <h1>机型性能PK · 视觉稿 v1</h1>
+    <span class="doc-badge">待审核</span>
+  </div>
+  <p class="doc-sub">
+    位置：<b>实用工具 → 产品知识库 → 机型性能PK</b>　|　一期只做<b>空调</b>，二期扩展冰箱　|　
+    本稿回答两件事：① 对比字段取哪些、从哪来；② 生成图片长什么样（对标《格力空调选购指南》风格）。
+  </p>
+
+  <!-- 一、功能页布局示意 -->
+  <section>
+    <div class="sec-title"><span class="no">一</span>功能页布局示意（员工操作区）</div>
+    <p class="sec-desc">员工在知识库选 2~4 台机型 → 点「生成对比图」→ 预览 → 复制 / 下载 PNG。</p>
+    <div class="page-mock">
+      <div class="pm-head">
+        <div>
+          <h2>机型性能PK</h2>
+          <p>自选机型横向对比，一键生成可直接发顾客、可用于详情页装修的对比图</p>
+        </div>
+        <div class="pm-actions">
+          <button class="btn btn-ghost" type="button">使用当前筛选</button>
+          <button class="btn btn-primary" type="button">生成对比图</button>
+        </div>
+      </div>
+      <div class="picker-grid" id="pickerGrid"></div>
+      <div class="pm-note">
+        <span><i class="dot" style="background:#1d5fd6"></i>档位徽标沿用分销机型档次</span>
+        <span><i class="dot" style="background:#0d8a4f"></i>参数自动带自产品知识库</span>
+        <span><i class="dot" style="background:#c96a00"></i>推荐理由由员工填写或 AI 起草</span>
+        <span><i class="dot" style="background:#7a3cf0"></i>机型图用已导入的商品主图，缺图自动占位</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 二、生成图片视觉稿 -->
+  <section>
+    <div class="sec-title"><span class="no">二</span>生成图片 · 视觉稿（对标参考图风格）</div>
+    <p class="sec-desc">深蓝科技底 + 红色大标题 + 推荐位橙色高亮；点机型卡可切换「推荐位」，右侧按钮可切换对比台数，验证 2/3/4 台排版自适应。</p>
+    <div class="poster-tools">
+      <span class="pt-label">对比台数</span>
+      <div class="seg" id="segCount">
+        <button type="button" data-n="2">2 台</button>
+        <button type="button" data-n="3">3 台</button>
+        <button type="button" data-n="4" class="on">4 台</button>
+      </div>
+      <span class="pt-label" style="margin-left:10px">提示：点击机型卡可切换推荐位</span>
+    </div>
+    <div class="poster-scroll">
+      <div class="poster" id="poster"></div>
+    </div>
+    <div class="poster-meta">
+      <span class="meta-chip">默认输出 <b>1200 × 1500（3:4）</b>，发顾客 / 朋友圈</span>
+      <span class="meta-chip">可选 <b>1:1</b> 与 <b>长图</b>，详情页装修用</span>
+      <span class="meta-chip">标题 / 副标题 / 店铺落款 <b>可配置</b></span>
+    </div>
+    <p class="poster-tip">
+      出图走<b>本地 canvas 合成</b>（沿用视觉设计铁律：AI 只做背景，商品图为真实原图，文字表格确定性绘制），不依赖外部服务，批量生成零成本。<br>
+      图中机型图为占位示意，正式版读取知识库已导入的<b>商品主图</b>；缺图的机型自动用灰底占位并提示先去「导入详情」补图。
+    </p>
+  </section>
+
+  <!-- 三、字段提取 -->
+  <section>
+    <div class="sec-title"><span class="no">三</span>对比字段提取（对标参考图 10 项）</div>
+    <p class="sec-desc">覆盖数截至今日知识库实际数据（格力 820 型号）。标注说明：<span class="src src-ok">自动带出</span>知识库已有　<span class="src src-part">部分覆盖</span>部分机型有、缺的留空　<span class="src src-manual">需补充</span>知识库暂无，需加字段或人工填</p>
+    <table class="tbl">
+      <thead><tr><th style="width:110px">参考图字段</th><th style="width:120px">数据来源</th><th>现状与方案</th></tr></thead>
+      <tbody>
+        <tr><td class="rowname">机型（图）</td><td><span class="src src-img">商品主图</span></td><td>读知识库「导入详情」的商品主图；当前仅 1 个型号有图，需把主力分销机型详情头图批量导入（前期已打通通道）。</td></tr>
+        <tr><td class="rowname">型号</td><td><span class="src src-ok">自动带出</span></td><td>model 字段，797 型号全覆盖。</td></tr>
+        <tr><td class="rowname">推荐理由</td><td><span class="src src-manual">需补充</span></td><td>知识库没有。方案：员工每期手填一句，或 AI 按参数差距自动起草（如「双排铜管硬核高配」）+ 人工确认后保存复用。</td></tr>
+        <tr><td class="rowname">铜管排数</td><td><span class="src src-part">部分覆盖</span></td><td>参数「铜管排数」已有 66 条（主数据明细机型）；基础款缺，缺失显示「—」。</td></tr>
+        <tr><td class="rowname">APF值</td><td><span class="src src-ok">自动带出</span></td><td>参数「APF 能效比」794 条，覆盖最全的核心卖点之一。</td></tr>
+        <tr><td class="rowname">循环风量</td><td><span class="src src-ok">自动带出</span></td><td>参数「循环风量」501 条，单位 m³/h。</td></tr>
+        <tr><td class="rowname">节能模式</td><td><span class="src src-manual">需补充</span></td><td>知识库暂无独立字段；Ultra 级机型的 AI 节能卖点散在「其他卖点」，建议新增结构化字段。</td></tr>
+        <tr><td class="rowname">运行温度</td><td><span class="src src-part">部分覆盖</span></td><td>参数「外机运行温度」66 条（如 -35℃~60℃）；「第二代冷酷外机」可由「冷酷外机」36 条推导。</td></tr>
+        <tr><td class="rowname">清洁方式</td><td><span class="src src-part">部分覆盖</span></td><td>参数「清洁方式」66 条（56℃净菌自洁 / 双效自清洁等）。</td></tr>
+        <tr><td class="rowname">控制方式</td><td><span class="src src-part">部分覆盖</span></td><td>可由「WiFi 智控」58 条 + 遥控推导拼出「遥控、格力+App」；建议新增「控制方式」字段更稳。</td></tr>
+        <tr><td class="rowname">电量查询</td><td><span class="src src-manual">需补充</span></td><td>知识库暂无，建议新增「支持 / 不支持」布尔字段，批量补一次。</td></tr>
+      </tbody>
+    </table>
+    <div class="next-box">
+      <div class="nb-t">备选行（知识库已覆盖，行配置里可随时加）</div>
+      能效等级（797）· 匹数（792）· 制冷量（796）/ 制热量（499）· 适用面积（792）· 内机噪音（501）· 变频类型（798）· 电辅热（790）· 冷酷外机（36）
+      <br><b>规划：</b>对比行不写死，做成「行配置」，运营可勾选显示哪几行、拖动排序；生成图片时只画勾选的行。
+    </div>
+  </section>
+
+</div>
+
+<!-- 机型占位图 SVG 模板 -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="acBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".72" stop-color="#eef2f8"/><stop offset="1" stop-color="#d7deea"/>
+    </linearGradient>
+    <symbol id="ac-unit" viewBox="0 0 220 92">
+      <ellipse cx="110" cy="86" rx="86" ry="5" fill="rgba(0,0,0,.35)"/>
+      <rect x="14" y="8" width="192" height="62" rx="14" fill="url(#acBody)"/>
+      <rect x="14" y="8" width="192" height="30" rx="14" fill="rgba(255,255,255,.65)"/>
+      <rect x="30" y="52" width="160" height="9" rx="4.5" fill="#b9c4d6"/>
+      <rect x="176" y="20" width="16" height="7" rx="2" fill="#9fb0c8"/>
+      <circle cx="36" cy="23" r="2.6" fill="#7fd0a0"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+(function(){
+  "use strict";
+  /* ---------- 数据（示例值取自参考图真实参数） ---------- */
+  var MODELS = [
+    { name:"1.5匹 天仪Pro", tier:"引流机", tierCls:"tier-1", model:"KFR-35GW/NhGt1BGj",
+      reason:"入门推荐款", copper:"1.6排", apf:"5.31", air:"760", eco:"无",
+      temp:"-7℃~43℃", clean:"56℃净菌自洁", ctrl:"遥控、格力+App", kwh:"无" },
+    { name:"1.5匹 云佳Pro", tier:"主推机", tierCls:"tier-2", model:"KFR-35GW/NhMa1BG",
+      reason:"外机升级 性能更强悍", copper:"1.6排", apf:"5.31", air:"800", eco:"无",
+      temp:"第二代冷酷外机 -35℃~60℃", clean:"双效自清洁 外机自清洁", ctrl:"遥控、格力+App", kwh:"支持" },
+    { name:"1.5匹 舒适风Pro", tier:"高配机", tierCls:"tier-3", model:"KFR-35GW/NhGu1BAj",
+      reason:"双排铜管 硬核高配", copper:"双排", apf:"5.36", air:"760", eco:"无",
+      temp:"第二代冷酷外机 -35℃~60℃", clean:"56℃净菌自洁 外机自清洁", ctrl:"遥控、格力+App 京东小家App", kwh:"支持" },
+    { name:"1.5匹 舒适风Ultra", tier:"利润机", tierCls:"tier-4", model:"KFR-35GW/NhMb1BAj",
+      reason:"AI动态节能2.0 全年再省23%", copper:"双排", apf:"5.4", air:"810",
+      eco:"AI动态节能2.0 人离节能", temp:"第二代冷酷外机 -35℃~60℃",
+      clean:"AI双效自清洁 智能清洁提醒 外机自清洁", ctrl:"遥控、格力+App 京东小家App", kwh:"支持", hero:true }
+  ];
+  var ROWS = [
+    { key:"reason", label:"推荐理由", cls:"reason" },
+    { key:"copper", label:"铜管排数" },
+    { key:"apf",    label:"APF值" },
+    { key:"air",    label:"循环风量", unit:"m³/h" },
+    { key:"eco",    label:"节能模式" },
+    { key:"temp",   label:"运行温度" },
+    { key:"clean",  label:"清洁方式" },
+    { key:"ctrl",   label:"控制方式" },
+    { key:"kwh",    label:"电量查询" }
+  ];
+
+  var state = { count:4, hero:3 };
+
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  /* ---------- 选机区示意（静态渲染一次） ---------- */
+  function renderPicker(){
+    var html = "";
+    for(var i=0;i<4;i++){
+      var m = MODELS[i];
+      html += '<div class="pick-slot filled">'
+        + '<span class="ps-close" title="移除">×</span>'
+        + '<span class="tier-badge '+m.tierCls+'">'+esc(m.tier)+'</span>'
+        + '<div class="ps-series">'+esc(m.name)+'</div>'
+        + '<div class="ps-model">'+esc(m.model)+'</div>'
+        + '</div>';
+    }
+    document.getElementById("pickerGrid").innerHTML = html;
+  }
+
+  /* ---------- 海报渲染（唯一渲染入口） ---------- */
+  function renderPoster(){
+    var n = state.count;
+    var cols = MODELS.slice(0, n);
+    var hero = Math.min(state.hero, n-1);
+    var g = 'grid-template-columns:150px repeat('+n+',1fr);';
+    var h = '<h1 class="p-title">格力空调机型对比</h1>'
+      + '<div class="p-sub">GREE · 1.5匹 挂机热销榜（标题/副标题可配置）</div>'
+      + '<div class="p-grid" style="'+g+'">';
+
+    /* 表头机型卡 */
+    h += '<div class="cell label"></div>';
+    for(var c=0;c<n;c++){
+      h += '<div class="cell '+(c===hero?'hero':'')+'" data-col="'+c+'" style="cursor:pointer;background:transparent;box-shadow:none;padding:6px 2px 2px;">'
+        + '<div class="m-card">'+(c===hero?'<span class="hero-flag">推荐</span>':'')
+        + '<div class="m-name">'+esc(cols[c].name)+'</div><div class="m-tag">'+esc(cols[c].tier)+'</div></div></div>';
+    }
+    /* 机型图 */
+    h += '<div class="cell label">机型</div>';
+    for(c=0;c<n;c++){
+      h += '<div class="cell img-cell '+(c===hero?'hero':'')+'" data-col="'+c+'" style="cursor:pointer;">'
+        + '<svg width="170" height="72"><use href="#ac-unit"/></svg></div>';
+    }
+    /* 型号 */
+    h += '<div class="cell label">型号</div>';
+    for(c=0;c<n;c++){
+      h += '<div class="cell data model-code '+(c===hero?'hero':'')+'">'+esc(cols[c].model)+'</div>';
+    }
+    /* 参数行（隔行换色） */
+    for(var r=0;r<ROWS.length;r++){
+      var row = ROWS[r];
+      h += '<div class="cell label">'+esc(row.label)+'</div>';
+      for(c=0;c<n;c++){
+        var cls = "cell " + (row.cls ? row.cls : ("data "+(r%2?"alt":"")));
+        if(c===hero) cls += " hero";
+        var val = esc(cols[c][row.key]);
+        if(row.unit) val += '<small>'+row.unit+'</small>';
+        h += '<div class="'+cls+'">'+val+'</div>';
+      }
+    }
+    h += '</div>';
+    h += '<div class="p-foot">'
+      + '<div class="gree-logo"><span class="gl-box">GREE</span><span class="gl-cn">格力</span></div>'
+      + '<div class="gree-slogan">好电器 · 格力造</div></div>';
+    document.getElementById("poster").innerHTML = h;
+
+    /* 事件：点击机型卡/图切推荐位（在渲染后绑定） */
+    var cells = document.querySelectorAll("#poster .cell[data-col]");
+    for(var i=0;i<cells.length;i++){
+      cells[i].addEventListener("click", function(){
+        var col = parseInt(this.getAttribute("data-col"),10);
+        if(col===state.hero) return;
+        state.hero = col;
+        renderPoster();
+      });
+    }
+  }
+
+  /* ---------- 台数切换 ---------- */
+  document.getElementById("segCount").addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if(!btn) return;
+    var ns = this.querySelectorAll("button");
+    for(var i=0;i<ns.length;i++) ns[i].classList.remove("on");
+    btn.classList.add("on");
+    state.count = parseInt(btn.getAttribute("data-n"),10);
+    state.hero = Math.min(state.hero, state.count-1);
+    renderPoster();
+  });
+
+  /* ---------- 初始化（固定顺序：数据→渲染，无渲染互调） ---------- */
+  renderPicker();
+  renderPoster();
+})();
+</script>
+</body>
+</html>

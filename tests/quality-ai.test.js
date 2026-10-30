@@ -61,9 +61,11 @@ test('非关键项按 5 分制折算 30 分', () => {
   const standard = CRITERIA.filter(item => item.kind === 'standard');
   const criteria = allPass().map(item => (item.id === standard[0].id ? { ...item, score: 3 } : item));
   const result = computeScore({ criteria });
-  // 6 项：5,3,5,5,5,5 → 28/30 → 28 分
-  assert.equal(result.standardScore, 28);
-  assert.equal(result.score, 98);
+  // n 项里 1 项 3 分、其余 5 分：(5(n-1)+3)/(5n) × 30
+  const n = standard.length;
+  const expected = Math.round(((5 * (n - 1) + 3) / (n * 5)) * 30 * 100) / 100;
+  assert.equal(result.standardScore, expected);
+  assert.equal(result.score, Math.round((70 + expected) * 100) / 100);
 });
 
 test('不适用项从分母里剔除', () => {

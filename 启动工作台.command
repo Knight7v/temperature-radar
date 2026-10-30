@@ -37,15 +37,32 @@ if [ -z "$NODE_BIN" ]; then
   exit 1
 fi
 
-# 3. 服务已经在跑？直接开浏览器
+# 3. 服务已经在跑？先确认它跑的是最新代码
+#    坑：旧版只看端口有没有人占，占着就说「已经在运行」并开浏览器。
+#    但接口代码是启动时缓存的，于是改了接口也永远不生效，页面报「接口不存在 / 加载失败」。
+#    现在先问一下进程的代码版本（/api/_status），旧的就地停掉重起，不用你手动关窗口。
 if lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
-  echo "✅ 工作台已经在运行，正在打开页面…"
-  [ -z "$WORKBENCH_NO_OPEN" ] && open "$URL"
-  echo ""
-  echo "   地址：$URL"
-  echo "   （服务已在后台运行，这个窗口可以关掉）"
-  echo ""
-  exit 0
+  FRESH="$(curl --noproxy '*' -s -m 3 "http://127.0.0.1:${PORT}/api/_status" 2>/dev/null | sed -n 's/.*"fresh":\([a-z]*\).*/\1/p')"
+  if [ "$FRESH" = "true" ]; then
+    echo "✅ 工作台已经在运行，正在打开页面…"
+    [ -z "$WORKBENCH_NO_OPEN" ] && open "$URL"
+    echo ""
+    echo "   地址：$URL"
+    echo "   （服务已在后台运行，这个窗口可以关掉）"
+    echo ""
+    exit 0
+  fi
+  echo "后台服务还是旧代码，正在重启（这样新接口才不会报「接口不存在」）…"
+  lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | xargs -n1 kill 2>/dev/null
+  for _ in {1..20}; do
+    lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1 || break
+    sleep 0.3
+  done
+  if lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | xargs -n1 kill -9 2>/dev/null
+    sleep 0.5
+  fi
+  echo "   旧服务已停止"
 fi
 
 # 4. 确保数据库容器在运行

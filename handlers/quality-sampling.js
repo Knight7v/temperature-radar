@@ -6,7 +6,7 @@ const {ensureQualitySchema}=require('../lib/quality/schema');
 const {sampleSessions}=require('../lib/quality/sampling');
 const fail=(message,status=422)=>{throw Object.assign(Error(message),{status});};
 const uuid=value=>{if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value||'')))fail('预览 ID 无效');return value;};
-const publicStats=sample=>({total:sample.total,target:sample.target,selected:sample.selected.length,requestedRate:sample.requestedRate,actualRate:sample.actualRate,agentCount:sample.agentCount,coverageRaisedSample:sample.coverageRaisedSample});
+const publicStats=sample=>({total:sample.total,target:sample.target,selected:sample.selected.length,requestedRate:sample.requestedRate,actualRate:sample.actualRate,agentCount:sample.agentCount,coverageRaisedSample:sample.coverageRaisedSample,quota:sample.quota,cap:sample.cap,capApplied:sample.capApplied});
 module.exports=apiHandler(async(req,res)=>{
  const action=String(req.query.action||'list'),write=req.method==='POST';
  const user=await requireInventoryUser(req,write?['admin','operator']:['admin','operator','viewer']);

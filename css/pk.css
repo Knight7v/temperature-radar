@@ -1,0 +1,63 @@
+/* 机型性能PK 页面样式。复用 workbench.css 的卡片/按钮基调，这里只管两栏布局和选择列表。 */
+.pk-main{max-width:1440px;margin:0 auto;padding:28px 32px 60px}
+.pk-layout{display:grid;grid-template-columns:400px minmax(0,1fr);gap:20px;align-items:start;margin-top:18px}
+.pk-card{background:#fff;border:1px solid #dfe5ee;border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(15,35,80,.06)}
+.pk-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.pk-card-head h2{margin:0;font-size:16px}
+.pk-head-gap{margin-top:18px}
+.pk-note{font-size:12px;color:#6b7688;margin:0}
+.pk-note.is-bad{color:#c0392b}
+.pk-note.is-ok{color:#0d8a4f}
+
+.pk-templates{display:flex;gap:6px;margin-bottom:8px}
+.pk-templates button{border:1px solid #d5dce6;background:#f5f7fa;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}
+.pk-templates button.is-on{background:#0d6a3f;border-color:#0d6a3f;color:#fff}
+
+.pk-tabs{display:flex;gap:6px;margin-bottom:10px}
+.pk-tabs button{border:1px solid #d5dce6;background:#f5f7fa;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
+.pk-tabs button.is-on{background:#123f8f;border-color:#123f8f;color:#fff}
+
+.pk-search input{width:100%;box-sizing:border-box;border:1px solid #d5dce6;border-radius:8px;padding:8px 10px;font-size:14px}
+
+.pk-results{margin-top:10px;max-height:300px;overflow:auto;border:1px solid #edf0f5;border-radius:8px}
+.pk-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid #f0f2f6;cursor:pointer}
+.pk-item:hover{background:#f4f8ff}
+.pk-item.is-picked{opacity:.45;cursor:not-allowed}
+.pk-item-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pk-item-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-item-model{font-size:11px;color:#6b7688;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-badge{flex-shrink:0;font-size:11px;border-radius:9px;padding:1px 8px}
+.pk-badge.dist{background:#e8f1ff;color:#123f8f}
+.pk-badge.norm{background:#f0f2f6;color:#6b7688}
+.pk-badge.type-ac{background:#e6f7ee;color:#0d8a4f}
+.pk-badge.type-cab{background:#f3ecff;color:#6b3fbf}
+.pk-badge.type-unk{background:#fdf0e6;color:#c96a00}
+
+.pk-selected{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.pk-chip{display:flex;align-items:center;gap:10px;border:1px solid #e2e7ef;border-radius:10px;padding:8px 10px}
+.pk-chip.is-hero{border-color:#f08c1e;background:#fff8ef}
+.pk-chip-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pk-chip-name{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-chip-model{font-size:11px;color:#6b7688;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-chip button{border:1px solid #d5dce6;background:#fff;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer}
+.pk-chip button.pk-set-hero{border-color:#f08c1e;color:#c96a00}
+.pk-chip button.pk-set-hero.is-on{background:#f08c1e;color:#fff}
+.pk-chip button.pk-remove:hover{border-color:#c0392b;color:#c0392b}
+.pk-hero-tag{font-size:11px;background:#f08c1e;color:#fff;border-radius:9px;padding:1px 8px;flex-shrink:0}
+
+.pk-acts{display:flex;gap:10px;margin-top:14px}
+.pk-acts button:disabled{opacity:.5;cursor:not-allowed}
+
+.pk-reasons{display:grid;gap:8px;margin-bottom:12px}
+.pk-reason-row{display:flex;align-items:center;gap:8px}
+.pk-reason-row label{font-size:12px;font-weight:700;width:130px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-reason-row input{flex:1;min-width:0;border:1px solid #d5dce6;border-radius:8px;padding:6px 10px;font-size:13px}
+.pk-reason-row .pk-count{font-size:11px;color:#6b7688;width:34px;text-align:right;flex-shrink:0}
+.pk-reason-row .pk-count.is-bad{color:#c0392b}
+
+.pk-canvas-wrap{position:relative}
+#pk{width:100%;height:auto;display:block;border-radius:10px;background:#011950}
+#canvasHint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9db4d8;font-size:14px;pointer-events:none}
+#canvasHint[hidden]{display:none}
+
+@media(max-width:1100px){.pk-layout{grid-template-columns:1fr}}

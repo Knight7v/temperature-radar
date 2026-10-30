@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>客服档案 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><link rel="stylesheet" href="/css/agents.css?v=20261027-agents"></head>
+<body class="workbench-body"><div id="shell"></div><main class="workbench-main agents-main">
+<div class="workbench-eyebrow">SERVICE ROSTER</div><h1>客服档案</h1>
+<p class="workbench-muted">把聊天记录里的昵称，对上真人、店铺和品牌组。质检按昵称统计，档案决定这些数字算到谁头上。</p>
+
+<section class="agents-card agents-kpis" id="kpiRow" aria-label="档案概览">
+  <div class="agents-kpi"><span>在册客服</span><strong id="kpiTotal">—</strong><em>人</em><small>不含已离职</small></div>
+  <div class="agents-kpi"><span>资料待补</span><strong id="kpiMissing">—</strong><em>人</em><small>缺姓名 / 店铺 / 品牌</small></div>
+  <div class="agents-kpi" id="kpiOrphanCard"><span>质检里有、档案没有</span><strong id="kpiOrphan">—</strong><em>个昵称</em><small>这些会话算不到人头上</small></div>
+  <div class="agents-kpi"><span>已离职</span><strong id="kpiLeft">—</strong><em>人</em><small>记录保留，不参与在册</small></div>
+</section>
+
+<section class="agents-card" id="board" aria-label="客服列表">
+  <div class="agents-head">
+    <div><h2 id="boardTitle">客服名单</h2><p id="boardNote" class="agents-note">正在加载…</p></div>
+    <div class="agents-acts">
+      <button id="importFromQuality" type="button">从质检记录带入</button>
+      <button id="exportBtn" type="button">导出</button>
+      <button id="createBtn" type="button" class="workbench-primary">新建客服</button>
+    </div>
+  </div>
+
+  <div class="agents-tools">
+    <input id="search" type="search" placeholder="搜客服名称 / 员工姓名 / 店铺" aria-label="搜索客服">
+    <select id="filterShop" aria-label="按店铺筛选"><option value="">全部店铺</option></select>
+    <select id="filterBrand" aria-label="按品牌组别筛选"><option value="">全部品牌组别</option></select>
+    <select id="filterStatus" aria-label="按状态筛选"><option value="">全部状态</option><option value="在职">在职</option><option value="离职">离职</option></select>
+    <label class="agents-check"><input id="onlyMissing" type="checkbox"> 只看资料待补</label>
+    <button id="resetFilters" type="button">重置</button>
+  </div>
+
+  <p id="orphanHint" class="agents-hint" hidden></p>
+  <div id="tableWrap" class="agents-table-wrap"></div>
+  <p id="status" class="agents-note" role="status"></p>
+</section>
+</main>
+
+<div class="agents-scrim" id="scrim" hidden></div>
+
+<aside class="agents-drawer" id="drawer" aria-labelledby="drawerTitle" hidden>
+  <div class="agents-drawer-head">
+    <div><h2 id="drawerTitle">新建客服</h2><p id="drawerSub">客服名称就是聊天记录里显示的那个名字，必须和日志里一字不差。</p></div>
+    <button id="drawerClose" type="button">关闭</button>
+  </div>
+  <form class="agents-drawer-body" id="form">
+    <label class="agents-field"><span>客服名称 <b>必填</b></span><input name="agentName" maxlength="40" required placeholder="如：格力旗舰店售前-阿伟" autocomplete="off"><small>从质检记录带入时会自动填好，改之前先确认和日志里一致</small></label>
+    <div class="agents-grid2">
+      <label class="agents-field"><span>员工姓名</span><input name="employeeName" maxlength="30" placeholder="真实姓名" autocomplete="off"></label>
+      <label class="agents-field"><span>岗位</span><select name="role"><option value="">未填写</option></select></label>
+    </div>
+    <div class="agents-grid2">
+      <label class="agents-field"><span>店铺</span><select name="shop"><option value="">未关联店铺</option></select></label>
+      <label class="agents-field"><span>品牌组别</span><select name="brandGroup"><option value="">未填写</option></select></label>
+    </div>
+    <div class="agents-grid2">
+      <label class="agents-field"><span>在职状态</span><select name="status"><option value="在职">在职</option><option value="离职">离职</option></select></label>
+      <label class="agents-field"><span>入职日期</span><input name="joinDate" type="date"></label>
+    </div>
+    <label class="agents-field"><span>备注</span><textarea name="note" rows="3" maxlength="200" placeholder="如：兼管售后工单、班次、替补关系"></textarea></label>
+    <div id="drawerStat" class="agents-drawer-stat" hidden></div>
+    <p id="formMsg" class="agents-note" role="alert"></p>
+    <div class="agents-drawer-foot">
+      <button type="submit" class="workbench-primary" id="saveBtn">保存</button>
+      <button type="button" id="cancelBtn">取消</button>
+      <div class="agents-gap"></div>
+      <button type="button" id="deleteBtn" class="agents-danger" hidden>删除档案</button>
+    </div>
+  </form>
+</aside>
+
+<script src="/js/workbench-session.js?v=20261027-roster"></script><script src="/js/workbench-shell.js?v=20261028-pk1"></script><script src="/js/agents.js?v=20261027-agents2"></script></body></html>

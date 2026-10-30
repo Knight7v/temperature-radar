@@ -1,7 +1,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.WorkbenchSession=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
  const KEY='workbench.session.v1';
- function safeReturnTo(input){const raw=String(input||'');if(!raw.startsWith('/')||raw.startsWith('//')||raw.includes('\\'))return '/workbench.html';try{const u=new URL(raw,'https://workbench.invalid');return u.origin==='https://workbench.invalid'&&['/workbench.html','/inventory.html','/replenishment.html','/index-v2.html','/quality.html','/service-commission.html','/sales.html','/sales-structure.html','/design.html','/selling.html','/comparison.html'].includes(u.pathname)?u.pathname+u.search+u.hash:'/workbench.html';}catch{return '/workbench.html';}}
+ function safeReturnTo(input){const raw=String(input||'');if(!raw.startsWith('/')||raw.startsWith('//')||raw.includes('\\'))return '/workbench.html';try{const u=new URL(raw,'https://workbench.invalid');return u.origin==='https://workbench.invalid'&&['/workbench.html','/inventory.html','/replenishment.html','/index-v2.html','/quality.html','/agents.html','/products.html','/pk.html','/service-commission.html','/sales.html','/sales-structure.html','/design.html','/selling.html','/comparison.html','/report-design.html'].includes(u.pathname)?u.pathname+u.search+u.hash:'/workbench.html';}catch{return '/workbench.html';}}
  function createSessionClient({fetchImpl=globalThis.fetch.bind(globalThis),storage=globalThis.sessionStorage,now=()=>Date.now()}={}){
   let refreshing=null;
   function clear(){storage.removeItem(KEY);}

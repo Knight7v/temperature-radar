@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1122" height="1402" viewBox="0 0 1122 1402">
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#063174"/>
+      <stop offset=".28" stop-color="#011950"/>
+      <stop offset="1" stop-color="#01113c"/>
+    </linearGradient>
+    <radialGradient id="topLight" cx="50%" cy="0" r="60%">
+      <stop offset="0" stop-color="#0866d8" stop-opacity=".58"/>
+      <stop offset="1" stop-color="#0866d8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bottomLight" cx="50%" cy="100%" r="55%">
+      <stop offset="0" stop-color="#0861c8" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#0861c8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bluePanel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#063577"/>
+      <stop offset=".52" stop-color="#002153"/>
+      <stop offset="1" stop-color="#02194c"/>
+    </linearGradient>
+    <linearGradient id="labelPanel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#053671"/>
+      <stop offset="1" stop-color="#03204b"/>
+    </linearGradient>
+    <linearGradient id="orangePanel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9d2b0b"/>
+      <stop offset=".48" stop-color="#5f1b07"/>
+      <stop offset="1" stop-color="#682012"/>
+    </linearGradient>
+    <linearGradient id="bluePill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#096eee"/>
+      <stop offset=".54" stop-color="#0756d0"/>
+      <stop offset="1" stop-color="#123d9c"/>
+    </linearGradient>
+    <linearGradient id="orangePill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8724"/>
+      <stop offset=".58" stop-color="#fb5a0f"/>
+      <stop offset="1" stop-color="#d73a0b"/>
+    </linearGradient>
+    <clipPath id="upperClip"><rect x="20" y="216" width="1082" height="598" rx="15"/></clipPath>
+    <clipPath id="lowerClip"><rect x="20" y="833" width="1082" height="505" rx="15"/></clipPath>
+  </defs>
+
+  <rect width="1122" height="1402" fill="url(#page)"/>
+  <rect width="1122" height="380" fill="url(#topLight)"/>
+  <rect y="1100" width="1122" height="302" fill="url(#bottomLight)"/>
+  <path d="M0 58L280 168 M1122 58L842 168" fill="none" stroke="#257ded" stroke-opacity=".13" stroke-width="2"/>
+  <path d="M0 80L275 173 M1122 80L847 173" fill="none" stroke="#257ded" stroke-opacity=".08" stroke-width="2"/>
+
+  <!-- 上区：左字段栏 + 四个机型列。纯背景，不含文字、产品图或参数。 -->
+  <g clip-path="url(#upperClip)">
+    <rect x="20" y="216" width="1082" height="598" fill="url(#bluePanel)"/>
+    <rect x="20" y="216" width="150" height="598" fill="url(#labelPanel)"/>
+    <rect x="869" y="216" width="233" height="598" fill="url(#orangePanel)"/>
+    <path d="M170 216V814 M403 216V814 M636 216V814 M869 216V814" fill="none" stroke="#1761a8" stroke-width="1.6"/>
+    <path d="M20 341H1102 M20 575H1102 M20 700H1102" fill="none" stroke="#1761a8" stroke-width="1.2"/>
+    <path d="M170 575H869 M170 700H869" fill="none" stroke="#4aa4ec" stroke-opacity=".28" stroke-width="1"/>
+    <path d="M869 575H1102 M869 700H1102" fill="none" stroke="#ffb064" stroke-opacity=".5" stroke-width="1"/>
+    <rect x="179" y="229" width="214" height="55" rx="25" fill="url(#bluePill)" stroke="#24bfff" stroke-width="1.5"/>
+    <rect x="412" y="229" width="214" height="55" rx="25" fill="url(#bluePill)" stroke="#24bfff" stroke-width="1.5"/>
+    <rect x="645" y="229" width="214" height="55" rx="25" fill="url(#bluePill)" stroke="#24bfff" stroke-width="1.5"/>
+    <rect x="878" y="229" width="214" height="55" rx="25" fill="url(#orangePill)" stroke="#ffad42" stroke-width="1.8"/>
+  </g>
+  <rect x="20" y="216" width="1082" height="598" rx="15" fill="none" stroke="#0373d6" stroke-opacity=".38" stroke-width="11"/>
+  <rect x="20" y="216" width="1082" height="598" rx="15" fill="none" stroke="#23c8ff" stroke-width="2.5"/>
+  <path d="M869 217V813" fill="none" stroke="#ff9d35" stroke-opacity=".4" stroke-width="8"/>
+  <path d="M1101 231V800" fill="none" stroke="#ff9d35" stroke-opacity=".35" stroke-width="8"/>
+  <path d="M869 217V813" fill="none" stroke="#ff9d35" stroke-width="2.2"/>
+
+  <!-- 下区：六条参数行，继续使用相同列线。 -->
+  <g clip-path="url(#lowerClip)">
+    <rect x="20" y="833" width="1082" height="505" fill="url(#bluePanel)"/>
+    <rect x="20" y="833" width="150" height="505" fill="url(#labelPanel)"/>
+    <rect x="869" y="833" width="233" height="505" fill="url(#orangePanel)"/>
+    <path d="M170 833V1338 M403 833V1338 M636 833V1338 M869 833V1338" fill="none" stroke="#1761a8" stroke-width="1.6"/>
+    <path d="M20 917H1102 M20 1001H1102 M20 1085H1102 M20 1169H1102 M20 1253H1102" fill="none" stroke="#1761a8" stroke-width="1.2"/>
+    <path d="M869 917H1102 M869 1001H1102 M869 1085H1102 M869 1169H1102 M869 1253H1102" fill="none" stroke="#ff9d35" stroke-opacity=".45" stroke-width="1"/>
+  </g>
+  <rect x="20" y="833" width="1082" height="505" rx="15" fill="none" stroke="#0373d6" stroke-opacity=".38" stroke-width="11"/>
+  <rect x="20" y="833" width="1082" height="505" rx="15" fill="none" stroke="#23c8ff" stroke-width="2.5"/>
+  <path d="M869 834V1337" fill="none" stroke="#ff9d35" stroke-opacity=".4" stroke-width="8"/>
+  <path d="M1101 848V1323" fill="none" stroke="#ff9d35" stroke-opacity=".35" stroke-width="8"/>
+  <path d="M869 834V1337" fill="none" stroke="#ff9d35" stroke-width="2.2"/>
+</svg>

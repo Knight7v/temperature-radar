@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>质检准确率校准 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><link rel="stylesheet" href="/css/quality.css?v=20261027-calibration"></head>
+<body class="workbench-body"><div id="shell"></div><main class="workbench-main quality-main">
+<div class="workbench-eyebrow">QC CALIBRATION</div><h1>质检准确率校准</h1><p class="workbench-muted">从已有 AI 结果的会话里分层抽一批，由您盲评给档位，系统算出 AI 判断和您有多接近。这一步只回答一个问题——<strong>这个分数能不能信</strong>，不给客服打分、也不进绩效。</p>
+
+<section class="qc-card" id="calCard" aria-labelledby="cal-title">
+  <div class="qc-section-head">
+    <div><h2 id="cal-title">本轮校准</h2><p id="calStatus">正在读取…</p></div>
+    <div class="qc-board-acts">
+      <button id="startBtn" class="workbench-primary" type="button">开始新一轮校准</button>
+      <button id="statsBtn" type="button">看一致率结果</button>
+    </div>
+  </div>
+  <div class="qc-kpis qc-cal-kpis">
+    <div class="qc-kpi"><span>本轮样本</span><strong id="kpiTotal">—</strong><em>条</em></div>
+    <div class="qc-kpi"><span>已评</span><strong id="kpiMarked">—</strong><em>条</em></div>
+    <div class="qc-kpi hot"><span>还没评</span><strong id="kpiLeft">—</strong><em>条</em></div>
+    <div class="qc-kpi"><span>可抽样会话</span><strong id="kpiPool">—</strong><em>条</em></div>
+  </div>
+  <p class="qc-note" id="poolNote"></p>
+</section>
+
+<section class="qc-card" id="workCard" aria-labelledby="work-title" hidden>
+  <div class="qc-section-head">
+    <div><h2 id="work-title">逐条盲评</h2><p>先看原文自己定档位，保存之后才显示 AI 的结论——这样才测得出真实差距。</p></div>
+    <span id="itemMeta" class="qc-note"></span>
+  </div>
+  <div class="qc-split">
+    <div class="qc-pane">
+      <h3>聊天原文 <small id="chatMeta"></small></h3>
+      <div class="qc-chat" id="messages"></div>
+    </div>
+    <div class="qc-pane">
+      <h3>您的判断 <small>按 1—5 可快速选档，回车保存</small></h3>
+      <div class="qc-cal-grades" id="gradeBtns"></div>
+      <label class="qc-note-label qc-cal-label">主要问题（可选）
+        <select id="issueSel"><option value="">不指定</option></select>
+      </label>
+      <label class="qc-note-label qc-cal-label">备注（可选）
+        <textarea id="noteInput" rows="3" maxlength="500" placeholder="例如：顾客其实已经被答复了，AI 判严了"></textarea>
+      </label>
+      <div class="qc-review-foot">
+        <button id="saveBtn" class="workbench-primary" type="button" disabled>保存并看 AI 结论</button>
+        <button id="nextBtn" type="button">换一条</button>
+        <div class="qc-foot-gap"></div>
+        <span id="workStatus" class="qc-note" role="status"></span>
+      </div>
+      <div id="aiReveal" class="qc-cal-reveal" hidden></div>
+    </div>
+  </div>
+</section>
+
+<section class="qc-card" id="statsCard" aria-labelledby="stats-title" hidden>
+  <div class="qc-section-head">
+    <div><h2 id="stats-title">一致率结果</h2><p>用已评的样本推算 AI 和主管的判断有多接近，并列出判断分歧的会话。</p></div>
+    <span id="statsMeta" class="qc-note"></span>
+  </div>
+  <p class="qc-cal-headline" id="statsHeadline"></p>
+  <div class="qc-cal-kpis" id="statsKpis"></div>
+  <div class="qc-cal-details" id="statsDetails"></div>
+  <h3>AI 档位 × 主管档位</h3>
+  <div class="qc-table-wrap"><table class="qc-table qc-cal-matrix" id="statsMatrix"></table></div>
+  <h3>判断分歧的会话</h3>
+  <div class="qc-table-wrap"><table class="qc-table qc-cal-mistakes" id="statsMistakes"></table></div>
+  <p class="qc-note" id="statsFoot"></p>
+</section>
+
+</main><script src="/js/workbench-session.js?v=20261027-roster"></script><script src="/js/workbench-shell.js?v=20261028-pk1"></script><script src="/js/quality-calibration.js?v=20261027-calibration"></script></body></html>

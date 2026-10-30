@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>产品知识库 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><link rel="stylesheet" href="/css/products.css?v=20261028-pkb24"></head>
+<body class="workbench-body"><div id="shell"></div><main class="workbench-main pkb-main">
+<div class="workbench-eyebrow">PRODUCT KNOWLEDGE</div><h1>产品知识库</h1>
+<p class="workbench-muted">全公司公用的「机型事实底座」：参数、卖点、主图、分销档位都以型号为准存在这里。后续的客服会话纠偏、机型功能 PK、视觉设计素材供给都从这里取数。</p>
+
+<ol class="pkb-flow" aria-label="使用流程">
+  <li><b>1</b><div><strong>录入型号</strong><span>导入参数表整批进 / 手动新建单个进</span></div></li>
+  <li><b>2</b><div><strong>挂上图片</strong><span>上传详情图压缩包，按物料编码自动对应</span></div></li>
+  <li><b>3</b><div><strong>随时核对</strong><span>点一行看卖点、参数和客服答复建议</span></div></li>
+</ol>
+
+<section class="pkb-card pkb-kpis" aria-label="知识库概览">
+  <div class="pkb-kpi"><span>已入库型号</span><strong id="kpiModels">—</strong><em>个</em><small id="kpiModelsNote">格力空调 / 海尔空调 / 海尔冰箱</small></div>
+  <div class="pkb-kpi"><span>卖点条数</span><strong id="kpiFeatures">—</strong><em>条</em><small>可用于纠正「没说到卖点」</small></div>
+  <div class="pkb-kpi"><span>参数与口径</span><strong id="kpiParams">—</strong><em>条</em><small>参数 + 售后政策</small></div>
+  <div class="pkb-kpi" id="kpiReviewCard"><span>待人工核实</span><strong id="kpiReview">—</strong><em>条</em><small>原文里没找到对应文字</small></div>
+</section>
+
+<nav class="pkb-tabs" id="tabs" role="tablist" aria-label="产品分组"></nav>
+
+<section class="pkb-card" id="board" aria-label="型号列表">
+  <div class="pkb-head">
+    <div><h2 id="boardTitle">型号列表</h2><p id="boardNote" class="pkb-note">正在加载…</p></div>
+    <div class="pkb-acts">
+      <button id="importOpen" type="button" class="workbench-primary">导入图片</button>
+      <button id="tableImport" type="button">导入参数表</button>
+      <button id="newProduct" type="button">手动新建</button>
+      <button id="rescan" type="button">刷新</button>
+      <button id="exportBtn" type="button">导出</button>
+    </div>
+  </div>
+  <div class="pkb-tools">
+    <input id="search" type="search" placeholder="搜型号 / 系列 / 物料编码" aria-label="搜索型号">
+    <label class="pkb-sort" title="默认按累计销量：主销型号排在最前面">
+      <span>排序</span>
+      <select id="sortSelect" aria-label="排序方式">
+        <option value="sales">按累计销量</option>
+        <option value="series">按系列</option>
+        <option value="updated">按最近更新</option>
+      </select>
+    </label>
+    <span id="linkNote" class="pkb-note"></span>
+  </div>
+  <div id="tableWrap" class="pkb-table-wrap"></div>
+  <p id="status" class="pkb-note" role="status"></p>
+</section>
+</main>
+
+<div class="pkb-scrim" id="scrim" hidden></div>
+
+<aside class="pkb-drawer" id="importDrawer" aria-labelledby="importTitle" hidden>
+  <div class="pkb-drawer-head">
+    <div><h2 id="importTitle">导入详情图片</h2><p>格力系统导出的「详情头图 / 详情图」压缩包。解压后按文件名里的「主数据编码」自动挂到对应型号上——只挂图，不改参数和卖点。</p></div>
+    <button id="importClose" type="button">关闭</button>
+  </div>
+  <div class="pkb-drawer-body">
+    <section class="pkb-section">
+      <h3>详情图片压缩包 <small>格力系统导出的 zip，文件名「主数据编码(序号)」</small></h3>
+      <div class="pkb-field"><span>压缩包文件</span>
+        <input id="zipFile" type="file" accept=".zip" hidden>
+        <div class="pkb-file-row">
+          <button id="pickZip" type="button">选择 .zip 压缩包</button>
+          <small id="zipFileName">未选择文件</small>
+        </div>
+      </div>
+      <div class="pkb-field"><span>这包图片是</span>
+        <div class="pkb-kind-row">
+          <label><input type="radio" name="zipKind" value="main" id="zipKindMain"> 详情头图 → <b>商品主图</b>（白底图）</label>
+          <label><input type="radio" name="zipKind" value="detail" id="zipKindDetail" checked> 详情图 → <b>商品详情</b></label>
+        </div>
+      </div>
+      <p class="pkb-tip">图片按「主数据编码」自动挂到对应型号，同一个型号重复导入会覆盖旧图。压缩包上限 30MB，整包导出太大时分批选。</p>
+      <div class="pkb-acts pkb-acts-left">
+        <button id="doZipImport" type="button" class="workbench-primary">解压并导入图片</button>
+        <span id="zipHint" class="pkb-note"></span>
+      </div>
+      <p id="zipMsg" class="pkb-note" role="alert"></p>
+    </section>
+  </div>
+</aside>
+
+<aside class="pkb-drawer pkb-drawer-wide" id="tableDrawer" aria-labelledby="tableTitle" hidden>
+  <div class="pkb-drawer-head">
+    <div><h2 id="tableTitle">导入产品参数表</h2><p>一张参数表能进几十个型号。系统把「一列一个系列」拆成「一台机器一条记录」，双值（1匹/1.5匹）按型号拆开，解析结果先给你看，勾选后才入库。</p></div>
+    <button id="tableClose" type="button">关闭</button>
+  </div>
+  <div class="pkb-drawer-body">
+    <div class="pkb-grid2">
+      <label class="pkb-field"><span>产品分组 <b>必填</b></span><select id="tableGroup"></select></label>
+      <div class="pkb-field"><span>参数表文件</span>
+        <input id="tableFile" type="file" accept=".xlsx" hidden>
+        <div class="pkb-file-row">
+          <button id="pickTable" type="button">选择 .xlsx</button>
+          <small id="tableFileName">未选择文件</small>
+        </div>
+      </div>
+    </div>
+    <p class="pkb-tip">表格里的图片读不出来——内外机尺寸、机器图片这几项会缺，其余文字参数、能效、净重、卖点都能读到。文件在服务器解析完就丢，不入库。</p>
+    <div class="pkb-acts pkb-acts-left">
+      <button id="doTablePreview" type="button" class="workbench-primary">解析预览</button>
+      <span id="tableHint" class="pkb-note"></span>
+    </div>
+
+    <section id="tablePreviewBox" hidden>
+      <div class="pkb-chips" id="tableStats"></div>
+      <ul id="tableWarnings" class="pkb-warnings"></ul>
+      <div id="tableSkipped" class="pkb-skips"></div>
+      <div class="pkb-pick">
+        <div class="pkb-pick-head">
+          <label class="pkb-pick-all"><input id="tableAll" type="checkbox" checked> <span>全选</span></label>
+          <span id="tablePickNote" class="pkb-note"></span>
+        </div>
+        <div id="tablePickWrap" class="pkb-pick-scroll"></div>
+      </div>
+      <div class="pkb-acts pkb-acts-left">
+        <button id="saveTable" type="button" class="workbench-primary">保存入库</button>
+        <span id="tableSaveNote" class="pkb-note"></span>
+      </div>
+    </section>
+    <p id="tableMsg" class="pkb-note" role="alert"></p>
+  </div>
+</aside>
+
+<aside class="pkb-drawer pkb-drawer-wide" id="detailDrawer" aria-labelledby="detailTitle" hidden>
+  <div class="pkb-drawer-head">
+    <div><h2 id="detailTitle">型号详情</h2><p id="detailSub">改完记得点保存；参数写错会直接影响给客服的建议。</p></div>
+    <button id="detailClose" type="button">关闭</button>
+  </div>
+  <div class="pkb-drawer-body">
+    <div class="pkb-grid2">
+      <label class="pkb-field"><span>型号</span><input id="detailModel" maxlength="40"></label>
+      <label class="pkb-field"><span>商品标题</span><input id="detailName" maxlength="80"></label>
+    </div>
+    <p id="detailMeta" class="pkb-note"></p>
+
+    <section class="pkb-section">
+      <div class="pkb-sec-head">
+        <h3>卖点 <small>顾客最常问、客服最容易漏说的点</small></h3>
+      </div>
+      <div id="featureRead" class="pkb-feat-read"></div>
+    </section>
+
+    <section class="pkb-section">
+      <h3>参数 <small>45 项标准字段，任何型号都在同一位置；缺的显示「待补充」，导入后锁定不可手改</small></h3>
+      <div id="paramRead" class="pkb-param-read"></div>
+    </section>
+
+    <section class="pkb-section">
+      <h3>外观</h3>
+      <div id="appearanceRows" class="pkb-rows"></div>
+      <button type="button" class="pkb-add" data-add="appearance">+ 添加外观</button>
+    </section>
+
+    <section class="pkb-section">
+      <h3>商品主图 <small>详情头图（白底），可用于视觉设计</small></h3>
+      <div id="mainImages" class="pkb-img-grid"></div>
+    </section>
+
+    <section class="pkb-section">
+      <h3>商品详情 <small>详情页整图，按导出顺序排列，可用于功能对比与培训</small></h3>
+      <div id="detailImages" class="pkb-img-grid"></div>
+    </section>
+
+    <div class="pkb-acts pkb-acts-left">
+      <button id="saveDetail" type="button" class="workbench-primary">保存修改</button>
+      <button id="deleteProduct" type="button" class="pkb-danger">删除这个型号</button>
+      <span id="detailMsg" class="pkb-note"></span>
+    </div>
+
+    <details class="pkb-stage2" id="stage2">
+      <summary><span>阶段二 · 会话关联与修正建议</span><em>试点</em></summary>
+      <div class="pkb-stage2-body">
+        <p class="pkb-note">拿这台机器的型号和卖点去最近导入的对话里找，再逐条判断「顾客问到的产品事实，客服答没答到」。<b>前提是上面录入得够全</b>：卖点没录、参数缺项，这里就给不出靠谱建议。</p>
+        <div class="pkb-acts pkb-acts-left">
+          <button id="findSessions" type="button">查相关会话</button>
+          <span class="pkb-note" id="matchNote">点「查相关会话」开始扫描。</span>
+        </div>
+        <div id="matchList" class="pkb-match-list"></div>
+      </div>
+    </details>
+  </div>
+</aside>
+
+<script src="/js/workbench-session.js?v=20261027-pkb"></script><script src="/js/workbench-shell.js?v=20261028-pk1"></script><script src="/js/products.js?v=20261028-pkb24"></script></body></html>

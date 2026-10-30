@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>机型性能PK · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><link rel="stylesheet" href="/css/pk.css?v=20261028-pk7"></head>
+<body class="workbench-body"><div id="shell"></div><main class="workbench-main pk-main">
+<div class="workbench-eyebrow">MODEL SHOWDOWN</div><h1>机型性能PK</h1>
+<p class="workbench-muted">从产品知识库自选 2~4 台机型，一键生成对比海报：可发给咨询顾客，也可用于京东详情页装修。参数取自知识库真实数据，缺的显示「—」，不编造数字。</p>
+
+<section class="pk-layout">
+  <section class="pk-card pk-picker" aria-label="选择机型">
+    <div class="pk-card-head"><h2>① 选机型（2~4 台）</h2><span id="pickNote" class="pk-note"></span></div>
+    <nav class="pk-templates" id="templates" aria-label="海报模板">
+      <button type="button" data-t="pk" class="is-on">模板一 · 空调性能PK（2~4台）</button>
+      <button type="button" data-t="guide">模板二 · 选购指南（固定4台）</button>
+    </nav>
+    <nav class="pk-tabs" id="tabs" aria-label="品类"></nav>
+    <div class="pk-search"><input id="search" type="search" placeholder="搜型号 / 系列" aria-label="搜索机型"></div>
+    <div id="resultList" class="pk-results" aria-label="可选机型"><p class="pk-note">正在加载机型…</p></div>
+    <div class="pk-card-head pk-head-gap"><h2>② 已选 &amp; 推荐位</h2><span class="pk-note">点「设为推荐」放到右侧橙色列</span></div>
+    <div id="selectedList" class="pk-selected" aria-label="已选机型"><p class="pk-note">还没选机型，从上面点选。</p></div>
+    <div class="pk-acts">
+      <button id="generate" type="button" class="workbench-primary" disabled>③ 生成对比图</button>
+      <button id="reset" type="button" hidden>清空重选</button>
+    </div>
+    <p id="status" class="pk-note" role="status"></p>
+  </section>
+
+  <section class="pk-card pk-board" aria-label="对比图预览">
+    <div class="pk-card-head"><h2>④ 预览 &amp; 微调</h2>
+      <div class="pk-acts"><button id="download" type="button" class="workbench-primary" disabled>下载 PNG</button></div>
+    </div>
+    <div id="reasonEdit" class="pk-reasons" hidden></div>
+    <div class="pk-canvas-wrap"><canvas id="pk" width="1122" height="1402" aria-label="对比海报预览"></canvas>
+      <p id="canvasHint" class="pk-note">选好机型后点「生成对比图」，海报在这里出现。</p></div>
+  </section>
+</section>
+</main>
+<script src="/js/workbench-session.js?v=20261027-pkb"></script><script src="/js/workbench-shell.js?v=20261028-pk1"></script><script src="/js/pk.js?v=20261028-pk7"></script></body></html>

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1320" viewBox="0 0 1080 1320">
+  <style>
+    text{font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;fill:#243247}
+    .title{font-size:46px;font-weight:700}.note{font-size:22px;fill:#617086}
+    .head{font-size:26px;font-weight:700}.label{font-size:27px;font-weight:600}
+    .value{font-size:26px}.metric{font-size:55px;font-weight:700}
+    .small{font-size:20px;fill:#617086}.reason{font-size:24px;font-weight:600}
+    .line{stroke:#aab5c2;stroke-width:2}.thin{stroke:#c8d0da;stroke-width:1.5}
+  </style>
+  <rect width="1080" height="1320" fill="#f5f7fa"/>
+  <text class="title" x="540" y="75" text-anchor="middle">空调性能PK</text>
+  <text class="note" x="540" y="112" text-anchor="middle">低保真结构示意 · 只确认字段位置与列对齐</text>
+
+  <rect x="40" y="150" width="1000" height="1110" rx="12" fill="#fff" stroke="#aab5c2" stroke-width="2"/>
+  <rect x="200" y="150" width="840" height="70" fill="#eaf0f8"/>
+  <rect x="830" y="150" width="210" height="70" fill="#fcebdc"/>
+  <rect x="830" y="220" width="210" height="1040" fill="#fff8f2"/>
+  <line class="line" x1="200" y1="150" x2="200" y2="1260"/>
+  <line class="line" x1="410" y1="150" x2="410" y2="1260"/>
+  <line class="line" x1="620" y1="150" x2="620" y2="1260"/>
+  <line class="line" x1="830" y1="150" x2="830" y2="1260"/>
+
+  <text class="head" x="305" y="195" text-anchor="middle">天仪Pro</text>
+  <text class="head" x="515" y="195" text-anchor="middle">云佳Pro</text>
+  <text class="head" x="725" y="195" text-anchor="middle">舒适风Pro</text>
+  <text class="head" x="935" y="195" text-anchor="middle">舒适风Ultra</text>
+
+  <g fill="#eef1f5" stroke="#c8d0da" stroke-width="2">
+    <rect x="227" y="240" width="156" height="92" rx="5"/>
+    <rect x="437" y="240" width="156" height="92" rx="5"/>
+    <rect x="647" y="240" width="156" height="92" rx="5"/>
+    <rect x="857" y="240" width="156" height="92" rx="5"/>
+  </g>
+  <text class="small" x="305" y="295" text-anchor="middle">商品图</text>
+  <text class="small" x="515" y="295" text-anchor="middle">商品图</text>
+  <text class="small" x="725" y="295" text-anchor="middle">商品图</text>
+  <text class="small" x="935" y="295" text-anchor="middle">商品图</text>
+  <text class="reason" x="305" y="375" text-anchor="middle">入门推荐款</text>
+  <text class="reason" x="515" y="375" text-anchor="middle">外机升级</text>
+  <text class="reason" x="725" y="375" text-anchor="middle">双排铜管</text>
+  <text class="reason" x="935" y="375" text-anchor="middle">AI动态节能</text>
+
+  <line class="line" x1="40" y1="415" x2="1040" y2="415"/>
+  <line class="thin" x1="40" y1="485" x2="1040" y2="485"/>
+  <line class="thin" x1="40" y1="590" x2="1040" y2="590"/>
+  <line class="line" x1="40" y1="695" x2="1040" y2="695"/>
+  <text class="label" x="65" y="458">型号</text>
+  <text class="label" x="65" y="550">APF值</text>
+  <text class="label" x="65" y="653">循环风量</text>
+  <text class="small" x="305" y="456" text-anchor="middle">KFR-35GW/…</text>
+  <text class="small" x="515" y="456" text-anchor="middle">KFR-35GW/…</text>
+  <text class="small" x="725" y="456" text-anchor="middle">KFR-35GW/…</text>
+  <text class="small" x="935" y="456" text-anchor="middle">KFR-35GW/…</text>
+  <text class="metric" x="305" y="557" text-anchor="middle">5.31</text>
+  <text class="metric" x="515" y="557" text-anchor="middle">5.31</text>
+  <text class="metric" x="725" y="557" text-anchor="middle">5.36</text>
+  <text class="metric" x="935" y="557" text-anchor="middle">5.40</text>
+  <text class="metric" x="305" y="663" text-anchor="middle">760</text>
+  <text class="metric" x="515" y="663" text-anchor="middle">800</text>
+  <text class="metric" x="725" y="663" text-anchor="middle">760</text>
+  <text class="metric" x="935" y="663" text-anchor="middle">810</text>
+
+  <line class="thin" x1="40" y1="775" x2="1040" y2="775"/>
+  <line class="thin" x1="40" y1="855" x2="1040" y2="855"/>
+  <line class="thin" x1="40" y1="960" x2="1040" y2="960"/>
+  <line class="thin" x1="40" y1="1070" x2="1040" y2="1070"/>
+  <line class="thin" x1="40" y1="1180" x2="1040" y2="1180"/>
+  <text class="label" x="65" y="743">铜管排数</text>
+  <text class="label" x="65" y="823">节能模式</text>
+  <text class="label" x="65" y="915">运行温度</text>
+  <text class="label" x="65" y="1021">清洁方式</text>
+  <text class="label" x="65" y="1129">控制方式</text>
+  <text class="label" x="65" y="1230">电量查询</text>
+  <g class="value" text-anchor="middle">
+    <text x="305" y="743">1.6排</text><text x="515" y="743">1.6排</text><text x="725" y="743">双排</text><text x="935" y="743">双排</text>
+    <text x="305" y="823">无</text><text x="515" y="823">无</text><text x="725" y="823">无</text><text x="935" y="823">AI动态节能</text>
+    <text x="305" y="913">−7～43℃</text><text x="515" y="913">−35～60℃</text><text x="725" y="913">−35～60℃</text><text x="935" y="913">−35～60℃</text>
+    <text x="305" y="1021">56℃净菌自洁</text><text x="515" y="1021">双效自清洁</text><text x="725" y="1021">56℃净菌自洁</text><text x="935" y="1021">AI双效自清洁</text>
+    <text x="305" y="1129">遥控 / App</text><text x="515" y="1129">遥控 / App</text><text x="725" y="1129">遥控 / App</text><text x="935" y="1129">遥控 / App</text>
+    <text x="305" y="1230">无</text><text x="515" y="1230">支持</text><text x="725" y="1230">支持</text><text x="935" y="1230">支持</text>
+  </g>
+</svg>

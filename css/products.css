@@ -1,0 +1,304 @@
+/* 产品知识库（2026-10-27）
+   三块：分组 TAB + 型号列表、右侧导入抽屉（预览后入库）、右侧型号抽屉（改知识 + 看会话建议）。 */
+
+.pkb-main{max-width:1360px}
+.pkb-locked{overflow:hidden}
+.pkb-card{background:#fff;border:1px solid #dce5f1;border-radius:18px;padding:22px 24px;margin:18px 0;box-shadow:0 4px 22px #14356708}
+.pkb-card h2{margin:0 0 4px;font-size:19px;color:#14203a}
+.pkb-note{margin:2px 0 0;font-size:12.5px;color:#6b7a94}
+.pkb-note.is-ok{color:#0e6b3a}
+.pkb-note.is-bad{color:#b52f2f}
+
+/* ---- 使用流程（框架说明） ---- */
+.pkb-flow{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 0;padding:0}
+.pkb-flow li{display:flex;gap:11px;align-items:flex-start;border:1px solid #e2eaf6;border-radius:14px;padding:13px 15px;background:#fff}
+.pkb-flow b{flex:none;width:24px;height:24px;border-radius:8px;background:#eaf1ff;color:#1454c8;font-size:12.5px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+.pkb-flow strong{display:block;font-size:13px;color:#14203a;font-weight:650;line-height:1.5}
+.pkb-flow span{display:block;margin-top:3px;font-size:11.5px;color:#7b8aa3;line-height:1.6}
+
+/* ---- 概览 ---- */
+.pkb-kpis{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:14px;padding:18px 24px}
+.pkb-kpi{border:1px solid #e6ebf4;border-radius:13px;padding:13px 15px;background:#fcfdff}
+.pkb-kpi>span{display:block;font-size:12.5px;color:#6b7a94}
+.pkb-kpi strong{font-size:26px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#14203a;line-height:1.25}
+.pkb-kpi em{font-style:normal;font-size:12px;color:#93a0b5;margin-left:5px}
+.pkb-kpi small{display:block;margin-top:3px;font-size:11.5px;color:#93a0b5}
+.pkb-kpi.is-warn{background:#fdf8ec;border-color:#f0e0bd}
+.pkb-kpi.is-warn strong{color:#a8620a}
+
+/* ---- 分组 TAB ---- */
+.pkb-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+.pkb-tabs button{border:1px solid #dce5f1;background:#fff;color:#455a7d;border-radius:11px;padding:9px 15px;font:inherit;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.pkb-tabs button:hover{border-color:#b9cdea;background:#f7faff}
+.pkb-tabs button.on{background:#14203a;border-color:#14203a;color:#fff}
+.pkb-tabs button.on em{background:#ffffff2e;color:#fff}
+.pkb-tabs em{font-style:normal;font-size:11.5px;background:#eef2f8;color:#5b6b85;border-radius:6px;padding:1px 7px;font-variant-numeric:tabular-nums}
+
+/* ---- 头部/工具条/按钮 ---- */
+.pkb-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.pkb-head>div:first-child{min-width:0}
+.pkb-acts{display:flex;gap:8px;flex-wrap:wrap;flex:none;align-items:center}
+.pkb-acts-left{justify-content:flex-start;margin-top:12px}
+.pkb-card button,.pkb-drawer button{border:1px solid #d4dfed;border-radius:9px;padding:8px 14px;background:#fff;color:#1454c8;cursor:pointer;font:inherit;font-size:13px;white-space:nowrap}
+.pkb-card button:hover,.pkb-drawer button:hover{border-color:#b9cdea;background:#f6f9ff}
+.pkb-card button.workbench-primary,.pkb-drawer button.workbench-primary{background:#175df5;color:#fff;border-color:#175df5}
+.pkb-card button.workbench-primary:hover,.pkb-drawer button.workbench-primary:hover{background:#0b47c4;border-color:#0b47c4}
+.pkb-card button:disabled,.pkb-drawer button:disabled{opacity:.55;cursor:not-allowed}
+.pkb-danger{color:#b52f2f!important;border-color:#f0c9c7!important}
+.pkb-danger:hover{background:#fdf4f4!important;border-color:#e8b4b2!important}
+.pkb-tools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:16px 0 4px}
+.pkb-tools input[type=search]{flex:0 1 320px;min-width:180px;border:1px solid #cbd7e8;border-radius:9px;padding:9px 12px;background:#fff;color:#172239;font:inherit;font-size:13px}
+.pkb-tools input[type=search]:focus{outline:2px solid #9dbcf5;outline-offset:-1px;border-color:#9dbcf5}
+/* 排序口径：默认按累计销量，主管要能一眼看出「凭什么排这个顺序」，所以选择器常驻、不做隐藏菜单 */
+.pkb-sort{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#5b6b85}
+.pkb-sort select{border:1px solid #cbd7e8;border-radius:9px;padding:8px 10px;background:#fff;color:#172239;font:inherit;font-size:13px;cursor:pointer}
+.pkb-sort select:focus{outline:2px solid #9dbcf5;outline-offset:-1px;border-color:#9dbcf5}
+.pkb-col-units{width:96px}
+.pkb-col-units.is-muted{color:#aeb8c8;font-weight:500}
+
+/* ---- 表格 ---- */
+.pkb-table-wrap{overflow:auto;margin-top:12px;border:1px solid #eef2f8;border-radius:12px}
+.pkb-table{width:100%;border-collapse:collapse;font-size:13px}
+.pkb-table th{position:sticky;top:0;z-index:1;background:#fafbfd;color:#4a5870;font-weight:600;text-align:left;padding:10px 12px;white-space:nowrap;border-bottom:1px solid #eef2f8}
+.pkb-table td{padding:10px 12px;border-bottom:1px solid #f2f5fa;color:#3c4a63;vertical-align:middle}
+.pkb-table tbody tr{cursor:pointer}
+.pkb-table tbody tr:hover td{background:#f7faff}
+.pkb-table tbody tr:focus-visible{outline:2px solid #9dbcf5;outline-offset:-2px}
+.pkb-table tr:last-child td{border-bottom:0}
+.pkb-model{font-weight:600;color:#14203a;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;white-space:nowrap}
+td .pkb-tier{font-size:10.5px;padding:1px 7px;vertical-align:1px}
+.pkb-table td .pkb-badge{white-space:nowrap}
+.pkb-name{color:#455a7d;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pkb-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#5a6b8c;white-space:nowrap}
+.pkb-num{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;width:78px;white-space:nowrap}
+.pkb-table td:last-child{white-space:nowrap}
+.pkb-badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;border-radius:6px;padding:2px 7px;background:#eef2f8;color:#5b6b85;font-variant-numeric:tabular-nums}
+.pkb-badge.is-warn{background:#fdf3e2;color:#a86a08}
+.pkb-badge.is-good{background:#e9f8ef;color:#0e6b3a}
+.pkb-badge.is-bad{background:#fdeceb;color:#b52f2f}
+.pkb-empty{padding:34px 20px;text-align:center;color:#6b7a94;font-size:13px;line-height:1.9}
+.pkb-empty b{color:#14203a}
+
+/* ---- 抽屉 ---- */
+.pkb-scrim{position:fixed;inset:0;background:#0f172a4d;z-index:60}
+.pkb-scrim[hidden]{display:none}
+.pkb-drawer{position:fixed;top:0;right:0;height:100dvh;width:min(620px,100vw);background:#fff;z-index:70;display:flex;flex-direction:column;box-shadow:-18px 0 50px #0f172a24;transform:translateX(14px);opacity:0;transition:transform .18s ease,opacity .18s ease}
+.pkb-drawer-wide{width:min(1240px,96vw)}
+.pkb-drawer[hidden]{display:none}
+.pkb-drawer.is-open{transform:none;opacity:1}
+.pkb-drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 22px 14px;border-bottom:1px solid #eef2f8}
+.pkb-drawer-head h2{margin:0;font-size:17px;color:#14203a}
+.pkb-drawer-head p{margin:4px 0 0;font-size:12.5px;color:#6b7a94;line-height:1.6}
+.pkb-drawer-body{padding:16px 22px 40px;overflow:auto;flex:1}
+.pkb-field{display:grid;gap:5px;margin-bottom:12px;font-size:12.5px;color:#4a5a76}
+.pkb-field>span b{color:#b52f2f;font-size:11px;margin-left:4px;font-weight:600}
+.pkb-field input,.pkb-field select,.pkb-field textarea{border:1px solid #cbd7e8;border-radius:9px;padding:9px 11px;background:#fff;color:#172239;font:inherit;font-size:13px;width:100%}
+.pkb-field textarea{resize:vertical;line-height:1.6}
+.pkb-field input:focus,.pkb-field select:focus,.pkb-field textarea:focus{outline:2px solid #9dbcf5;outline-offset:-1px;border-color:#9dbcf5}
+.pkb-field small{color:#93a0b5;font-size:11.5px}
+.pkb-tip{margin:0;font-size:11.5px;color:#6b7a94;line-height:1.7;background:#f7faff;border:1px dashed #d4e2f5;border-radius:9px;padding:8px 10px}
+.pkb-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pkb-file-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pkb-file-row button{padding:9px 13px}
+.pkb-file-row small{color:#6b7a94}
+
+/* ---- 预览 ---- */
+.pkb-preview{margin-top:18px;padding-top:16px;border-top:1px dashed #e2e9f4}
+.pkb-preview-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.pkb-preview-head h3{margin:0;font-size:15px;color:#14203a}
+.pkb-preview-body{display:grid;gap:14px;margin-top:12px}
+.pkb-chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 4px}
+.pkb-warnings{margin:10px 0 0;padding-left:18px;font-size:12.5px;color:#8a5a06;line-height:1.8}
+.pkb-warnings:empty{display:none}
+.pkb-hint{margin:12px 0 0;padding:10px 13px;border-radius:10px;background:#fdf8ec;border:1px solid #f0e0bd;color:#7a5410;font-size:12.5px;line-height:1.7}
+
+/* 预览里的条目：左边名字、中间内容+原文出处、右边删除
+   选择器带 .pkb-row 前缀是为了压过后面的通用 .pkb-row 两列布局 */
+.pkb-preview-sec{display:grid;gap:6px}
+.pkb-preview-h{margin:0;font-size:13px;color:#14203a;font-weight:650}
+.pkb-row.pkb-prow{grid-template-columns:minmax(110px,150px) minmax(0,1fr) auto;align-items:start}
+.pkb-prow>.pkb-model{white-space:normal;line-height:1.6;display:flex;gap:6px;flex-wrap:wrap;align-items:baseline}
+.pkb-prow>div:nth-child(2) .pkb-model{white-space:normal;line-height:1.6}
+.pkb-prow>.pkb-row-del{padding:2px 9px;font-size:15px;line-height:1.2;color:#b52f2f;border-color:#f0d5d3;border-radius:7px}
+.pkb-evi{margin-top:4px;font-size:11.5px;color:#93a0b5;line-height:1.6;border-left:2px solid #e6ebf4;padding-left:7px;overflow-wrap:anywhere}
+
+/* 阶段二：默认收起，避免半成品占主流程 */
+.pkb-stage2{margin-top:22px;border:1px solid #e6ebf4;border-radius:13px;background:#fbfdff}
+.pkb-stage2>summary{list-style:none;cursor:pointer;padding:12px 15px;display:flex;align-items:center;gap:9px;font-size:13px;color:#455a7d;font-weight:600}
+.pkb-stage2>summary::-webkit-details-marker{display:none}
+.pkb-stage2>summary::before{content:'▸';color:#93a0b5;font-size:12px;transition:transform .15s}
+.pkb-stage2[open]>summary::before{transform:rotate(90deg)}
+.pkb-stage2>summary em{font-style:normal;font-size:11px;font-weight:500;color:#8a5a06;background:#fdf3e2;border-radius:6px;padding:1px 7px}
+.pkb-stage2-body{padding:0 15px 15px;display:grid;gap:10px}
+.pkb-tip.is-warn{background:#fdf8ec;border-color:#f0e0bd;color:#7a5410}
+
+/* ---- 详情抽屉内区块 ---- */
+.pkb-section{margin-top:20px;padding-top:14px;border-top:1px dashed #e2e9f4}
+.pkb-section h3{margin:0 0 8px;font-size:14.5px;color:#14203a;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pkb-section h3 small{font-weight:400;font-size:11.5px;color:#93a0b5}
+.pkb-rows{display:grid;gap:8px}
+.pkb-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;border:1px solid #eef2f8;border-radius:10px;padding:9px 10px;background:#fcfdff}
+.pkb-row.is-review{border-color:#f0e0bd;background:#fffdf7}
+.pkb-row input,.pkb-row textarea,.pkb-row select{border:1px solid #dbe4f0;border-radius:8px;padding:7px 9px;background:#fff;color:#172239;font:inherit;font-size:12.5px;width:100%}
+.pkb-row textarea{resize:vertical;min-height:38px;line-height:1.6}
+.pkb-row-main{display:grid;gap:6px}
+.pkb-row-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#93a0b5}
+.pkb-row-del{border:1px solid #f0d5d3;color:#b52f2f;background:#fff;border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer;height:fit-content;align-self:start}
+.pkb-row-del:hover{background:#fdf4f4}
+.pkb-add{border:1px dashed #cbd7e8;background:#fbfdff;color:#1454c8;border-radius:9px;padding:7px 12px;font-size:12.5px;cursor:pointer;margin-top:8px}
+.pkb-add:hover{background:#f2f7ff;border-color:#9dbcf5}
+
+/* ---- 卖点阅读视图：连续序号 + 分类分组，编辑收进按钮 ---- */
+.pkb-sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.pkb-sec-head h3{margin:0}
+.pkb-sec-head button{padding:5px 12px;font-size:12.5px}
+.pkb-feat-read{margin:10px 0 2px}
+.pkb-feat-cat{font-size:11.5px;font-weight:700;color:#5b6b85;letter-spacing:.05em;margin:13px 0 4px;display:flex;align-items:center;gap:8px}
+.pkb-feat-cat::after{content:'';flex:1;height:1px;background:#e9eff7}
+.pkb-feat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 22px;margin:2px 0 4px}
+.pkb-param-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;margin:10px 0 4px}
+.pkb-param-item{display:grid;grid-template-columns:minmax(0,6.5em) minmax(0,1fr);gap:10px;padding:8px 12px;background:#f8fafd;border:1px solid #eef2f8;border-radius:9px;align-items:baseline}
+.pkb-param-item.is-review{background:#fffdf7;border-color:#f0e0bd}
+.pkb-param-name{font-size:12.5px;font-weight:600;color:#5b6b85;line-height:1.5}
+.pkb-param-value{font-size:13px;color:#14203a;line-height:1.55;word-break:break-word;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.pkb-feat-item{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;padding:6px 8px;border-radius:9px;align-items:start}
+.pkb-feat-item.is-review{background:#fffdf7;outline:1px dashed #f0e0bd}
+.pkb-feat-no{width:22px;height:22px;border-radius:50%;background:#eaf1ff;color:#1454c8;font-size:11.5px;font-weight:700;display:grid;place-items:center;margin-top:1px;font-variant-numeric:tabular-nums}
+.pkb-feat-title{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:13.5px;font-weight:600;color:#14203a;line-height:1.5}
+.pkb-feat-title .pkb-badge{font-weight:400}
+.pkb-feat-detail{margin:3px 0 0;font-size:12.5px;color:#6b7a94;line-height:1.6}
+
+/* ---- 相关会话与建议 ---- */
+.pkb-match-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.pkb-match-list{display:grid;gap:10px;margin-top:12px}
+.pkb-session{border:1px solid #e6ebf4;border-radius:12px;padding:12px 14px;background:#fcfdff}
+.pkb-session-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:12.5px;color:#6b7a94}
+.pkb-session-head b{color:#14203a;font-size:13px}
+.pkb-session-ask{margin:6px 0 0;font-size:13px;color:#3c4a63;line-height:1.7}
+.pkb-session-hits{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pkb-session-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pkb-session-acts button{padding:6px 11px;font-size:12.5px}
+.pkb-advice{margin-top:10px;border-top:1px dashed #e2e9f4;padding-top:10px;display:grid;gap:9px}
+.pkb-advice-sum{margin:0;font-size:12.5px;color:#3c4a63;line-height:1.7;background:#f4f8ff;border-radius:9px;padding:9px 11px}
+.pkb-advice-item{border:1px solid #eef2f8;border-radius:10px;padding:10px 12px;background:#fff}
+.pkb-advice-top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:12px;color:#6b7a94}
+.pkb-advice-ask{margin:5px 0 0;font-size:12.5px;color:#3c4a63;line-height:1.7}
+.pkb-advice-reply{margin:6px 0 0;font-size:13px;color:#0e6b3a;background:#f2fbf6;border-radius:8px;padding:8px 10px;line-height:1.7}
+.pkb-advice-why{margin:5px 0 0;font-size:12px;color:#8a5a06}
+.pkb-msgs{margin-top:10px;border:1px solid #eef2f8;border-radius:10px;max-height:280px;overflow:auto;padding:10px 12px;background:#fff;display:grid;gap:7px}
+.pkb-msg{font-size:12.5px;line-height:1.7;color:#3c4a63}
+.pkb-msg b{color:#14203a;margin-right:6px}
+.pkb-msg.is-agent b{color:#1454c8}
+.pkb-msg time{color:#93a0b5;margin-right:6px;font-variant-numeric:tabular-nums}
+
+/* ---- 参数表批量导入：勾选列表 ---- */
+.pkb-skips{margin:10px 0 0;display:grid;gap:6px}
+.pkb-skips:empty{display:none}
+.pkb-skip{border:1px solid #f0e0bd;background:#fffdf7;border-radius:10px;padding:8px 11px;font-size:12px;color:#7a5410;line-height:1.65}
+.pkb-skip b{color:#8a5a06}
+.pkb-pick{margin-top:14px;border:1px solid #eef2f8;border-radius:12px;overflow:hidden}
+.pkb-pick-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 13px;background:#fafbfd;border-bottom:1px solid #eef2f8;flex-wrap:wrap}
+.pkb-pick-all{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#3c4a63;cursor:pointer}
+.pkb-pick-all input{width:15px;height:15px;accent-color:#175df5;cursor:pointer}
+.pkb-pick-scroll{max-height:min(46vh,420px);overflow:auto}
+.pkb-pick-scroll table{width:100%;border-collapse:collapse;font-size:12.5px}
+.pkb-pick-scroll th{position:sticky;top:0;z-index:1;background:#fff;color:#4a5870;font-weight:600;text-align:left;padding:8px 10px;white-space:nowrap;border-bottom:1px solid #eef2f8}
+.pkb-pick-scroll td{padding:8px 10px;border-bottom:1px solid #f4f7fb;color:#3c4a63;vertical-align:middle}
+.pkb-pick-scroll tr.is-on td{background:#f8fbff}
+.pkb-pick-scroll tr.pkb-pick-row{cursor:pointer}
+.pkb-pick-scroll tr.pkb-pick-row:hover td{background:#f3f8ff}
+.pkb-pick-scroll tr.pkb-pick-detail td{background:#fbfdff;padding:0}
+.pkb-pick-check{width:38px;text-align:center}
+.pkb-pick-check input{width:15px;height:15px;accent-color:#175df5;cursor:pointer}
+.pkb-pick-detail .pkb-detail-inner{padding:10px 12px 12px;display:grid;gap:9px}
+
+/* ---- 参数标准表：任何型号都铺成同一套格子，同一字段永远在同一位置 ----
+   名称列固定 6.5em，是「对齐」的关键：值长短只会让这一行变高，不会把后面的字段挤走。
+   缺值用虚线框 + 灰字「待补充」，一眼分得清「没有」和「没录」。 */
+.pkb-psheet-summary{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;padding:7px 12px;margin:0 0 10px;background:#f4f8ff;border:1px solid #e3ecfa;border-radius:9px;font-size:12px;color:#3c4a63}
+.pkb-psheet-summary b{font-size:12.5px;font-weight:600;color:#1454c8}
+.pkb-psheet-summary .is-muted{color:#8794ab}
+.pkb-psheet-sec{margin-top:12px}
+.pkb-psheet-sec:first-of-type{margin-top:0}
+.pkb-psheet-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 9px;margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid #eef2f8}
+.pkb-psheet-head b{font-size:12.5px;font-weight:600;color:#2b3a55}
+.pkb-psheet-head em{font-style:normal;font-size:11.5px;color:#7b8aa3;background:#f2f5fa;border-radius:20px;padding:1px 8px}
+.pkb-psheet-head small{font-size:11.5px;color:#93a0b5}
+.pkb-psheet-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 14px}
+/* 每格固定两行高：值是 1 行还是 2 行，格子高度都一样。
+   这一条是「同一字段永远在同一位置」的最后一环 —— 不锁高度，长值一换行就把后面整片推下去。 */
+.pkb-pfield{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:10px;padding:6px 11px;background:#f8fafd;border:1px solid #eef2f8;border-radius:9px;align-items:center;min-height:55px}
+.pkb-pfield.is-review{background:#fffdf7;border-color:#f0e0bd}
+.pkb-pfield.is-missing{background:#fcfcfd;border-style:dashed;border-color:#e9edf4}
+.pkb-pfield-name{font-size:12.5px;font-weight:600;color:#5b6b85;line-height:1.5;word-break:keep-all}
+.pkb-pfield-value{font-size:13px;color:#14203a;line-height:1.55;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;min-width:0}
+.pkb-pfield-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.pkb-pfield.is-missing .pkb-pfield-name{color:#9aa6ba;font-weight:500}
+.pkb-pfield.is-missing .pkb-pfield-value{color:#aeb8c8}
+/* 缺了会导致「机型性能PK」那一行出不来：红框 + 左侧色条 + 「请尽快填写」。
+   只改边框颜色和左内边距，格子高度仍是 min-height:55px —— 高亮不能把对齐搞乱。
+   左内边距 9px = 常规 11px 减掉多出的 2px 边框，文字位置与相邻格子齐平。 */
+.pkb-pfield.is-pk{background:#fff7f5;border-color:#f3cbc2;border-style:solid;border-left:3px solid #e2694f;padding-left:9px}
+.pkb-pfield.is-pk .pkb-pfield-name{color:#a8503a;font-weight:600}
+.pkb-pfield.is-pk .pkb-pfield-value{color:#b34b32}
+.pkb-badge.is-pk{background:#fdece4;color:#b5472b;font-weight:600}
+/* PK 缺口提示条：一条说清「缺几项、缺哪几项、怎么补」 */
+.pkb-psheet-pk{display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 10px;padding:7px 12px;margin:0 0 10px;background:#fdf1ec;border:1px solid #f5d3c6;border-left:3px solid #e2694f;border-radius:9px;font-size:12px;color:#8d4430;min-width:0;overflow-wrap:anywhere}
+.pkb-psheet-pk b{font-size:12.5px;font-weight:600;color:#b5472b;flex:none}
+.pkb-psheet-pk small{font-size:11.5px;color:#a9705d;min-width:0}
+/* 缺的字段名占一整行，长名字也顶不出框 */
+.pkb-psheet-pk-list{flex:1 1 100%;color:#8d4430;line-height:1.6;font-weight:500}
+.pkb-psheet-pk.is-clear{background:#eef9f2;border-color:#cfe9da;border-left-color:#2f9e63;color:#2c6b4a}
+.pkb-psheet-pk.is-clear b{color:#1f7a4c}
+.pkb-psheet-pk.is-clear small{color:#5c8a71}
+/* 零销量型号：只说明为什么不催，保持中性灰，别做成提醒 */
+.pkb-psheet-pk.is-idle{background:#f6f8fb;border-color:#e4e9f1;border-left-color:#b9c3d3;color:#68758c}
+.pkb-psheet-pk.is-idle b{color:#4c5a73}
+.pkb-psheet-pk.is-idle small{color:#8794ab}
+.pkb-psheet-head .is-pk{font-size:11.5px;color:#b5472b;font-weight:600}
+/* 列表行展开里密度收紧一档，45 项不至于拉得太长 */
+.pkb-detail-sheet .pkb-psheet-grid{gap:5px 12px}
+.pkb-detail-sheet .pkb-pfield{padding:4px 10px}
+.pkb-detail-sheet .pkb-pfield-value{font-size:12.5px}
+.pkb-detail-feats{margin:0;padding-left:18px;font-size:12px;color:#3c4a63;line-height:1.7;list-style:decimal}
+.pkb-detail-empty{font-size:12px;color:#93a0b5}
+.pkb-pick-toggle{border:1px solid #dbe4f0;border-radius:7px;padding:3px 8px;font-size:11.5px;color:#1454c8;background:#fff;cursor:pointer;white-space:nowrap}
+.pkb-pick-toggle:hover{background:#f2f7ff;border-color:#9dbcf5}
+
+@media(max-width:1100px){
+ .pkb-feat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}@media(max-width:900px){
+ .pkb-kpis{grid-template-columns:repeat(2,1fr)}
+ .pkb-name{max-width:180px}
+ .pkb-flow{grid-template-columns:1fr;gap:8px}
+}
+@media(max-width:760px){
+ .pkb-card{padding:16px 14px;border-radius:16px}
+ .pkb-kpis{grid-template-columns:repeat(2,1fr);gap:10px;padding:14px}
+ .pkb-head{flex-wrap:wrap}
+ .pkb-acts{flex:1 1 100%}
+ .pkb-head .pkb-acts button{flex:1 1 auto}
+ .pkb-grid2{grid-template-columns:1fr}
+ .pkb-row{grid-template-columns:1fr;gap:6px}
+ .pkb-row-del{justify-self:end}
+ .pkb-row.pkb-prow{grid-template-columns:minmax(0,1fr) auto;align-items:center}
+ .pkb-prow>div:nth-child(2){grid-column:1/-1}
+ .pkb-prow>.pkb-row-del{grid-row:1;grid-column:2;align-self:center}
+ .pkb-drawer,.pkb-drawer-wide{width:100vw}
+ .pkb-sec-head{flex-wrap:wrap}
+ .pkb-feat-grid{grid-template-columns:1fr}
+ .pkb-param-grid{grid-template-columns:1fr}
+ .pkb-psheet-grid{grid-template-columns:1fr}
+ .pkb-pfield{grid-template-columns:5.5em minmax(0,1fr);gap:8px}
+ .pkb-feat-item{grid-template-columns:22px minmax(0,1fr);gap:7px;padding:6px 4px}
+ .pkb-tools input[type=search]{flex:1 1 100%}
+ .pkb-table{min-width:720px}
+}
+
+/* ---- 详情图片（商品主图 / 商品详情） ---- */
+.pkb-img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.pkb-img-item{margin:0;background:#fff;border:1px solid #dde6f2;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.pkb-img-item img{width:100%;height:150px;object-fit:contain;background:#fff;cursor:zoom-in;display:block}
+.pkb-img-item figcaption{font-size:11px;color:#78909c;padding:5px 8px;text-align:center;border-top:1px solid #eef3f9}
+.pkb-kind-row{display:flex;flex-wrap:wrap;gap:6px 18px;padding:6px 0}
+.pkb-kind-row label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#33475f;cursor:pointer;white-space:nowrap}

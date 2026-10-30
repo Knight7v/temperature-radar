@@ -477,3 +477,324 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- 抠图状态（1.0-a） ---------- */
+
+.ds-field > span b {
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.ds-matte-bar {
+  display: flex;
+  gap: 8px;
+}
+
+.ds-matte-bar > button {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: #fff;
+  color: #33465c;
+  cursor: pointer;
+}
+
+.ds-matte-bar > button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ds-matte-bar > button:not(:disabled):hover {
+  border-color: #94a9c4;
+  background: #f6f9fd;
+}
+
+/* ---------- 素材库按钮行与额度 ---------- */
+
+.ds-asset-row {
+  margin-top: 10px;
+  align-items: center;
+}
+
+.ds-quota {
+  margin-left: auto;
+  font-size: 12px;
+  color: #66768a;
+}
+
+.ds-quota[data-tone="warn"] {
+  color: #b45309;
+  font-weight: 600;
+}
+
+/* ---------- 素材库抽屉（1.0-a） ---------- */
+
+.ds-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ds-drawer[hidden] {
+  display: none;
+}
+
+.ds-drawer-mask {
+  position: absolute;
+  inset: 0;
+  background: #0b1a2e52;
+  backdrop-filter: blur(1px);
+}
+
+.ds-drawer-panel {
+  position: relative;
+  width: min(920px, 94vw);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f7f9fc;
+  box-shadow: -18px 0 48px #0b1a2e26;
+  animation: ds-slide-in 0.18s ease-out;
+}
+
+@keyframes ds-slide-in {
+  from { transform: translateX(24px); opacity: 0.4; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.ds-drawer-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 16px 20px;
+  background: #fff;
+  border-bottom: 1px solid var(--wb-line);
+}
+
+.ds-drawer-head h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #16283f;
+}
+
+.ds-drawer-head small {
+  color: #66768a;
+  font-size: 12px;
+}
+
+.ds-drawer-close {
+  margin-left: auto;
+  padding: 6px 14px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  color: #33465c;
+}
+
+.ds-drawer-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 20px 20px;
+  overflow: auto;
+}
+
+.ds-lib-filters {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.6fr) repeat(2, minmax(96px, 0.8fr)) repeat(2, minmax(120px, 0.9fr));
+  gap: 8px;
+}
+
+.ds-lib-filters input,
+.ds-lib-filters select {
+  padding: 7px 9px;
+  font: inherit;
+  font-size: 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: #fff;
+  min-width: 0;
+}
+
+.ds-lib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.ds-lib-empty {
+  grid-column: 1 / -1;
+  padding: 28px 12px;
+  text-align: center;
+  color: #66768a;
+  font-size: 13px;
+  background: #fff;
+  border: 1px dashed var(--wb-line);
+  border-radius: 12px;
+}
+
+.ds-lib-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--wb-line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ds-lib-thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: repeating-conic-gradient(#eef2f8 0% 25%, #fff 0% 50%) 50% / 16px 16px;
+  cursor: zoom-in;
+}
+
+.ds-lib-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.ds-lib-badge {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0b1a2e;
+  background: #e6edf7;
+}
+
+.ds-lib-badge[data-purpose="background"] { background: #dcfce7; color: #14532d; }
+.ds-lib-badge[data-purpose="first"] { background: #e0f2fe; color: #075985; }
+.ds-lib-badge[data-purpose="promo"] { background: #fee2e2; color: #7f1d1d; }
+.ds-lib-badge[data-purpose="deal"] { background: #fef3c7; color: #78350f; }
+
+.ds-lib-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px 2px;
+}
+
+/* 型号可能很长（KFR-35GW/(35549)FNHAc-B1），允许折两行，别硬挤成一条缝 */
+.ds-lib-meta strong {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #16283f;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-all;
+}
+
+.ds-lib-meta small {
+  font-size: 11px;
+  color: #7d8da3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-lib-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 10px 10px;
+  margin-top: auto;
+}
+
+.ds-lib-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ds-lib-cost {
+  font-size: 11px;
+  color: #66768a;
+  margin-right: auto;
+  white-space: nowrap;
+}
+
+.ds-lib-foot select {
+  padding: 3px 4px;
+  font-size: 11px;
+  border: 1px solid var(--wb-line);
+  border-radius: 6px;
+  background: #fff;
+  min-height: 0;
+  max-width: 82px;
+}
+
+.ds-lib-actions button {
+  flex: 1;
+  padding: 5px 6px;
+  font-size: 11px;
+  border: 1px solid var(--wb-line);
+  border-radius: 6px;
+  background: #fff;
+  color: #33465c;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ds-lib-actions button:hover {
+  border-color: #94a9c4;
+  background: #f6f9fd;
+}
+
+.ds-lib-actions .ds-lib-danger {
+  flex: 0 0 auto;
+}
+
+.ds-lib-actions .ds-lib-danger:hover {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.ds-lib-pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+  font-size: 12px;
+  color: #66768a;
+}
+
+.ds-lib-pager span {
+  margin-right: auto;
+}
+
+.ds-lib-pager button {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--wb-line);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  color: #33465c;
+}
+
+@media (max-width: 720px) {
+  .ds-lib-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ds-drawer-panel {
+    width: 100%;
+  }
+}

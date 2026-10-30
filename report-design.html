@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg">
+<title>战报设计 · 观星台</title>
+<link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai">
+<link rel="stylesheet" href="/css/report-design.css?v=20261028-report1">
+</head>
+<body class="workbench-body">
+<div id="reportShell"></div>
+<main class="workbench-main report-page">
+  <div class="workbench-eyebrow">VISUAL STUDIO</div>
+  <h1>战报设计</h1>
+  <p class="workbench-muted">选择长缨星河专属底图，填写中标信息，上传产品图片，即可合成喜报。</p>
+  <div class="report-tabs" role="tablist" aria-label="战报类型">
+    <button type="button" role="tab" aria-selected="true" id="engineeringTab">工程战报</button>
+    <button type="button" role="tab" aria-selected="false" id="promotionTab">大促战报</button>
+  </div>
+  <section id="engineeringPane" role="tabpanel" aria-labelledby="engineeringTab" class="report-layout">
+    <div class="report-panel report-editor">
+      <h2>项目中标喜报</h2>
+      <p class="report-hint">公司标识、喜报标题和标语已固定在底图中。</p>
+      <h3>1. 选择模板</h3>
+      <div class="report-templates" aria-label="中标喜报模板">
+        <button type="button" data-template="starfield" aria-pressed="true"><img src="/assets/design/report-templates/bid-win-starfield.png" alt="星河璀璨模板"><span>星河璀璨</span></button>
+        <button type="button" data-template="orbit" aria-pressed="false"><img src="/assets/design/report-templates/bid-win-orbit.png" alt="星轨跃升模板"><span>星轨跃升</span></button>
+        <button type="button" data-template="vertical" aria-pressed="false"><img src="/assets/design/report-templates/bid-win-vertical.png" alt="喜报长卷模板"><span>喜报长卷</span></button>
+      </div>
+      <h3>2. 填写项目信息</h3>
+      <label class="report-field"><span>项目名称 <em>必填</em></span><input id="projectName" maxlength="40" placeholder="例如：四川绵阳中物院" autocomplete="off"></label>
+      <label class="report-field"><span>产品名称 <em>必填</em></span><input id="productName" maxlength="28" placeholder="例如：海尔空调" autocomplete="off"></label>
+      <div class="report-field-row">
+        <label class="report-field"><span>数量 <em>必填</em></span><input id="quantity" type="number" min="1" max="999999" step="1" placeholder="例如：16"></label>
+        <label class="report-field"><span>单位</span><input id="unit" maxlength="4" value="台" placeholder="台"></label>
+      </div>
+      <p class="report-copy">成品文案：<strong id="reportCopy">长缨星河中标……</strong></p>
+      <h3>3. 上传产品图片</h3>
+      <label class="report-field"><span>产品图 <em>必填</em></span><input id="reportProduct" type="file" accept="image/png,image/jpeg,image/webp"><small>支持 PNG、JPG、WebP，最多 15 MB。透明底图片效果最佳；白底图片会尝试在本机去底。</small></label>
+      <label class="report-check"><input id="autoMatte" type="checkbox" checked> 自动去除纯色背景</label>
+      <label class="report-field"><span>产品大小 <b id="productScaleValue">100%</b></span><input id="productScale" type="range" min="50" max="140" value="100" step="5"></label>
+    </div>
+    <div class="report-panel report-preview">
+      <div class="report-preview-heading"><h2>实时预览</h2><span>本地合成 · 原图不上传</span></div>
+      <div class="report-canvas-wrap"><canvas id="reportCanvas" width="941" height="1672" aria-label="中标喜报预览"></canvas></div>
+      <p id="reportStatus" role="status">正在加载模板……</p>
+      <button type="button" id="downloadReport" class="workbench-primary" disabled>下载喜报 PNG</button>
+    </div>
+  </section>
+  <section id="promotionPane" role="tabpanel" aria-labelledby="promotionTab" class="report-promotion" hidden>
+    <h2>大促战报</h2>
+    <p>大促战报模板正在准备中。</p>
+  </section>
+</main>
+<script src="/js/workbench-session.js?v=20261028-report1"></script>
+<script src="/js/workbench-shell.js?v=20261028-report1"></script>
+<script src="/js/design-matte.js?v=20261027-design1a"></script>
+<script src="/js/report-design.js?v=20261028-report1"></script>
+</body>
+</html>

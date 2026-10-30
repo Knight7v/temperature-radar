@@ -19,22 +19,33 @@
       }
       return body.data;
     }
+    const post = (action, payload) =>
+      json(`/api/design?action=${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload || {})
+      });
+    const qs = params => {
+      const search = new URLSearchParams();
+      Object.entries(params || {}).forEach(([key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) search.set(key, value);
+      });
+      const text = search.toString();
+      return text ? `&${text}` : '';
+    };
     return {
       meta: () => json('/api/design?action=meta'),
       scenes: () => json('/api/design?action=scenes'),
       verify: () => json('/api/design?action=verify'),
-      draftPrompt: payload =>
-        json('/api/design?action=prompt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }),
-      generate: payload =>
-        json('/api/design?action=generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        })
+      usage: month => json(`/api/design?action=usage${month ? `&month=${encodeURIComponent(month)}` : ''}`),
+      draftPrompt: payload => post('prompt', payload),
+      generate: payload => post('generate', payload),
+      refineMatte: payload => post('matting', payload),
+      assets: params => json(`/api/design?action=assets${qs(params)}`),
+      assetSave: payload => post('asset-save', payload),
+      assetUpdate: payload => post('asset-update', payload),
+      assetDelete: payload => post('asset-delete', payload),
+      assetsZip: params => json(`/api/design?action=assets-zip${qs(params)}`)
     };
   }
 

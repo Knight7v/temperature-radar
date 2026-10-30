@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs>
+    <clipPath id="upper"><rect x="40" y="150" width="1000" height="565" rx="11"/></clipPath>
+    <clipPath id="lower"><rect x="40" y="735" width="1000" height="540" rx="11"/></clipPath>
+  </defs>
+  <rect width="1080" height="1350" fill="#f5f7fa"/>
+  <g clip-path="url(#upper)">
+    <rect x="40" y="150" width="1000" height="565" fill="#fff"/>
+    <rect x="200" y="150" width="630" height="92" fill="#eaf0f8"/>
+    <rect x="830" y="150" width="210" height="565" fill="#fff8f2"/>
+    <rect x="830" y="150" width="210" height="92" fill="#fcebdc"/>
+    <g stroke="#aab5c2" stroke-width="2">
+      <path d="M200 150V715 M410 150V715 M620 150V715 M830 150V715"/>
+    </g>
+    <g stroke="#c8d0da" stroke-width="1.5">
+      <path d="M40 440H1040 M40 575H1040"/>
+    </g>
+  </g>
+  <rect x="40" y="150" width="1000" height="565" rx="11" fill="none" stroke="#3192e2" stroke-width="4"/>
+  <g clip-path="url(#lower)">
+    <rect x="40" y="735" width="1000" height="540" fill="#fff"/>
+    <rect x="830" y="735" width="210" height="540" fill="#fff8f2"/>
+    <g stroke="#aab5c2" stroke-width="2">
+      <path d="M200 735V1275 M410 735V1275 M620 735V1275 M830 735V1275"/>
+    </g>
+    <g stroke="#c8d0da" stroke-width="1.5">
+      <path d="M40 825H1040 M40 915H1040 M40 1005H1040 M40 1095H1040 M40 1185H1040"/>
+    </g>
+  </g>
+  <rect x="40" y="735" width="1000" height="540" rx="11" fill="none" stroke="#3192e2" stroke-width="4"/>
+</svg>

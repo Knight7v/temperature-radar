@@ -1,93 +1,211 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>客服质检 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><link rel="stylesheet" href="/css/quality.css?v=20261019-redesign"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>客服质检 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><link rel="stylesheet" href="/css/quality.css?v=20261027-insdate2"></head>
 <body class="workbench-body"><div id="shell"></div><main class="workbench-main quality-main">
-<div class="workbench-eyebrow">SERVICE QUALITY</div><h1>客服质检</h1><p class="workbench-muted">AI 逐条判定并取证，主管只处理它标记出的问题会话；分数按 70/30 固定公式计算，人不重复打分。</p>
+<div class="workbench-eyebrow">SERVICE QUALITY</div><h1>客服质检</h1><p class="workbench-muted">先看整体水平，再处理高风险会话，最后逐条清待复核。AI 逐条判定并取证，分数按 70/30 固定公式计算。</p>
 
-<details class="qc-card qc-fold" id="importCard">
-  <summary class="qc-fold-head">
-    <span class="qc-fold-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>
-    <span class="qc-fold-text"><strong>导入聊天记录</strong><em id="importSummary">支持 UTF-8 的 .log / .txt，单文件最大 3 MB</em></span>
-    <span class="qc-fold-state">展开</span>
-  </summary>
-  <div class="qc-fold-body">
-    <div class="qc-toolbar"><label>聊天记录文件<input id="file" type="file" accept=".log,.txt,text/plain"></label><label>导入店铺<select id="importShop"><option value="">自动识别 / 待关联</option></select></label><label>客服名称关键词<input id="agentHint" type="text" value="格力旗舰店" maxlength="60" aria-describedby="hint-help"></label><label>抽检比例<select id="rate"><option value="5">5%</option><option value="10">10%</option><option value="15" selected>15%</option><option value="20">20%</option><option value="30">30%</option><option value="50">50%</option><option value="100">全部</option></select></label><button id="preview" class="workbench-primary" type="button">校验与预览</button></div>
-    <p id="hint-help" class="qc-note">用于区分客服与顾客发言；请填写日志里客服名称共有的文字。导入店铺用于准确关联店铺、品牌和客服组别；未选择时只在名称唯一匹配时自动关联。</p>
-    <p id="status" role="status">请选择聊天记录文件。</p>
-    <div id="previewBox" hidden><div id="previewStats" class="qc-stats"></div><p id="sampleStats" class="qc-sample-stats"></p><p id="previewWarning" class="qc-note"></p><div id="previewExamples" class="qc-examples"></div><button id="confirm" class="workbench-primary" type="button">确认导入会话</button></div>
-  </div>
-</details>
-
-<section class="qc-card" id="boardCard" aria-label="质检工作台">
+<section class="qc-card qc-topbar" id="boardCard" aria-label="质检工作台">
   <div class="qc-board">
     <div class="qc-kpis">
       <div class="qc-kpi hot" id="kpiReview" role="button" tabindex="0"><span>待我复核</span><strong>—</strong><em>条</em></div>
       <div class="qc-kpi" id="kpiPending" role="button" tabindex="0"><span>未分析</span><strong>—</strong><em>条</em></div>
       <div class="qc-kpi" id="kpiDone" role="button" tabindex="0"><span>今日已复核</span><strong>—</strong><em>条</em></div>
-      <div class="qc-kpi bad" id="kpiRisk"><span>高风险（D 级）</span><strong>—</strong><em>条</em></div>
+      <div class="qc-kpi bad" id="kpiRisk" role="button" tabindex="0"><span>高风险（D 级）</span><strong>—</strong><em>条</em></div>
     </div>
     <div class="qc-board-acts">
       <label class="qc-inline">分析日期<input id="aiDate" type="date"></label>
-      <select id="aiLimit" class="qc-inline-select" aria-label="本次分析数量"><option value="5">5 条</option><option value="10" selected>10 条</option><option value="20">20 条</option><option value="50">50 条</option></select>
-      <button id="aiBatch" class="workbench-primary" type="button">批量 AI 分析</button>
+      <button id="aiBatch" class="workbench-primary" type="button">分析全部未分析</button>
+      <button id="importOpen" type="button">导入记录</button>
       <button id="exportBtn" type="button">导出</button>
+      <a class="qc-link-btn" href="/quality-calibration.html">准确率校准</a>
     </div>
   </div>
   <div class="qc-board-foot"><span id="aiBadge" class="qc-ai-chip">正在检查 API 状态…</span><span id="aiStatus" class="qc-note" role="status"></span></div>
 </section>
 
-<section class="qc-card" id="aiCard" aria-labelledby="ai-title">
-  <div class="qc-section-head"><div><h2 id="ai-title">AI 分析明细</h2><p>质检的核心结论：整体水平、问题集中在谁、具体是哪一条。</p></div></div>
+<nav class="qc-viewnav" id="viewTabs" role="tablist" aria-label="质检视图">
+  <button type="button" data-view="overview" class="on" role="tab" aria-selected="true">总览</button>
+  <button type="button" data-view="sessions" role="tab" aria-selected="false">会话 <b id="navCntAll">0</b></button>
+  <button type="button" data-view="insight" role="tab" aria-selected="false">消费者洞察</button>
+  <span class="qc-viewnav-hint">主管的日常顺序：整体 → 高风险 → 逐条</span>
+  <button type="button" class="qc-viewnav-rules" id="rulesOpen" title="查 19 条评分规则（快捷键 ?）">规则速查</button>
+</nav>
 
-  <div class="qc-ai-sec">
-    <h3><i>1</i>结论概览</h3>
+<section class="qc-view" id="viewOverview" aria-label="总览">
+  <section class="qc-card">
+    <div class="qc-section-head">
+      <div><h2>整体水平</h2><p>这批会话的平均分、等级分布和最常失分的项。</p></div>
+      <button id="ovGoSessions" type="button">看全部会话</button>
+    </div>
     <div id="aiOverview" class="qc-ov"><p class="qc-note">正在加载…</p></div>
-  </div>
+  </section>
 
-  <div class="qc-ai-sec">
-    <h3><i>2</i>按客服</h3>
+  <section class="qc-card qc-risk" id="riskCard" aria-labelledby="risk-title" hidden>
+    <div class="qc-section-head">
+      <div><h2 id="risk-title">优先处理：高风险会话</h2><p>AI 判为 D 级（40 分以下），通常意味着顾客已经明确不满，建议先看这批。</p></div>
+      <div class="qc-risk-act"><strong id="riskCount">0</strong><span>条</span><button id="riskOpen" type="button">查看全部</button></div>
+    </div>
+    <div id="riskList" class="qc-risk-list"></div>
+  </section>
+
+  <section class="qc-card" aria-labelledby="agents-title">
+    <div class="qc-section-head">
+      <div><h2 id="agents-title">按客服</h2><p>谁的分低、问题集中在哪个评分项。</p></div>
+    </div>
     <div id="aiAgents" class="qc-table-wrap"></div>
-  </div>
+  </section>
+</section>
 
-  <div class="qc-ai-sec">
-    <h3><i>3</i>每条会话</h3>
+<section class="qc-view" id="viewSessions" aria-label="会话列表" hidden>
+  <section class="qc-card qc-session-card">
     <div class="qc-ai-toolbar">
       <div class="qc-seg" id="aiTabs" role="tablist">
         <button type="button" data-tab="pending" class="on" role="tab">待复核 <b id="cntPending">0</b></button>
+        <button type="button" data-tab="todo" role="tab">待分析 <b id="cntTodo">0</b></button>
         <button type="button" data-tab="all" role="tab">全部 <b id="cntAll">0</b></button>
         <button type="button" data-tab="reviewed" role="tab">已复核 <b id="cntDone">0</b></button>
       </div>
       <input id="filterAgent" type="search" class="qc-inline-select" placeholder="客服名称" aria-label="按客服筛选">
       <button id="search" type="button">查询</button>
+      <label class="qc-check" title="隐藏 AI 判定无问题的会话，只看真正需要人看的"><input id="needsOnly" type="checkbox"> 只看需人工判断</label>
       <span id="aiSessionsMeta" class="qc-note"></span>
     </div>
-    <div id="aiSessions" class="qc-table-wrap"></div>
+    <div id="aiSessions" class="qc-table-wrap qc-session-scroll"></div>
     <div id="aiPager" class="qc-pager"></div>
-  </div>
+  </section>
 </section>
 
-<section class="qc-card" id="reviewCard" hidden aria-labelledby="review-title">
-  <div class="qc-section-head">
-    <div><h2 id="review-title">单条复核</h2><p id="reviewMeta"></p></div>
-    <div class="qc-review-tags"><span id="reviewAiTag" class="qc-pill">—</span><button id="closeDetail" type="button">收起</button></div>
-  </div>
-  <div class="qc-split">
-    <div class="qc-pane">
-      <h3>聊天原文（已脱敏）<small>AI 引用的句子已标黄</small></h3>
-      <div id="messages" class="qc-chat"></div>
+<section class="qc-view" id="viewInsight" aria-label="消费者洞察" hidden>
+  <section class="qc-card" id="insightCard">
+    <div class="qc-section-head">
+      <div><h2 id="insight-title">消费者洞察</h2><p>把顾客提的问题汇总起来看：问的是什么、售前售后各占多少、客服哪里没答好、哪些问题还没闭环。</p></div>
+      <div class="qc-ins-acts">
+        <span id="insDateLabel" class="qc-ins-scope" role="button" tabindex="0" title="跟随页面上方的「分析日期」，点这里可以去改">范围：全部日期</span>
+        <button id="insRun" class="workbench-primary" type="button">开始分析</button>
+        <button id="insStop" type="button" hidden>停止</button>
+        <button id="insExport" type="button">导出</button>
+      </div>
     </div>
-    <div class="qc-pane">
-      <h3>AI 逐项判定<small>不认同的直接改判，其余不用动</small></h3>
-      <div id="aiCriteria" class="qc-crit"></div>
-      <label class="qc-note-label">复核备注<textarea id="reviewNote" rows="3" maxlength="2000" placeholder="记录改判原因或需外部核实的事项"></textarea></label>
+    <p id="insStatus" class="qc-note" role="status">正在加载…</p>
+    <div id="insKpis" class="qc-ins-kpis"></div>
+
+    <div class="qc-ins-grid">
+      <div class="qc-ins-panel">
+        <h3>顾客问了什么<small id="insStageMeta"></small></h3>
+        <div id="insTopics" class="qc-ins-bars"></div>
+        <div id="insSample" class="qc-ins-sample" hidden></div>
+      </div>
+      <div class="qc-ins-panel">
+        <h3>客服哪里没答好<small>按“问题条数”排序，点一条看原文</small></h3>
+        <div id="insGaps" class="qc-ins-bars"></div>
+        <div id="insGapSample" class="qc-ins-sample" hidden></div>
+      </div>
+    </div>
+
+    <div class="qc-ins-panel">
+      <h3>没答清的问题<small id="insOpenMeta"></small></h3>
+      <div class="qc-ins-filters">
+        <select id="insFilterStage" aria-label="按阶段筛选"><option value="">全部阶段</option><option value="pre_sale">售前</option><option value="after_sale">售后</option></select>
+        <select id="insFilterTopic" aria-label="按主题筛选"><option value="">全部主题</option></select>
+        <select id="insFilterGap" aria-label="按不足类型筛选"><option value="">全部不足</option></select>
+        <input id="insFilterAgent" type="search" placeholder="客服名称" aria-label="按客服筛选">
+        <button id="insReset" type="button">清空筛选</button>
+      </div>
+      <div id="insOpen" class="qc-table-wrap qc-ins-scroll"></div>
+    </div>
+
+    <div class="qc-ins-panel">
+      <h3>按客服对比<small>问题没答清的比例从高到低</small></h3>
+      <div id="insAgents" class="qc-table-wrap"></div>
+    </div>
+
+    <div class="qc-ins-panel qc-ins-report" id="insReportPanel">
+      <div class="qc-ins-report-head">
+        <h3>洞察总结与行动建议<small>根据上面的统计生成，不额外编数字</small></h3>
+        <button id="insReport" type="button">生成总结</button>
+      </div>
+      <div id="insReportBox"><p class="qc-note">还没有生成。点右上角「生成总结」，约 20 秒。</p></div>
+    </div>
+  </section>
+</section>
+
+</main>
+
+<div class="qc-scrim" id="scrim" hidden></div>
+
+<aside class="qc-drawer qc-drawer-import" id="importCard" aria-labelledby="import-title" hidden>
+  <div class="qc-drawer-head">
+    <div><h2 id="import-title">导入聊天记录</h2><p id="importSummary">支持 UTF-8 的 .log / .txt，单文件最大 3 MB</p></div>
+    <button id="importClose" type="button">关闭</button>
+  </div>
+  <div class="qc-drawer-body">
+    <div class="qc-toolbar"><label>聊天记录文件<input id="file" type="file" accept=".log,.txt,text/plain"></label><label>导入店铺<select id="importShop"><option value="">自动识别 / 待关联</option></select></label></div>
+    <div class="qc-toolbar"><label>会话记录列表（可选）<input id="listFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label></div>
+    <p class="qc-note">选填京麦「咨询会话查询」导出的 .xlsx：用「掩码顾客ID + 咨询时间 + 接待客服」三项交叉核对，把 log 里看不见的完整顾客ID 还原出来，同时补上首次响应时间、会话时长和双方消息条数（可对照 log 判断对话是否完整）。</p>
+    <div id="listReport" class="qc-list-report" hidden></div>
+    <div class="qc-toolbar"><label>客服名称关键词<input id="agentHint" type="text" value="格力旗舰店" maxlength="60" aria-describedby="hint-help"></label><label>抽检比例<select id="rate"><option value="5">5%</option><option value="10">10%</option><option value="15" selected>15%</option><option value="20">20%</option><option value="30">30%</option><option value="50">50%</option><option value="100">全部</option></select></label><button id="preview" class="workbench-primary" type="button">校验与预览</button></div>
+    <p id="hint-help" class="qc-note">用于区分客服与顾客发言；请填写日志里客服名称共有的文字。导入店铺用于准确关联店铺、品牌和客服组别；未选择时只在名称唯一匹配时自动关联。</p>
+    <p id="status" role="status">请选择聊天记录文件。</p>
+    <div id="previewBox" hidden><div id="previewStats" class="qc-stats"></div><p id="sampleStats" class="qc-sample-stats"></p><p id="previewWarning" class="qc-note"></p><div id="previewExamples" class="qc-examples"></div><button id="confirm" class="workbench-primary" type="button">确认导入会话</button></div>
+  </div>
+</aside>
+
+<aside class="qc-drawer qc-drawer-review" id="reviewCard" aria-labelledby="review-title" hidden>
+  <div class="qc-drawer-head">
+    <div><h2 id="review-title">单条复核</h2><p id="reviewMeta"></p><p id="reviewCustomer" class="qc-review-customer" hidden></p></div>
+    <div class="qc-review-tags"><span id="reviewAiTag" class="qc-pill">—</span><button id="closeDetail" type="button">关闭</button></div>
+  </div>
+  <div class="qc-drawer-body">
+    <div class="qc-split">
+      <div class="qc-pane">
+        <h3>聊天原文（已脱敏）<small id="chatHint">AI 引用的句子已标黄</small></h3>
+        <div id="messages" class="qc-chat"></div>
+      </div>
+      <div class="qc-pane">
+        <h3>AI 逐项判定<small>不认同的直接改判，其余不用动</small></h3>
+        <div id="aiCriteria" class="qc-crit"></div>
+        <label class="qc-note-label">复核备注<textarea id="reviewNote" rows="3" maxlength="2000" placeholder="记录改判原因或需外部核实的事项"></textarea></label>
+      </div>
     </div>
   </div>
   <div class="qc-review-foot">
+    <button id="prevBtn" type="button" title="上一条（快捷键 ←）">上一条</button>
     <button id="confirmReview" class="workbench-primary" type="button">确认并下一条</button>
+    <button id="nextBtn" type="button" title="下一条（快捷键 →）">下一条</button>
     <div id="reviewScore" class="qc-review-score"></div>
     <span id="reviewStatus" class="qc-note" role="status"></span>
     <div class="qc-foot-gap"></div>
     <span id="reviewProgress" class="qc-note"></span>
   </div>
-</section>
+</aside>
 
-</main><script src="/js/workbench-session.js?v=20261020-guanxingtai"></script><script src="/js/workbench-shell.js?v=20261020-guanxingtai"></script><script src="/js/quality.js?v=20261019-roles"></script></body></html>
+<!-- 规则速查：复核时拿不准某项该不该扣，直接查。内容由接口 meta 的 rubric 渲染，与 AI 判定同源 -->
+<div class="qc-rules" id="rulesCard" hidden>
+  <div class="qc-rules-backdrop" id="rulesBackdrop"></div>
+  <div class="qc-rules-panel" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+    <div class="qc-rules-head">
+      <div>
+        <h2 id="rules-title">规则速查<small id="rulesVer"></small></h2>
+        <p>19 条评分规则。查不清「这项该不该扣」的时候来这里看判定标准，和 AI 用的是同一份。</p>
+      </div>
+      <button id="rulesClose" type="button">关闭</button>
+    </div>
+    <div class="qc-rules-scale" id="rulesScale"></div>
+    <div class="qc-rules-tools">
+      <input id="rulesSearch" type="search" placeholder="搜规则：返现 / 单字 / 链接 / 时效 / 发票…" aria-label="搜索规则">
+      <div class="qc-rules-tabs" id="rulesTabs" role="tablist" aria-label="按类别筛选">
+        <button type="button" data-kind="" class="on" role="tab">全部 <b id="rtAll">0</b></button>
+        <button type="button" data-kind="fatal" role="tab">红线 <b id="rtFatal">0</b></button>
+        <button type="button" data-kind="critical" role="tab">关键项 <b id="rtCritical">0</b></button>
+        <button type="button" data-kind="standard" role="tab">非关键项 <b id="rtStandard">0</b></button>
+      </div>
+      <button id="rulesExpand" type="button">全部展开</button>
+    </div>
+    <div class="qc-rules-body" id="rulesList"></div>
+    <div class="qc-rules-foot">
+      <span id="rulesMeta" class="qc-note"></span>
+      <span class="qc-note">快捷键：? 打开 · Esc 关闭</span>
+    </div>
+  </div>
+</div>
+
+<script src="/js/workbench-session.js?v=20261027-roster"></script><script src="/js/workbench-shell.js?v=20261028-pk1"></script><script src="/js/quality.js?v=20261027-datefix"></script><script src="/js/quality-insight.js?v=20261027-insdate"></script></body></html>

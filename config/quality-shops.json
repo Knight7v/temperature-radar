@@ -1,0 +1,15 @@
+{
+  "_说明": "质检店铺白名单。填好后系统才能区分「我司店铺」与「别家店铺」。hosts 填店铺专属域名（如 xxx.tmall.com），shopIds 填平台店铺 ID（京东 mall.jd.com/index-<ID>.html 里的数字）。不填则同平台链接一律按「无法确认」交人工复核，不会误判违规。",
+  "shops": [
+    { "name": "格力旗舰店（京东POP）", "platform": "jd", "hosts": [], "shopIds": [], "nameKeywords": ["格力旗舰店"] },
+    { "name": "格力空调换新", "platform": "jd", "hosts": [], "shopIds": [], "nameKeywords": ["格力空调换新", "空调换新"] },
+    { "name": "格力空调正品专卖", "platform": "jd", "hosts": [], "shopIds": [], "nameKeywords": ["格力空调正品专卖", "正品专卖店"] },
+    { "name": "格力直营旗舰店", "platform": "jd", "hosts": [], "shopIds": [], "nameKeywords": ["格力直营旗舰", "直营旗舰店"] },
+    { "name": "董明珠健康家2号店", "platform": "jd", "hosts": [], "shopIds": [], "nameKeywords": ["董明珠健康家"] },
+    { "name": "喵速达（天猫）", "platform": "tmall", "hosts": [], "shopIds": [], "nameKeywords": ["喵速达"] },
+    { "name": "喵住（天猫）", "platform": "tmall", "hosts": [], "shopIds": [], "nameKeywords": ["喵住"] },
+    { "name": "海尔星河", "platform": "tmall", "hosts": [], "shopIds": [], "nameKeywords": ["海尔星河", "星河旗舰店"] },
+    { "name": "海尔优选", "platform": "tmall", "hosts": [], "shopIds": [], "nameKeywords": ["海尔优选"] },
+    { "name": "长缨星河", "platform": "tmall", "hosts": [], "shopIds": [], "nameKeywords": ["长缨星河"] }
+  ]
+}

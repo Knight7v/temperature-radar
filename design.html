@@ -6,7 +6,7 @@
 <link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg">
 <title>视觉设计 · 观星台</title>
 <link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai">
-<link rel="stylesheet" href="/css/design-studio.css?v=20261020-design1">
+<link rel="stylesheet" href="/css/design-studio.css?v=20261027-design1a">
 <style>
 .design-heading{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
 .design-heading h2{font-size:15px;margin:0}
@@ -34,8 +34,25 @@
       <div class="ds-field">
         <span>商品图片</span>
         <input id="productFile" type="file" accept="image/png,image/jpeg,image/webp">
-        <small class="ds-hint" id="fileHint">支持 PNG、JPG、WebP，最大 15 MB。白底图或透明底图效果最好。</small>
+        <small class="ds-hint" id="fileHint">支持 PNG、JPG、WebP，最大 15 MB。白底图和透明底图都能自动处理。</small>
       </div>
+
+      <div class="ds-field" id="matteField">
+        <span>抠图 <b id="matteScore"></b></span>
+        <div class="ds-matte-bar">
+          <button type="button" id="rematteBtn" disabled>重新抠图</button>
+          <button type="button" id="rawBtn" disabled>改用原图</button>
+        </div>
+        <small class="ds-hint" id="matteHint">白底图上传后会自动抠成透明底（在本机完成，原图不上传）。抠不干净的可以点「改用原图」，会自动垫白色展示台。</small>
+      </div>
+
+      <div class="ds-field" id="skuField">
+        <span>型号 / SKU</span>
+        <input id="sku" list="skuList" maxlength="40" placeholder="例如：KFR-35GW/(35549)FNhAc-B1">
+        <datalist id="skuList"></datalist>
+        <small class="ds-hint">从产品知识库选一个，或手填。填了以后才能在素材库里按型号找图。</small>
+      </div>
+
       <div class="ds-field" id="nameField">
         <span>商品名称</span>
         <input id="productName" maxlength="36" placeholder="例如：格力云之海 1.5 匹挂机">
@@ -212,13 +229,21 @@
         <button type="button" id="downloadPng" class="workbench-primary" disabled>下载 PNG</button>
         <button type="button" id="downloadJpg" disabled>下载 JPG（更小）</button>
       </div>
+      <div class="ds-row ds-asset-row">
+        <button type="button" id="saveAssetBtn" disabled>存进素材库</button>
+        <button type="button" id="openLibraryBtn">素材库 <b id="assetCount">0</b></button>
+        <span class="ds-quota" id="usageNote"></span>
+      </div>
     </section>
   </div>
+  <div id="libraryDrawer"></div>
 </main>
-<script src="/js/workbench-session.js?v=20261020-guanxingtai"></script>
-<script src="/js/workbench-shell.js?v=20261020-guanxingtai"></script>
-<script src="/js/design-ai.js?v=20261020-design1"></script>
+<script src="/js/workbench-session.js?v=20261027-roster"></script>
+<script src="/js/workbench-shell.js?v=20261028-pk1"></script>
+<script src="/js/design-ai.js?v=20261027-design1a"></script>
+<script src="/js/design-matte.js?v=20261027-design1a"></script>
+<script src="/js/design-library.js?v=20261027-design1a"></script>
 <script src="/js/design-deal.js?v=20261020-deal1"></script>
-<script src="/js/design.js?v=20261020-deal1"></script>
+<script src="/js/design.js?v=20261027-design1a"></script>
 </body>
 </html>

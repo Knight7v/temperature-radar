@@ -325,7 +325,7 @@ function renderHeadline(cur,shopTotals){
   }).sort((a,b)=>{const x=a.rate,y=b.rate;if(x==null&&y==null)return b.cents-a.cents;if(x==null)return 1;if(y==null)return -1;return y-x;});
 
   const box=q('ghRanks');
-  if(!rows.length){box.innerHTML='<p class="gh-empty">没有可统计的店铺，请先在数据分析管理里维护店铺档案。</p>';q('ghRankBase').textContent='进度基准线 —';q('ghRankLag').textContent='—';return;}
+  if(!rows.length){box.innerHTML='<p class="gh-empty">没有可统计的店铺，请先在销售分析里维护店铺档案。</p>';q('ghRankBase').textContent='进度基准线 —';q('ghRankLag').textContent='—';return;}
 
   box.innerHTML=rows.map((r,i)=>{
    let barCls='',pctText='—',lag=false;

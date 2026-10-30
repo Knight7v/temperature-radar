@@ -6,6 +6,7 @@ const {getInventoryPool,transact}=require('../lib/db/inventory-client');
 const {ensureQualitySchema}=require('../lib/quality/schema');
 const {readQualityFile}=require('../lib/quality/upload');
 const {parseChatLog}=require('../lib/quality/parser');
+const {parseSessionList,reconcileSessions}=require('../lib/quality/session-list');
 const {findEvidence}=require('../lib/quality/evidence');
 const {validateReview}=require('../lib/quality/review');
 const {RULES,RULE_VERSION}=require('../lib/quality/rules');
@@ -69,6 +70,28 @@ module.exports=apiHandler(async(req,res)=>{
   const hash=createHash('sha256').update(raw).digest('hex');
   const inserted=(await db.query('INSERT INTO quality_previews(tenant_id,source_hash,filename,data,created_by) VALUES($1,$2,$3,$4,$5) RETURNING id',[tenant,hash,filename,data,user.userId])).rows[0];
   return res.json({data:{id:inserted.id,filename,summary:data.summary,speakers:data.speakers,examples:data.sessions.slice(0,3).map(session=>({ordinal:session.ordinal,agent:session.agent,startedAt:session.startedAt,anomalies:session.anomalies,evidenceCount:session.evidence.length}))}});
+ }
+ if(action==='attach-list'){
+  /* 会话记录列表（京麦 xlsx）→ 还原完整顾客ID + 补会话级时点。
+     单列一个动作而不是并进 preview：log 与 xlsx 是两个文件，为它改成 multipart 不值得。 */
+  let filename;try{filename=decodeURIComponent(req.headers['x-quality-filename']||'');}catch{fail('文件名编码无效');}
+  filename=String(filename).split(/[\\/]/).at(-1).slice(0,200)||'会话记录.xlsx';
+  const raw=Buffer.isBuffer(body)?body:Buffer.alloc(0);
+  if(!raw.length)fail('会话记录文件为空，请重新选择');
+  if(raw.length>16*1024*1024)fail('会话记录文件超过 16MB，请拆分后再上传');
+  if(raw[0]!==0x50||raw[1]!==0x4b)fail('这不是 Excel 文件，请上传京麦导出的「咨询会话查询」.xlsx');
+  const previewId=uuid(String(req.query.previewId||''));
+  const parsed=await parseSessionList(raw);
+  const report=await transact(db,async client=>{
+   const preview=(await client.query('SELECT * FROM quality_previews WHERE tenant_id=$1 AND id=$2 AND created_by=$3 FOR UPDATE',[tenant,previewId,user.userId])).rows[0];
+   if(!preview)fail('预览不存在或已过期，请重新上传聊天记录',404);
+   if(Date.now()-new Date(preview.created_at).getTime()>30*60*1000)fail('预览已过期，请重新上传聊天记录');
+   const summary=reconcileSessions(preview.data.sessions,parsed.rows);
+   const data={...preview.data,list:{filename,range:parsed.range,report:summary}};
+   await client.query('UPDATE quality_previews SET data=$3 WHERE tenant_id=$1 AND id=$2',[tenant,previewId,JSON.stringify(data)]);
+   return summary;
+  });
+  return res.json({data:report});
  }
  if(action==='confirm'){
   const result=await transact(db,async client=>{
