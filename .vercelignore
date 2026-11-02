@@ -1,0 +1,19 @@
+# 本地运行时数据：比价登录态含京东 cookie，绝不上传到云端
+data/
+backups/
+output/
+
+# 开发期产物，线上不需要
+tests/
+scripts/bin/
+test-results/
+playwright-report/
+docs/
+.workbuddy/
+.superpowers/
+
+# 凭据与本机启动器：绝不能出现在公网
+本地账号.txt
+*.command
+启动工作台.command
+启动工作台-远程.command
