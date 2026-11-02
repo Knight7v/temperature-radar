@@ -581,3 +581,11 @@ body.qc-locked{overflow:hidden}
  .qc-review-customer{gap:6px}
  .qc-cust-id{font-size:12px}
 }
+
+/* ---------- 运营指标（P0-B） ---------- */
+.qc-ops-kpis{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin:10px 0 14px}
+.qc-ops-kpi{border:1px solid #e6ebf4;border-radius:11px;padding:10px 13px;background:#fcfdff;display:grid;gap:2px}
+.qc-ops-kpi span{font-size:11.5px;color:#708097}
+.qc-ops-kpi strong{font-size:20px;font-weight:700;color:#17233a;font-variant-numeric:tabular-nums}
+.qc-ops-kpi em{font-style:normal;font-size:10.5px;color:#93a1b5}
+@media(max-width:1180px){.qc-ops-kpis{grid-template-columns:repeat(2,1fr)}}

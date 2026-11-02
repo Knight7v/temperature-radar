@@ -1,0 +1,192 @@
+/* ============================================================
+   用户与权限页专用样式（2026-10-30 视觉升级 v1）
+   视觉方向：Tabler 骨架 + shadcn 表格 + CSS 变量打底
+   ⚠️ 本文件只被 users.html 引用；变量是全站升级的种子，
+   以后其他页面升级时把 :root 变量块抽到公共文件，这里再改为引用。
+   ============================================================ */
+/* 变量同时挂在 .u-modal 上：弹窗挂在 </main> 之外，吃不到 .u-root 的作用域 */
+.u-root,.u-modal{
+  /* ---- 色板变量（全站种子） ---- */
+  --u-bg:#f4f6fa;
+  --u-card:#ffffff;
+  --u-card-sub:#f8fafd;
+  --u-line:#e5eaf2;
+  --u-line-strong:#d4dce8;
+  --u-ink:#1a2333;
+  --u-ink-2:#3a4a63;
+  --u-sub:#708097;
+  --u-faint:#9aa7ba;
+  --u-blue:#2563eb;
+  --u-blue-soft:#eaf1fe;
+  --u-green:#16a34a;--u-green-soft:#e8f7ee;
+  --u-red:#dc2626;--u-red-soft:#fdecec;
+  --u-amber:#d97706;--u-amber-soft:#fdf1de;
+  --u-violet:#7c3aed;--u-violet-soft:#f1ebfd;
+  --u-teal:#0d9488;--u-teal-soft:#e4f5f3;
+  --u-gray-soft:#eef1f6;
+  --u-radius:10px;
+  --u-radius-s:7px;
+  --u-shadow:0 1px 2px rgba(23,35,58,.04);
+}
+
+/* ================= 页头 ================= */
+.u-pagehead{display:flex;align-items:flex-start;gap:16px;margin-bottom:6px}
+.u-pagehead .u-eyebrow{font-size:11px;letter-spacing:.14em;color:var(--u-blue);font-weight:700;margin-bottom:2px}
+.u-pagehead h1{font-size:22px;font-weight:700;letter-spacing:.01em;margin:0}
+.u-pagehead .u-desc{font-size:13px;color:var(--u-sub);margin:3px 0 0}
+.u-pagehead .u-actions{margin-left:auto;display:flex;gap:10px;flex-shrink:0;padding-top:8px}
+
+/* ---- 按钮 ---- */
+.u-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:var(--u-radius-s);font-size:13px;font-weight:600;border:1px solid transparent;cursor:pointer;background:transparent;color:var(--u-ink-2);font-family:inherit}
+.u-btn-primary{background:var(--u-blue);color:#fff;box-shadow:0 1px 2px rgba(37,99,235,.28)}
+.u-btn-primary:hover{background:#1d4fd7}
+.u-btn-ghost{border-color:var(--u-line-strong);background:var(--u-card);color:var(--u-ink-2)}
+.u-btn-ghost:hover{border-color:#b9c6d8;background:var(--u-card-sub)}
+
+/* ================= tab 切换条（同质检页 qc-viewnav 风格） ================= */
+.u-tabs{display:flex;align-items:center;gap:4px;margin:16px 0 14px;padding:4px;background:#eef2f8;border-radius:12px;position:sticky;top:60px;z-index:20}
+.u-tabs button{border:0;background:transparent;padding:8px 16px;border-radius:9px;font:inherit;font-size:13.5px;color:#3c4a63;cursor:pointer;white-space:nowrap}
+.u-tabs button.on{background:#fff;color:#1454c8;font-weight:600;box-shadow:0 1px 2px #14203a14}
+.u-tabs button:focus-visible{outline:2px solid #9dbcf5;outline-offset:1px}
+.u-tabs-hint{margin-left:auto;padding-right:10px;font-size:12px;color:#8494ab}
+@media(max-width:900px){.u-tabs-hint{display:none}}
+
+.u-view{display:block}
+.u-view[hidden]{display:none!important}
+.u-msg{font-size:13px;color:#b0541e;margin:0 0 10px;min-height:0}
+.u-msg:empty{margin:0}
+
+/* ================= 卡片 ================= */
+.u-card{background:var(--u-card);border:1px solid var(--u-line);border-radius:var(--u-radius);box-shadow:var(--u-shadow);margin-bottom:16px;overflow:hidden}
+.u-card-head{display:flex;align-items:baseline;gap:12px;padding:14px 20px 12px;flex-wrap:wrap}
+.u-card-head h2{font-size:15px;font-weight:700;margin:0}
+.u-card-hint{font-size:12px;color:var(--u-faint)}
+
+/* ================= 创建用户弹窗 ================= */
+/* ⚠️ 铁律：display:flex 会压掉 hidden 属性，必须配 [hidden]{display:none!important} */
+.u-modal-scrim{position:fixed;inset:0;background:#1c2740;z-index:80}
+.u-modal{position:fixed;z-index:81;top:50%;left:50%;transform:translate(-50%,-50%);width:min(480px,calc(100vw - 40px));background:var(--u-card);border:1px solid var(--u-line);border-radius:14px;box-shadow:0 18px 48px rgba(23,35,58,.18);overflow:hidden}
+.u-modal[hidden],.u-modal-scrim[hidden]{display:none!important}
+.u-modal-head{display:flex;align-items:flex-start;gap:12px;padding:18px 20px 0}
+.u-modal-head h2{margin:0;font-size:16px;font-weight:700;color:var(--u-ink)}
+.u-modal-head p{margin:3px 0 0;font-size:12.5px;color:var(--u-sub)}
+.u-modal-x{margin-left:auto;border:0;background:transparent;width:28px;height:28px;border-radius:7px;color:var(--u-faint);font-size:13px;cursor:pointer;flex-shrink:0;font-family:inherit}
+.u-modal-x:hover{background:var(--u-gray-soft);color:var(--u-ink-2)}
+.u-modal-body{padding:16px 20px 4px;display:grid;gap:13px}
+.u-field{display:grid;gap:5px;font-size:12.5px;font-weight:600;color:var(--u-sub)}
+.u-field input,.u-field select{min-height:38px;padding:6px 11px;border:1px solid var(--u-line-strong);border-radius:var(--u-radius-s);font-size:13.5px;color:var(--u-ink-2);background:#fff;font-family:inherit;font-weight:400;width:100%}
+.u-field input:focus,.u-field select:focus{outline:2px solid #9dbcf5;outline-offset:0;border-color:var(--u-blue)}
+/* 密码框 + 👁️ 明文切换 */
+.u-pw{position:relative;display:block}
+.u-pw input{padding-right:42px}
+.u-eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:30px;height:28px;border:0;border-radius:6px;background:transparent;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;opacity:.55;font-family:inherit}
+.u-eye:hover{background:var(--u-gray-soft);opacity:1}
+.u-eye.on{opacity:1;background:var(--u-blue-soft)}
+.u-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.u-modal-err{margin:0;font-size:12.5px;color:var(--u-red);background:var(--u-red-soft);border-radius:7px;padding:8px 12px}
+.u-modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px 18px}
+@media(max-width:560px){.u-field-row{grid-template-columns:1fr}}
+
+/* ================= 表格（shadcn 式） ================= */
+.users-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.users-table thead th{text-align:left;font-size:11.5px;font-weight:700;color:var(--u-sub);letter-spacing:.05em;background:var(--u-card-sub);border-top:1px solid var(--u-line);border-bottom:1px solid var(--u-line);padding:9px 14px;white-space:nowrap}
+.users-table thead th:first-child,.users-table tbody td:first-child{padding-left:20px}
+.users-table thead th:last-child,.users-table tbody td:last-child{padding-right:20px}
+.users-table tbody td{border-bottom:1px solid var(--u-line);padding:11px 14px;vertical-align:middle;color:var(--u-ink-2)}
+.users-table tbody tr:last-child td{border-bottom:none}
+.users-table tbody tr{transition:background .12s}
+.users-table tbody tr:hover{background:#f6f9ff}
+
+/* ---- 用户列：头像 + 主副两行 ---- */
+.u-who{display:flex;align-items:center;gap:11px}
+.u-avatar{width:34px;height:34px;border-radius:50%;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.u-who .u-name{font-weight:600;color:var(--u-ink);line-height:1.35}
+.u-who .u-name input{width:110px;min-height:30px;border:1px solid transparent;border-radius:6px;background:transparent;font:inherit;font-weight:600;color:var(--u-ink);padding:2px 6px;margin-left:-6px}
+.u-who .u-name input:hover{border-color:var(--u-line-strong);background:#fff}
+.u-who .u-name input:focus{border-color:var(--u-blue);background:#fff;outline:none}
+.u-acc{font-size:12px;color:var(--u-sub);line-height:1.35;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+/* ---- 徽章 ---- */
+.u-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:99px;line-height:1.5;white-space:nowrap}
+.u-badge .u-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.u-bg-admin{background:var(--u-violet-soft);color:var(--u-violet)}
+.u-bg-operator{background:var(--u-blue-soft);color:var(--u-blue)}
+.u-bg-supply{background:var(--u-teal-soft);color:var(--u-teal)}
+.u-bg-viewer{background:var(--u-gray-soft);color:var(--u-sub)}
+.u-bg-on{background:var(--u-green-soft);color:var(--u-green)}
+.u-bg-off{background:var(--u-gray-soft);color:var(--u-sub)}
+.u-bg-log-shop{background:var(--u-blue-soft);color:var(--u-blue)}
+.u-bg-log-target{background:var(--u-violet-soft);color:var(--u-violet)}
+.u-bg-log-sales{background:var(--u-green-soft);color:var(--u-green)}
+.u-bg-log-quality{background:var(--u-amber-soft);color:var(--u-amber)}
+.u-bg-log-user{background:var(--u-teal-soft);color:var(--u-teal)}
+.u-bg-log-agent{background:var(--u-gray-soft);color:var(--u-ink-2)}
+
+/* ---- 角色下拉 / 状态按钮（表格内） ---- */
+.users-table .role{padding:4px 8px;border:1px solid var(--u-line-strong);border-radius:var(--u-radius-s);font-size:12.5px;color:var(--u-ink-2);background:#fff;font-family:inherit;cursor:pointer}
+.users-table .u-status{border:0;background:transparent;padding:0;cursor:pointer;font:inherit}
+.users-table .u-status .u-badge{cursor:pointer}
+.users-table .u-status:hover .u-badge{filter:brightness(.95)}
+.u-date{font-size:12.5px;color:var(--u-faint);white-space:nowrap;font-variant-numeric:tabular-nums}
+.u-date b{display:block;color:var(--u-ink-2);font-weight:600;font-size:12.5px}
+
+/* ================= 操作日志（audit-ui.js 渲染） ================= */
+.wb-audit-filters{display:flex;gap:8px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--u-line);background:var(--u-card-sub)}
+.wb-audit-filters select,.wb-audit-filters input{min-height:34px;padding:4px 10px;border:1px solid var(--u-line-strong);border-radius:var(--u-radius-s);font-size:13px;color:var(--u-ink-2);background:#fff;font-family:inherit}
+.wb-audit-filters input{width:230px}
+.wb-audit-filters .workbench-primary{border:0;border-radius:var(--u-radius-s);background:var(--u-blue);color:#fff;font-size:13px;font-weight:600;min-height:34px;padding:0 16px;cursor:pointer;font-family:inherit}
+.wb-audit-filters .workbench-primary:hover{background:#1d4fd7}
+.wb-audit-more{margin:12px 0 16px 20px;border:1px solid var(--u-line-strong);background:#fff;border-radius:var(--u-radius-s);padding:7px 18px;font-size:12.5px;color:var(--u-ink-2);cursor:pointer;font-family:inherit}
+.wb-audit-more:hover{background:var(--u-card-sub)}
+.wb-audit-act{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.wb-audit-time{white-space:nowrap;font-variant-numeric:tabular-nums}
+.wb-audit-time b{display:block;color:var(--u-ink-2);font-weight:600;font-size:12.5px}
+.wb-audit-time small{color:var(--u-faint);font-size:11.5px}
+.wb-audit-detail{color:var(--u-sub);word-break:break-word;max-width:420px;font-size:12.5px}
+.wb-audit-who{display:flex;align-items:center;gap:8px}
+.wb-audit-who .u-avatar{width:26px;height:26px;font-size:11px}
+.wb-audit-who .u-n{font-size:13px;font-weight:600;color:var(--u-ink);line-height:1.3}
+.wb-audit-who .u-r{font-size:11px;color:var(--u-faint);line-height:1.3}
+#auditBox>.u-note,#auditRows>.u-note{padding:16px 20px;font-size:12.5px;margin:0}
+
+/* ================= 定时任务（notifications-ui.js 渲染，页面内重皮） ================= */
+.wb-tasks-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.wb-tasks-table th{background:var(--u-card-sub)}
+.wb-tasks-table th,.wb-tasks-table td{text-align:left;border-bottom:1px solid var(--u-line);padding:12px 14px;font-size:13px}
+.wb-tasks-table th:first-child,.wb-tasks-table td:first-child{padding-left:20px}
+.wb-tasks-table th:last-child,.wb-tasks-table td:last-child{padding-right:20px}
+.wb-tasks-table tbody tr:last-child td{border-bottom:none}
+.wb-tasks-table tbody tr:hover{background:#f6f9ff}
+.wb-tasks-table td b{color:var(--u-ink);font-weight:600}
+.wb-tasks-table .wb-tasks-detail{color:var(--u-faint);font-size:12px}
+.wb-tasks-table .wb-tasks-ok{color:var(--u-green);font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.wb-tasks-table .wb-tasks-bad{color:var(--u-red);font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.wb-tasks-table .wb-tasks-never{color:var(--u-faint);font-weight:600;white-space:nowrap}
+
+/* ================= 数据字典（audit-ui.js 渲染，shadcn 三段式） ================= */
+.wb-dict-group{display:grid;grid-template-columns:240px 1fr;gap:20px;padding:15px 20px;border-bottom:1px solid var(--u-line)}
+.wb-dict-group:last-child{border-bottom:none}
+.wb-dict-group:hover{background:#fafbfe}
+.wb-dict-group h4{margin:0;font-size:13.5px;font-weight:600;color:var(--u-ink);line-height:1.5}
+.wb-dict-group h4 small{display:block;font-size:12px;color:var(--u-sub);font-weight:400;margin-top:2px}
+.wb-dict-items{display:flex;gap:7px;flex-wrap:wrap;align-content:flex-start}
+.wb-dict-chip{font-size:12px;padding:3px 11px;border-radius:99px;border:1px solid var(--u-line-strong);color:var(--u-ink-2);background:#fff}
+.wb-dict-chip code{color:var(--u-faint);font-family:ui-monospace,monospace;font-size:11px;margin-right:5px}
+.wb-dict-chip.u-chip-green{background:var(--u-green-soft);border-color:#c6ecd4;color:#15803d}
+.wb-dict-chip.u-chip-amber{background:var(--u-amber-soft);border-color:#f3ddb0;color:#b45309}
+.wb-dict-chip.u-chip-red{background:var(--u-red-soft);border-color:#f6caca;color:#b91c1c}
+
+@media(max-width:900px){
+  .u-pagehead{flex-direction:column;gap:6px}
+  .u-pagehead .u-actions{margin-left:0;padding-top:0}
+  .wb-dict-group{grid-template-columns:1fr;gap:8px}
+  .users-table,.wb-tasks-table{display:block;overflow-x:auto}
+}
+
+
+/* ---- 行内操作按钮（2026-10-30 操作列） ---- */
+.u-actions-cell{white-space:nowrap;text-align:right}
+.u-rowbtn{border:1px solid var(--u-line-strong);background:var(--u-card);color:var(--u-ink-2);font-size:12px;font-weight:600;border-radius:var(--u-radius-s);padding:5px 12px;cursor:pointer;font-family:inherit;margin-left:6px}
+.u-rowbtn:hover{border-color:#b9c6d8;background:var(--u-card-sub)}
+.u-rowbtn.danger{color:#b42318;border-color:#f2c1bb}
+.u-rowbtn.danger:hover{background:#fdf3f2;border-color:#e3a39b}

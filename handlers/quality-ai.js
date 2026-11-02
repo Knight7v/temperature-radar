@@ -8,6 +8,8 @@ const { analyzeSession, analyzeBatch } = require('../lib/quality/ai/analyze');
 const { CRITERIA, CATEGORIES, RUBRIC_VERSION, CRITICAL_WEIGHT, STANDARD_WEIGHT } = require('../lib/quality/ai/rubric');
 const client = require('../lib/quality/ai/client');
 const { computeScore } = require('../lib/quality/ai/score');
+const { DICTIONARY } = require('../lib/dictionary');
+const { logAudit } = require('../lib/audit');
 
 const fail = (message, status = 422) => {
   throw Object.assign(Error(message), { status });
@@ -351,6 +353,98 @@ module.exports = apiHandler(async (req, res) => {
         : null;
       return res.json({ data: { date: date || 'all', summary, agents, topIssues, pool, reviewedToday, latest } });
     }
+    if (action === 'agent-metrics') {
+      // 客服运营指标（P0-B）：首响时长 / 会话量 / 解决率，按客服排名。只读，跟着「分析日期」走。
+      // 首响口径：优先京麦会话记录的「首次响应时间」（平台官方统计），
+      // 没贴会话记录的会话退回 AI 分析时从聊天原文算出的 firstReplySeconds，两者都不在则不计入。
+      // 解决率/满意度同样只来自京麦会话记录，没有就不计入（不拿打分状态冒充解决率）。
+      const date = dateText(req.query.date);
+      if (!date) fail('运营指标需要指定日期');
+      const args = [tenant, date];
+      const base = (
+        await db.query(
+          `WITH base AS (
+             SELECT s.id,s.agent,
+                    CASE
+                      WHEN s.data->'sessionList'->>'firstResponseAt' IS NOT NULL THEN
+                        GREATEST(0, EXTRACT(EPOCH FROM (
+                          to_timestamp(s.data->'sessionList'->>'firstResponseAt','YYYY-MM-DD HH24:MI:SS')
+                          - (CASE
+                               -- 京东考核时段 8:00-23:00：8 点前咨询按当天 8 点起算，23 点后咨询按次日 8 点起算
+                               WHEN to_timestamp(s.started_at,'YYYY-MM-DD HH24:MI:SS')::time < TIME '08:00'
+                                 THEN date_trunc('day',to_timestamp(s.started_at,'YYYY-MM-DD HH24:MI:SS')) + INTERVAL '8 hours'
+                               WHEN to_timestamp(s.started_at,'YYYY-MM-DD HH24:MI:SS')::time >= TIME '23:00'
+                                 THEN date_trunc('day',to_timestamp(s.started_at,'YYYY-MM-DD HH24:MI:SS')) + INTERVAL '32 hours'
+                               ELSE to_timestamp(s.started_at,'YYYY-MM-DD HH24:MI:SS')
+                             END))))
+                      WHEN a.data->'metrics'->>'firstReplySeconds' IS NOT NULL THEN
+                        (a.data->'metrics'->>'firstReplySeconds')::numeric
+                    END AS first_sec,
+                    s.data->'sessionList'->>'resolved' AS resolved,
+                    s.data->'sessionList'->>'satisfaction' AS satisfaction,
+                    s.data->'sessionList'->>'durationMin' AS duration_min
+               FROM quality_sessions s
+               LEFT JOIN LATERAL (SELECT data FROM quality_ai_results x
+                                   WHERE x.tenant_id=s.tenant_id AND x.session_id=s.id
+                                   ORDER BY created_at DESC LIMIT 1) a ON true
+              WHERE s.tenant_id=$1 AND left(s.started_at,10)=$2)
+           SELECT agent,count(*)::int AS sessions,
+                  count(first_sec)::int AS first_known,
+                  round(avg(first_sec)::numeric,1) AS first_avg,
+                  round(percentile_cont(0.5) WITHIN GROUP (ORDER BY first_sec)::numeric,1) AS first_median,
+                  max(first_sec)::numeric AS first_max,
+                  count(*) FILTER (WHERE resolved='${DICTIONARY.quality.resolved.yes}')::int AS resolved_yes,
+                  count(*) FILTER (WHERE resolved='${DICTIONARY.quality.resolved.no}')::int AS resolved_no,
+                  count(*) FILTER (WHERE resolved IS NOT NULL AND resolved<>'' AND resolved NOT IN ('${DICTIONARY.quality.resolved.ignored.join("','")}'))::int AS resolved_known,
+                  count(*) FILTER (WHERE satisfaction IN ('${DICTIONARY.quality.satisfaction.good.join("','")}'))::int AS sat_good,
+                  count(*) FILTER (WHERE satisfaction='${DICTIONARY.quality.satisfaction.mid[0]}')::int AS sat_mid,
+                  count(*) FILTER (WHERE satisfaction='${DICTIONARY.quality.satisfaction.bad[0]}')::int AS sat_bad,
+                  round(avg(NULLIF(duration_min,'')::numeric)::numeric,1) AS duration_avg
+             FROM base GROUP BY agent ORDER BY sessions DESC, first_avg ASC`,
+          args
+        )
+      ).rows;
+      const totals = (
+        await db.query(
+          `WITH base AS (
+             SELECT CASE
+                      WHEN s.data->'sessionList'->>'firstResponseAt' IS NOT NULL THEN
+                        GREATEST(0, EXTRACT(EPOCH FROM (
+                          to_timestamp(s.data->'sessionList'->>'firstResponseAt','YYYY-MM-DD HH24:MI:SS')
+                          - (CASE
+                               -- 京东考核时段 8:00-23:00：8 点前咨询按当天 8 点起算，23 点后咨询按次日 8 点起算
+                               WHEN to_timestamp(s.started_at,'YYYY-MM-DD HH24:MI:SS')::time < TIME '08:00'
+                                 THEN date_trunc('day',to_timestamp(s.started_at,'YYYY-MM-DD HH24:MI:SS')) + INTERVAL '8 hours'
+                               WHEN to_timestamp(s.started_at,'YYYY-MM-DD HH24:MI:SS')::time >= TIME '23:00'
+                                 THEN date_trunc('day',to_timestamp(s.started_at,'YYYY-MM-DD HH24:MI:SS')) + INTERVAL '32 hours'
+                               ELSE to_timestamp(s.started_at,'YYYY-MM-DD HH24:MI:SS')
+                             END))))
+                      WHEN a.data->'metrics'->>'firstReplySeconds' IS NOT NULL THEN
+                        (a.data->'metrics'->>'firstReplySeconds')::numeric
+                    END AS first_sec,
+                    s.data->'sessionList'->>'resolved' AS resolved,
+                    s.data->'sessionList'->>'satisfaction' AS satisfaction
+               FROM quality_sessions s
+               LEFT JOIN LATERAL (SELECT data FROM quality_ai_results x
+                                   WHERE x.tenant_id=s.tenant_id AND x.session_id=s.id
+                                   ORDER BY created_at DESC LIMIT 1) a ON true
+              WHERE s.tenant_id=$1 AND left(s.started_at,10)=$2)
+           SELECT count(*)::int AS sessions,
+                  count(first_sec)::int AS first_known,
+                  round(avg(first_sec)::numeric,1) AS first_avg,
+                  round(percentile_cont(0.5) WITHIN GROUP (ORDER BY first_sec)::numeric,1) AS first_median,
+                  count(*) FILTER (WHERE resolved='${DICTIONARY.quality.resolved.yes}')::int AS resolved_yes,
+                  count(*) FILTER (WHERE resolved='${DICTIONARY.quality.resolved.no}')::int AS resolved_no,
+                  count(*) FILTER (WHERE resolved IS NOT NULL AND resolved<>'' AND resolved NOT IN ('${DICTIONARY.quality.resolved.ignored.join("','")}'))::int AS resolved_known,
+                  count(*) FILTER (WHERE satisfaction IN ('${DICTIONARY.quality.satisfaction.good.join("','")}'))::int AS sat_good,
+                  count(*) FILTER (WHERE satisfaction='${DICTIONARY.quality.satisfaction.mid[0]}')::int AS sat_mid,
+                  count(*) FILTER (WHERE satisfaction='${DICTIONARY.quality.satisfaction.bad[0]}')::int AS sat_bad
+             FROM base`,
+          args
+        )
+      ).rows[0] || {};
+      return res.json({ data: { date, agents: base, totals } });
+    }
     fail('操作不存在', 404);
   }
 
@@ -395,6 +489,11 @@ module.exports = apiHandler(async (req, res) => {
       "UPDATE quality_sessions SET review=$1,status='reviewed',revision=revision+1,reviewed_by=$2,reviewed_at=now() WHERE tenant_id=$3 AND id=$4",
       [JSON.stringify(review), user.userId, tenant, sessionId]
     );
+    await logAudit(db, {
+      tenantId: tenant, user, action: 'quality.review', targetType: 'session', targetId: sessionId,
+      targetLabel: sessionId,
+      detail: { aiScore: Number(latest.score), finalScore: score.score, overrides: applied.length, note: review.note || '' }
+    });
     return res.json({ data: { sessionId, review, score } });
   }
 

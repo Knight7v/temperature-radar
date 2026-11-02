@@ -12,6 +12,7 @@
 const { apiHandler } = require('../lib/http');
 const { requireInventoryUser } = require('../lib/inventory/access');
 const { getInventoryPool, transact } = require('../lib/db/inventory-client');
+const { logAudit } = require('../lib/audit');
 const {
   STATUSES,
   ROLES,
@@ -164,37 +165,41 @@ module.exports = apiHandler(async (req, res) => {
   if (action === 'save') {
     const data = validate(normalize(body));
     const id = body.id ? uuid(body.id) : null;
-    return res.json({
-      data: await transact(db, async c => {
-        await assertUniqueName(c, tenant, data.agentName, id);
-        if (id) {
-          const updated = await c.query(
-            'UPDATE service_agents SET data=$1,revision=revision+1,updated_at=now() WHERE tenant_id=$2 AND id=$3 RETURNING id,revision',
-            [data, tenant, id]
-          );
-          if (!updated.rowCount) fail('这条档案不存在，可能已被删除', 404);
-          return { id, revision: updated.rows[0].revision, created: false };
-        }
-        const inserted = await c.query(
-          'INSERT INTO service_agents(tenant_id,data,created_by) VALUES($1,$2,$3) RETURNING id,revision',
-          [tenant, data, user.userId]
+    const out = await transact(db, async c => {
+      await assertUniqueName(c, tenant, data.agentName, id);
+      if (id) {
+        const updated = await c.query(
+          'UPDATE service_agents SET data=$1,revision=revision+1,updated_at=now() WHERE tenant_id=$2 AND id=$3 RETURNING id,revision',
+          [data, tenant, id]
         );
-        return { id: inserted.rows[0].id, revision: inserted.rows[0].revision, created: true };
-      })
+        if (!updated.rowCount) fail('这条档案不存在，可能已被删除', 404);
+        return { id, revision: updated.rows[0].revision, created: false };
+      }
+      const inserted = await c.query(
+        'INSERT INTO service_agents(tenant_id,data,created_by) VALUES($1,$2,$3) RETURNING id,revision',
+        [tenant, data, user.userId]
+      );
+      return { id: inserted.rows[0].id, revision: inserted.rows[0].revision, created: true };
     });
+    await logAudit(db, {
+      tenantId: tenant, user, action: out.created ? 'agent.create' : 'agent.update',
+      targetType: 'agent', targetId: out.id, targetLabel: data.agentName,
+      detail: { shop: data.shop, role: data.role, status: data.status }
+    });
+    return res.json({ data: out });
   }
 
   if (action === 'delete') {
     const id = uuid(body.id);
-    return res.json({
-      data: await transact(db, async c => {
-        const hit = await c.query('SELECT data FROM service_agents WHERE tenant_id=$1 AND id=$2', [tenant, id]);
-        if (!hit.rowCount) fail('这条档案不存在', 404);
-        await c.query('DELETE FROM service_agents WHERE tenant_id=$1 AND id=$2', [tenant, id]);
-        /* 质检记录按昵称字符串关联，删档案不会动它们，只是这些会话重新变成「未建档」 */
-        return { deleted: true, agentName: (hit.rows[0].data || {}).agentName || '' };
-      })
+    const out = await transact(db, async c => {
+      const hit = await c.query('SELECT data FROM service_agents WHERE tenant_id=$1 AND id=$2', [tenant, id]);
+      if (!hit.rowCount) fail('这条档案不存在', 404);
+      await c.query('DELETE FROM service_agents WHERE tenant_id=$1 AND id=$2', [tenant, id]);
+      /* 质检记录按昵称字符串关联，删档案不会动它们，只是这些会话重新变成「未建档」 */
+      return { deleted: true, agentName: (hit.rows[0].data || {}).agentName || '' };
     });
+    await logAudit(db, { tenantId: tenant, user, action: 'agent.delete', targetType: 'agent', targetId: id, targetLabel: out.agentName, detail: {} });
+    return res.json({ data: out });
   }
 
   /* 从质检记录带入：把还没建档的昵称先建成草稿，店铺/品牌/岗位能猜的自动填上，人脸和姓名留给主管补 */
@@ -205,8 +210,7 @@ module.exports = apiHandler(async (req, res) => {
     const known = new Set(existing.map(row => key(row.name)));
     const created = [];
     const skipped = [];
-    return res.json({
-      data: await transact(db, async c => {
+    const out = await transact(db, async c => {
         for (const row of stats) {
           const agentName = String(row.agent || '').trim();
           if (!agentName) continue;
@@ -238,8 +242,9 @@ module.exports = apiHandler(async (req, res) => {
           created.push({ id: inserted.rows[0].id, ...data, sessions: Number(row.sessions || 0) });
         }
         return { created, skipped };
-      })
-    });
+      });
+    await logAudit(db, { tenantId: tenant, user, action: 'agent.import', targetType: 'agent', targetLabel: '从质检带入建档', detail: { created: out.created.length, skipped: out.skipped.length } });
+    return res.json({ data: out });
   }
 
   fail('操作不存在', 404);

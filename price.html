@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>比价助手 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261030-skel2"><link rel="stylesheet" href="/css/price.css?v=20261102-px2"></head>
+<body class="workbench-body"><div id="shell"></div><main class="workbench-main px-main">
+<div class="workbench-eyebrow">PRICE WATCH</div>
+<div class="px-head">
+  <div>
+    <h1>比价助手</h1>
+    <p class="workbench-muted">盯住 10 家竞店的重点机型到手价。竞品比我方便宜时，落一条记录并发企业微信；日常只发一条汇总，差得明显才单独提醒。</p>
+  </div>
+  <div class="px-head-actions">
+    <button type="button" id="btnRefresh">刷新数据</button>
+    <button type="button" id="btnExport">导出当前列表</button>
+  </div>
+</div>
+
+<div class="px-notice" id="pxNotice" hidden>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8v5m0 3.5h.01M10.3 3.9 2.6 17.3A1.8 1.8 0 0 0 4.2 20h15.6a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div><b id="pxNoticeTitle">当前为演示数据</b><span id="pxNoticeText"></span></div>
+</div>
+
+<div class="px-statusbar" id="pxStatus">
+  <span><i class="px-dot" id="dotRun"></i><span id="txtRun">正在读取采集状态…</span></span>
+  <i class="px-sep"></i>
+  <span id="txtNext">下次采集 —</span>
+  <i class="px-sep"></i>
+  <span id="txtLogin">我方登录状态 —</span>
+</div>
+
+<section class="px-kpis" aria-label="今日概览">
+  <div class="px-kpi is-alert"><span>今日命中机型</span><strong id="kpiAlerts">—</strong><small id="kpiAlertsNote">竞品比我方低</small></div>
+  <div class="px-kpi"><span>最大价差</span><strong id="kpiGap">—</strong><small id="kpiGapNote">单机型最高差额</small></div>
+  <div class="px-kpi is-warn"><span>今日数据缺失</span><strong id="kpiMissing">—</strong><small id="kpiMissingNote">采集失败，不参与比价</small></div>
+  <div class="px-kpi"><span>监控覆盖</span><strong id="kpiCover">—</strong><small id="kpiCoverNote">机型 / 竞品链接</small></div>
+</section>
+
+<nav class="px-tabs" id="tabs" role="tablist" aria-label="比价视图">
+  <button type="button" role="tab" data-panel="hits" aria-selected="true">今日对比<span class="px-tabnum" id="tabNumHits">—</span></button>
+  <button type="button" role="tab" data-panel="missing" aria-selected="false">数据缺失<span class="px-tabnum" id="tabNumMissing">—</span></button>
+  <button type="button" role="tab" data-panel="links" aria-selected="false">链接管理<span class="px-tabnum" id="tabNumLinks">—</span></button>
+  <button type="button" role="tab" data-panel="trend" aria-selected="false">机型趋势</button>
+  <button type="button" role="tab" data-panel="config" aria-selected="false">监控设置</button>
+</nav>
+
+<!-- 今日命中 -->
+<section class="px-panel" id="panel-hits" role="tabpanel">
+  <div class="px-card">
+    <div class="px-card-head">
+      <div><h2>今日对比</h2><p>口径：<b>到手价 = 标价 − 可叠加券 − 国补</b>，也就是顾客真正要掏的钱。今天采到的机型都列在这里，差得最多的排最前面；同一机型多家竞店都更便宜时只出一条，列出最低那家与「另有 N 家更低」。</p></div>
+      <div class="px-head-actions">
+        <select id="filterBrand" aria-label="按品牌筛选"><option value="">全部品牌</option><option value="gree">格力</option><option value="haier">海尔</option></select>
+        <select id="filterStatus" aria-label="按状态筛选"><option value="">全部状态</option><option value="open">待处理</option><option value="normal">未命中</option><option value="ignored">已忽略</option><option value="recovered">已回升</option></select>
+      </div>
+    </div>
+    <div class="px-card-body is-flush">
+      <div class="px-scroll">
+        <table class="px-table" id="hitsTable">
+          <thead><tr><th>机型</th><th>我方到手价</th><th>竞品到手价</th><th>价差</th><th>更低竞店</th><th>置信度</th><th>状态</th><th>首次发现</th><th>操作</th></tr></thead>
+          <tbody id="hitsBody"><tr><td colspan="9" class="px-empty">正在加载…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 数据缺失 -->
+<section class="px-panel" id="panel-missing" role="tabpanel" hidden>
+  <div class="px-card">
+    <div class="px-card-head">
+      <div><h2>数据缺失</h2><p>采不到就显示缺失，绝不拿上一次的价格冒充今天。缺失的链接不参与比价。</p></div>
+    </div>
+    <div class="px-card-body is-flush">
+      <div class="px-scroll">
+        <table class="px-table" id="missingTable">
+          <thead><tr><th>机型 / 店铺</th><th>链接</th><th>失败原因</th><th>最近成功价</th><th>最近成功时间</th><th>操作</th></tr></thead>
+          <tbody id="missingBody"><tr><td colspan="6" class="px-empty">正在加载…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 链接管理：导入 / 查看 两个子页 -->
+<section class="px-panel" id="panel-links" role="tabpanel" hidden>
+  <nav class="px-subtabs" id="linkTabs" role="tablist" aria-label="链接管理">
+    <button type="button" role="tab" data-ltab="import" aria-selected="true">导入链接</button>
+    <button type="button" role="tab" data-ltab="list" aria-selected="false">查看链接<span class="px-tabnum" id="linkNum">—</span></button>
+  </nav>
+
+  <!-- 导入 -->
+  <div class="px-subpanel" id="ltab-import">
+    <div class="px-card">
+      <div class="px-card-head">
+        <div><h2>导入商品链接</h2><p>粘贴链接 → 选它属于哪个商品（机型）→ 确认。同一条链接重复导入不会重复挂，商品编号自动排重。</p></div>
+      </div>
+      <div class="px-card-body">
+        <div class="px-steps">
+          <div class="px-step"><b>1</b><div><strong>粘贴链接</strong>一行一个，从京东商品页复制即可，带参数的分享链接也能认</div></div>
+          <div class="px-step"><b>2</b><div><strong>选归属商品</strong>这批链接算在哪个机型下，没有就当场新建</div></div>
+          <div class="px-step"><b>3</b><div><strong>确认导入</strong>入库后下一轮采集就会去抓它的到手价</div></div>
+        </div>
+        <div class="px-form">
+          <div class="px-field is-wide">
+            <label for="linkInput">商品链接<em>支持 item.jd.com/数字.html、item.m.jd.com/product/数字 与分享链接</em></label>
+            <textarea id="linkInput" placeholder="https://item.jd.com/100012043978.html&#10;https://item.jd.com/100021234567.html"></textarea>
+            <small id="linkHint">一行一个；同一批里重复的链接会自动去掉。</small>
+          </div>
+          <div class="px-field">
+            <label for="linkModel">归属商品</label>
+            <select id="linkModel"><option value="">正在加载商品…</option></select>
+            <small>按「品牌 + 系列 + 匹数」归组，一个商品下可以挂多家店。</small>
+          </div>
+          <div class="px-field">
+            <label for="linkSide">阵营</label>
+            <select id="linkSide"><option value="competitor">竞品（对方店铺）</option><option value="own">我方（自家店铺）</option></select>
+            <small>竞品价用来比价；我方价是判价的基准，挂错会直接把结论搞反。</small>
+          </div>
+          <div class="px-field is-wide" id="newModelFields" hidden>
+            <label for="newBrand">新建商品<em>品牌 / 系列 / 匹数</em></label>
+            <div class="px-inline">
+              <select id="newBrand"><option value="gree">格力</option><option value="haier">海尔</option><option value="midea">美的</option><option value="hualing">华凌</option><option value="tcl">TCL</option></select>
+              <input id="newSeries" type="text" placeholder="系列名，如 云佳Pro">
+              <input id="newCap" type="text" placeholder="匹数，如 1.5匹">
+            </div>
+            <small>系列名用京东标题里的叫法就行；匹数留空也能建，但同一台机器最好填上，否则会被当成两个商品。</small>
+          </div>
+          <div class="px-field is-wide" id="moveField">
+            <label class="px-check"><input type="checkbox" id="linkMove"> 这些链接里已在别的商品下的，改挂到当前商品</label>
+            <small>默认不动。勾上之前请确认真的标错了，挪错会让两个机型的比价一起错。</small>
+          </div>
+        </div>
+        <div class="px-actions">
+          <button type="button" id="btnParse">解析链接</button>
+          <button type="button" class="workbench-primary" id="btnImport" disabled>确认导入</button>
+          <button type="button" id="btnClearLinks">清空</button>
+          <button type="button" id="btnGoList" hidden>查看这些链接 →</button>
+          <span class="px-hint" id="parseHint"></span>
+        </div>
+        <div class="px-scroll" style="margin-top:16px">
+          <table class="px-table" id="previewTable" hidden>
+            <thead><tr><th>商品编号</th><th>将挂到</th><th>状态</th><th>说明</th></tr></thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 查看 -->
+  <div class="px-subpanel" id="ltab-list" hidden>
+    <div class="px-card">
+      <div class="px-card-head">
+        <div><h2>在监控的商品链接</h2><p id="linkSub">按商品分组。点商品编号直接打开京东页面核对；停用的链接不采集，但历史价格保留。</p></div>
+        <div class="px-head-actions">
+          <input id="linkSearch" type="search" placeholder="搜商品 / 店铺 / 编号" aria-label="搜索链接">
+          <select id="linkBrand" aria-label="按品牌筛选"><option value="">全部品牌</option><option value="gree">格力</option><option value="haier">海尔</option><option value="midea">美的</option><option value="hualing">华凌</option><option value="tcl">TCL</option></select>
+          <select id="linkSideFilter" aria-label="按阵营筛选"><option value="">我方 + 竞品</option><option value="own">只看我方</option><option value="comp">只看竞品</option></select>
+          <select id="linkStateFilter" aria-label="按状态筛选"><option value="">全部状态</option><option value="active">采集中</option><option value="paused">已停用</option></select>
+        </div>
+      </div>
+      <div class="px-card-body is-flush">
+        <div class="px-scroll">
+          <table class="px-table px-link-table" id="linkTable">
+            <thead><tr><th>商品</th><th>店铺</th><th>商品编号</th><th>最近到手价</th><th>最近采集</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody id="linkBody"><tr><td colspan="7" class="px-empty">正在加载…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 机型趋势 -->
+<section class="px-panel" id="panel-trend" role="tabpanel" hidden>
+  <div class="px-card">
+    <div class="px-card-head">
+      <div><h2>机型价格趋势</h2><p id="trendSub">我方最低到手价 vs 竞品最低到手价，近 14 天。</p></div>
+      <div class="px-head-actions">
+        <select id="trendSelect" aria-label="选择机型"></select>
+      </div>
+    </div>
+    <div class="px-card-body is-flush">
+      <div class="px-chart-wrap">
+        <div class="px-legend"><span><i style="background:#0665ff"></i>我方最低</span><span><i style="background:#d92d20"></i>竞品最低</span></div>
+        <svg class="px-chart" id="trendChart" viewBox="0 0 720 240" role="img" aria-label="机型价格趋势图"></svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 监控设置 -->
+<section class="px-panel" id="panel-config" role="tabpanel" hidden>
+  <div class="px-card">
+    <div class="px-card-head">
+      <div><h2>立即采集一次</h2><p>刚录完链接不用等到 10:00 / 20:00，点一下马上跑。手动这一轮不发企微，只更新页面数据。</p></div>
+    </div>
+    <div class="px-card-body">
+      <div class="px-actions">
+        <button type="button" class="workbench-primary" id="btnRunNow">立即采集</button>
+        <span class="px-hint" id="runHint">每 12–22 秒采一条，几十条链接要跑几分钟；期间可以关掉页面，采完刷新就能看到。</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-card">
+    <div class="px-card-head">
+      <div><h2>监控设置</h2><p>阈值改动会立刻影响判价；采样时点改动在下一个 5 分钟轮询时生效。</p></div>
+    </div>
+    <div class="px-card-body">
+      <div class="px-form">
+        <div class="px-field">
+          <label for="cfgAmount">金额门槛<em>元</em></label>
+          <input id="cfgAmount" type="number" min="0" step="0.5" value="3" inputmode="decimal">
+          <small>竞品低出的金额达到这个数就报。</small>
+        </div>
+        <div class="px-field">
+          <label for="cfgRate">比例门槛<em>%</em></label>
+          <input id="cfgRate" type="number" min="0" step="0.1" value="0.3" inputmode="decimal">
+          <small>与金额门槛「满足任一」即报，不是两个都要满足。</small>
+        </div>
+        <div class="px-field">
+          <label for="cfgFull">全量采集时点</label>
+          <input id="cfgFull" type="text" value="10:00" inputmode="numeric">
+          <small>跑全部链接，约 25–60 分钟。</small>
+        </div>
+        <div class="px-field">
+          <label for="cfgFocus">重点机型时点</label>
+          <input id="cfgFocus" type="text" value="20:00" inputmode="numeric">
+          <small>只跑标记为重点的机型，约 8–18 分钟，对准晚 8 点大促。</small>
+        </div>
+        <div class="px-field">
+          <label for="cfgSubsidyRate">国补比例<em>%</em></label>
+          <input id="cfgSubsidyRate" type="number" min="0" max="100" step="0.5" value="15" inputmode="decimal">
+          <small>按「券后价」乘，不是按标价。当前政策 15%。</small>
+        </div>
+        <div class="px-field">
+          <label for="cfgSubsidyCap">国补上限<em>元/件</em></label>
+          <input id="cfgSubsidyCap" type="number" min="0" step="50" value="1500" inputmode="decimal">
+          <small>单件最高抵扣。改完从下一轮采集起生效，历史快照保持当时的规则。</small>
+        </div>
+        <div class="px-field">
+          <label for="cfgWebhook">企业微信机器人地址</label>
+          <input id="cfgWebhook" type="text" placeholder="未配置" readonly>
+          <small>密钥只在服务端保存，这里只显示是否已配置。</small>
+        </div>
+        <div class="px-field">
+          <label for="cfgNotify">单独提醒的条件</label>
+          <select id="cfgNotify"><option value="major">差额 ≥ 5 元或 ≥ 2.5% 才单独弹（推荐）</option><option value="all">每条命中都单独弹</option><option value="digest">只发汇总，不单独弹</option></select>
+          <small>日常无论选哪个，都会发一条汇总。</small>
+        </div>
+      </div>
+      <div class="px-actions">
+        <button type="button" class="workbench-primary" id="btnSaveCfg">保存设置</button>
+        <span class="px-hint" id="cfgHint"></span>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="px-drawer-mask" id="drawerMask" hidden></div>
+<aside class="px-drawer" id="drawer" aria-label="机型明细" role="dialog" aria-modal="true" hidden>
+  <div class="px-drawer-head">
+    <div><h2 id="drawerTitle">机型</h2><p id="drawerSub"></p></div>
+    <button type="button" class="px-drawer-close" id="drawerClose" aria-label="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="px-drawer-body" id="drawerBody"></div>
+</aside>
+
+<script src="/js/workbench-session.js?v=20261030-px1"></script><script src="/js/workbench-shell.js?v=20261030-shell2"></script><script src="/js/notifications-ui.js?v=20261030-ntf1"></script><script src="/js/command-palette.js?v=20261030-cmdk2"></script><script src="/js/price.js?v=20261102-px6"></script></body></html>

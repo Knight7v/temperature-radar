@@ -46,28 +46,29 @@ const Y_PILL=257,Y_CODE=312,AC_Y=348,AC_H=138,Y_REASON=521,Y_APF=638,Y_AIR=757;
 const T2_Y=[875,959,1043,1127,1211,1295];
 const T2_KEYS=['copper','eco','temp','clean','ctrl','kwh'];
 const BG_URL={2:'/assets/pk/pk-bg-2col.png?v=20261028-pk1',3:'/assets/pk/pk-bg-3col.png?v=20261028-pk1',4:'/assets/pk/pk-bg-4col.png?v=20261028-pk1',
- guide:'/assets/pk/guide-bg-clean.png?v=20261028-pk6'};
+ guide:'/assets/pk/guide-bg-high-fidelity.png?v=20261030-guide1'};
 
-/* ---------- 模板二「选购指南」几何（抹字自 750×1041 原图） ---------- */
-const G_W=750,G_H=1041;
-const G_CENTERS=[210,369,517,660];
-const G_COLX=[[126,286],[293,446],[455,577],[581,740]];
-const G_PILLW=[110,144,114,144];   /* 机名胶囊内部宽度 */
-const G_PILL_Y=148;
-const G_AC={y:175,w:130,h:112};    /* 产品图槽位 */
-/* 11 行参数：key 与 pk-fields 的字段对应；y=行文字中心 */
+/* ---------- 模板二「选购指南」几何（1065×1477 高保真底图） ---------- */
+const G_W=1065,G_H=1477;
+const G_CENTERS=[305,524,733,937];
+const G_COLX=[[208,403],[403,644],[644,822],[822,1052]];
+const G_PILLW=[176,230,178,226];
+const G_PILL_Y=215;
+const G_AC={y:250,w:185,h:176};
+const G_MODEL_Y=571;
+/* 行文字中心与底图横线对应，字段名由底图承载 */
 const G_ROWS=[
- {key:'reason',  y:344,size:20,weight:800,maxLines:2},
- {key:'apf',     y:444,size:27,weight:800,special:'apf'},
- {key:'temp',    y:495,size:19,weight:600,maxLines:2},
- {key:'vane',    y:541,size:19,weight:600,maxLines:2},
- {key:'clean',   y:588,size:17,weight:600,maxLines:2},
- {key:'air',     y:628,size:24,weight:800,special:'air'},
- {key:'swing',   y:690,size:18,weight:600,maxLines:3},
- {key:'ctrlText',y:750,size:16,weight:500,maxLines:2},
- {key:'tempctl', y:797,size:19,weight:600,maxLines:1},
- {key:'sleep',   y:845,size:17,weight:500,maxLines:2},
- {key:'light',   y:897,size:19,weight:600,maxLines:1}
+ {key:'reason',  y:488,size:27,weight:800,maxLines:2},
+ {key:'apf',     y:630,size:32,weight:800,special:'apf'},
+ {key:'temp',    y:695,size:23,weight:600,maxLines:2},
+ {key:'vane',    y:763,size:23,weight:600,maxLines:2},
+ {key:'clean',   y:828,size:21,weight:600,maxLines:2},
+ {key:'air',     y:895,size:31,weight:800,special:'air'},
+ {key:'swing',   y:982,size:22,weight:600,maxLines:3},
+ {key:'ctrlText',y:1069,size:20,weight:500,maxLines:2},
+ {key:'tempctl', y:1136,size:23,weight:600,maxLines:1},
+ {key:'sleep',   y:1203,size:19,weight:500,maxLines:2},
+ {key:'light',   y:1274,size:23,weight:600,maxLines:1}
 ];
 const bgCache={};
 
@@ -168,6 +169,7 @@ async function draw(){
  if(n<2)return;
  const cv=get('pk'),ctx=cv.getContext('2d');
  if(state.template==='guide'){
+  if(n!==4||orderedPicked().some(id=>state.pickedMap[id]?.group!=='gree-ac'))return;
   await drawGuide(ctx);
   return;
  }
@@ -245,27 +247,24 @@ async function drawGuide(ctx){
   if(img)drawContain(ctx,img,cx,G_AC.y,G_AC.w,G_AC.h);
   else{
    ctx.fillStyle='rgba(6,26,64,.55)';
-   const w=110,h=78,x=cx-w/2,y=G_AC.y+(G_AC.h-h)/2;
+   const w=155,h=108,x=cx-w/2,y=G_AC.y+(G_AC.h-h)/2;
    ctx.beginPath();
    if(ctx.roundRect)ctx.roundRect(x,y,w,h,8);else ctx.rect(x,y,w,h);
    ctx.fill();
    center(ctx,'暂无主图',cx,G_AC.y+G_AC.h/2,'#6f95c9',null);
   }
   /* 机名（胶囊内） */
-  fitFont(ctx,m.series,G_PILLW[i]-16,21,700);
-  center(ctx,m.series,cx,G_PILL_Y,'#ffffff',['rgba(0,20,60,.5)',4]);
+  fitFont(ctx,m.series,G_PILLW[i]-16,29,800);
+  center(ctx,m.series,cx,G_PILL_Y,i%2===0?'#132D6A':'#ffffff',i%2===0?null:['rgba(0,20,60,.35)',3]);
+  const code=String(m.model||'—');
+  fitFont(ctx,code,colW-18,19,500);
+  center(ctx,code,cx,G_MODEL_Y,'#f6f8ff',null);
   const reason=String(state.reasons[m.id]!=null?state.reasons[m.id]:(m.fields.reason||'—'));
   for(const row of G_ROWS){
-   const color=hero?'#ffd583':'#eef4ff';
-   if(row.special==='model'){
-    const p=fitFont(ctx,m.model||'—',colW-18,row.size,500);
-    fontPx(ctx,p,500);
-    center(ctx,m.model||'—',cx,row.y,'#c9d8ef',null);
-    continue;
-   }
+   const color=hero&&row.key==='reason'?'#ffe1a2':'#f6f8ff';
    if(row.special==='apf'){
     const apf=num(m.fields.apf);
-    if(apf)bigNumber(ctx,apf,cx,row.y,row.size,hero);
+    if(apf){fontPx(ctx,row.size,row.weight);center(ctx,apf,cx,row.y,hero?'#FFD077':'#F6F8FF',null);}
     else center(ctx,'—',cx,row.y,'#9db4d8',null);
     continue;
    }
@@ -274,13 +273,13 @@ async function drawGuide(ctx){
     if(airv){
      fontPx(ctx,row.size,row.weight);
      const nw=ctx.measureText(airv).width;
-     fontPx(ctx,12,500);
+     fontPx(ctx,17,500);
      const uw=ctx.measureText('m³/h').width;
      const x0=cx-(nw+4+uw)/2;
      ctx.textAlign='left';ctx.textBaseline='middle';
-     fontPx(ctx,row.size,row.weight);ctx.fillStyle=color;
+     fontPx(ctx,row.size,row.weight);ctx.fillStyle=hero?'#FFD077':'#F6F8FF';
      ctx.fillText(airv,x0,row.y);
-     fontPx(ctx,12,500);ctx.fillStyle=color;
+     fontPx(ctx,17,500);ctx.fillStyle='#F6F8FF';
      ctx.fillText('m³/h',x0+nw+4,row.y+2);
      ctx.textAlign='center';
     }else center(ctx,'—',cx,row.y,'#9db4d8',null);
@@ -292,10 +291,15 @@ async function drawGuide(ctx){
     /* 推荐理由按空格分行（最多两行），不做逐字折行，避免「省电之/选」这种断法 */
     lines=reason.split(/\s+/).filter(Boolean).slice(0,2);
     if(!lines.length)lines=['—'];
+    lines=lines.flatMap(line=>wrapLines(ctx,line,colW-20,row.size,row.weight,2)).slice(0,2);
    }else{
     if(row.key==='temp')value=fmtTemp(m.fields.temp);
     else value=String(m.fields[row.key]||'—');
-    lines=wrapLines(ctx,value,colW-22,row.size,row.weight,row.maxLines||1);
+    const words=value.split(/\s+/).filter(Boolean);
+    if(words.length===2&&row.maxLines>=2){
+     fontPx(ctx,row.size,row.weight);
+     lines=words.every(word=>ctx.measureText(word).width<=colW-22)?words:wrapLines(ctx,value,colW-22,row.size,row.weight,row.maxLines);
+    }else lines=wrapLines(ctx,value,colW-22,row.size,row.weight,row.maxLines||1);
    }
    const lh=row.size*1.3;
    const y0=row.y-(lines.length-1)*lh/2;
@@ -426,7 +430,7 @@ function renderResults(){
    const locked=pickedType();
    if(locked&&locked!==type){setStatus('挂机和柜机不能混着对比：已选的是「'+locked+'」，请先清空重选或只选'+locked+'。','bad');return;}
    state.picked.push(p.id);
-   state.pickedMap[p.id]={id:p.id,data:d};
+   state.pickedMap[p.id]={id:p.id,data:d,group:state.group};
    if(!state.heroId)state.heroId=p.id;
    renderSelected();refreshPick();
    setStatus('已锁定「'+type+'」对比，还可再选 '+(4-state.picked.length)+' 台（'+type+'）');
@@ -447,6 +451,9 @@ async function generate(){
  const ids=orderedPicked();
  const need=state.template==='guide'?4:2;
  if(ids.length<need){setStatus(state.template==='guide'?'「选购指南」模板固定 4 台对比，请选满 4 台。':'至少选 2 台才能生成。','bad');return;}
+ if(state.template==='guide'&&ids.some(id=>state.pickedMap[id]?.group!=='gree-ac')){
+  setStatus('模板二使用格力品牌底图，请选 4 台格力空调。','bad');return;
+ }
  /* 类型只认点选时的快照：搜索换列表后依然算得准，不会再误报「混比」 */
  const types=[...new Set(ids.map(id=>{const p=state.pickedMap[id];return p?machineTypeOf(p.data):'';}))].filter(t=>t!=='');
  if(types.length>1){setStatus('挂机与柜机不能混着对比，请只选同一类机型。','bad');return;}
@@ -456,7 +463,7 @@ async function generate(){
  try{
   const data=await api('pk-fields',{ids:ids.join(',')});
   state.models=data.models||[];
-  if(state.models.length<2)throw Error('可用机型不足 2 台（可能有型号刚被删除），刷新后重选。');
+  if(state.models.length<need)throw Error('可用机型不足 '+need+' 台（可能有型号刚被删除），刷新后重选。');
   get('canvasHint').hidden=true;
   renderReasonEdit();
   await draw();
@@ -484,8 +491,12 @@ try{
    state.template=b.dataset.t;
    for(const t of get('templates').querySelectorAll('button'))t.classList.toggle('is-on',t===b);
    renderSelected();
-   if(state.template==='guide'&&state.picked.length!==4)setStatus('「选购指南」模板固定 4 台对比，请选满 4 台再生成。');
-   else if(state.models.length&&state.picked.length>=4)draw().catch(e=>setStatus(explain(e),'bad'));
+   const guideInvalid=state.template==='guide'&&(state.picked.length!==4||orderedPicked().some(id=>state.pickedMap[id]?.group!=='gree-ac'));
+   if(guideInvalid){
+    state.drawn=false;get('download').disabled=true;get('canvasHint').hidden=false;
+    const cv=get('pk');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+    setStatus(state.picked.length!==4?'「选购指南」模板固定 4 台对比，请选满 4 台再生成。':'模板二使用格力品牌底图，请选 4 台格力空调。');
+   }else if(state.models.length)draw().catch(e=>setStatus(explain(e),'bad'));
   };
  }
  /* 一期只做空调：格力空调 + 海尔空调；冰箱（haier-fridge）二期再放 */

@@ -57,3 +57,10 @@ scripts/bin/
 
 # 文档生成中间产物(本地流水线工作区)
 output/
+
+# 比价助手登录态（含京东 cookie，严禁入库/进 git）
+data/price-session.json
+data/price-browser/
+
+# dev-server 运行时产物
+data/.devserver-mtime

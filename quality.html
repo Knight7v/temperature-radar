@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>客服质检 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><link rel="stylesheet" href="/css/quality.css?v=20261027-insdate2"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>客服质检 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261030-skel2"><link rel="stylesheet" href="/css/quality.css?v=20261030-ops2"></head>
 <body class="workbench-body"><div id="shell"></div><main class="workbench-main quality-main">
 <div class="workbench-eyebrow">SERVICE QUALITY</div><h1>客服质检</h1><p class="workbench-muted">先看整体水平，再处理高风险会话，最后逐条清待复核。AI 逐条判定并取证，分数按 70/30 固定公式计算。</p>
 
@@ -25,6 +25,7 @@
 <nav class="qc-viewnav" id="viewTabs" role="tablist" aria-label="质检视图">
   <button type="button" data-view="overview" class="on" role="tab" aria-selected="true">总览</button>
   <button type="button" data-view="sessions" role="tab" aria-selected="false">会话 <b id="navCntAll">0</b></button>
+  <button type="button" data-view="ops" role="tab" aria-selected="false">运营指标</button>
   <button type="button" data-view="insight" role="tab" aria-selected="false">消费者洞察</button>
   <span class="qc-viewnav-hint">主管的日常顺序：整体 → 高风险 → 逐条</span>
   <button type="button" class="qc-viewnav-rules" id="rulesOpen" title="查 19 条评分规则（快捷键 ?）">规则速查</button>
@@ -71,6 +72,17 @@
     </div>
     <div id="aiSessions" class="qc-table-wrap qc-session-scroll"></div>
     <div id="aiPager" class="qc-pager"></div>
+  </section>
+</section>
+
+<section class="qc-view" id="viewOps" aria-label="运营指标" hidden>
+  <section class="qc-card">
+    <div class="qc-section-head">
+      <div><h2>客服运营指标<small id="opsDateNote" style="font-weight:400;color:#93a1b5"></small></h2><p>首响时长、会话量、解决率——运营好不好看这里，打得规不规范看「总览」。首响与解决率来自京麦「咨询会话查询」记录，没贴会话记录的会话不计入。</p></div>
+      <button id="opsRefresh" type="button">刷新</button>
+    </div>
+    <div id="opsKpis" class="qc-ops-kpis"></div>
+    <div id="opsAgents" class="qc-table-wrap"><p class="qc-note">正在加载…</p></div>
   </section>
 </section>
 
@@ -208,4 +220,5 @@
   </div>
 </div>
 
-<script src="/js/workbench-session.js?v=20261027-roster"></script><script src="/js/workbench-shell.js?v=20261028-pk1"></script><script src="/js/quality.js?v=20261027-datefix"></script><script src="/js/quality-insight.js?v=20261027-insdate"></script></body></html>
+<script src="/js/workbench-session.js?v=20261030-px1"></script>
+<script src="/js/table-tools.js?v=20261031-p1"></script><script src="/js/workbench-shell.js?v=20261030-shell2"></script><script src="/js/notifications-ui.js?v=20261030-ntf1"></script><script src="/js/command-palette.js?v=20261030-cmdk2"></script><script src="/js/quality.js?v=20261030-ops2"></script><script src="/js/quality-insight.js?v=20261027-insdate"></script></body></html>

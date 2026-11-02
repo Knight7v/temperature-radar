@@ -23,6 +23,25 @@ if [ ! -d "$PROJECT_DIR" ]; then
   read -r "?按回车键关闭…"
   exit 1
 fi
+# 1.5 权限自检 —— macOS 会把「桌面」文件夹保护起来。终端没有桌面权限时，
+#     服务能起来，但读任何项目文件都报 EPERM，接口全 500，看起来像代码坏了。
+if ! cat "$PROJECT_DIR/package.json" >/dev/null 2>&1; then
+  echo "❌ 被 macOS 权限拦住了，读不到项目文件（不是程序坏了）"
+  echo ""
+  echo "   解决办法（两次点击，1 分钟）："
+  echo "   系统设置 → 隐私与安全性 → 文件和文件夹 → 找到「终端」"
+  echo "   → 把「桌面文件夹」打开"
+  echo ""
+  echo "   如果列表里没有「终端」："
+  echo "   系统设置 → 隐私与安全性 → 完全磁盘访问权限 → 点 + →"
+  echo "   选择「应用程序/实用工具/终端」→ 打开开关"
+  echo ""
+  echo "   改完按 ⌘Q 完全退出终端（不是关窗口），再双击本文件。"
+  echo ""
+  read -r "?按回车键关闭…"
+  exit 1
+fi
+
 cd "$PROJECT_DIR" || exit 1
 
 # 2. 找到 node
@@ -41,9 +60,15 @@ fi
 #    坑：旧版只看端口有没有人占，占着就说「已经在运行」并开浏览器。
 #    但接口代码是启动时缓存的，于是改了接口也永远不生效，页面报「接口不存在 / 加载失败」。
 #    现在先问一下进程的代码版本（/api/_status），旧的就地停掉重起，不用你手动关窗口。
+# 服务端主程序（dev-server.js）改过也要重启：/api/_status 的 fresh 只比对接口代码，
+# 定时任务、启动参数这些写在 dev-server.js 里的改动，不重启是不会生效的。
 if lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
-  FRESH="$(curl --noproxy '*' -s -m 3 "http://127.0.0.1:${PORT}/api/_status" 2>/dev/null | sed -n 's/.*"fresh":\([a-z]*\).*/\1/p')"
-  if [ "$FRESH" = "true" ]; then
+  STATUS="$(curl --noproxy '*' -s -m 3 "http://127.0.0.1:${PORT}/api/_status" 2>/dev/null)"
+  FRESH="$(printf '%s' "$STATUS" | sed -n 's/.*"fresh":\([a-z]*\).*/\1/p')"
+  SERVER_STALE="$(printf '%s' "$STATUS" | sed -n 's/.*"serverStale":\([a-z]*\).*/\1/p')"
+  # serverStale 是服务自己比出来的：磁盘上的 dev-server.js 和它启动时那份不一样 → 必须重启。
+  # 老版本进程没有这个字段（取到空），同样按"要重启"处理，避免一直跑旧代码。
+  if [ "$FRESH" = "true" ] && [ "$SERVER_STALE" = "false" ]; then
     echo "✅ 工作台已经在运行，正在打开页面…"
     [ -z "$WORKBENCH_NO_OPEN" ] && open "$URL"
     echo ""
@@ -85,6 +110,8 @@ for _ in {1..30}; do
   if lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then break; fi
   sleep 0.5
 done
+
+mkdir -p "$PROJECT_DIR/data"
 
 if lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   echo ""

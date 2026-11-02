@@ -1,0 +1,124 @@
+/* ============================================================
+   销售分析页换壳样式（2026-10-30 · 按 output/sales-visual-draft.html 实施）
+   视觉语言与 users.css 同源：Tabler 骨架 + shadcn 表格 + CSS 变量打底
+   只作用于 sales.html（.s-root 作用域），不影响其他页面
+   ============================================================ */
+.s-root{
+  --s-bg:#f4f6fa;
+  --s-card:#ffffff;
+  --s-card-sub:#f8fafd;
+  --s-line:#e5eaf2;
+  --s-line-strong:#d4dce8;
+  --s-ink:#1a2333;
+  --s-ink-2:#3a4a63;
+  --s-sub:#708097;
+  --s-faint:#9aa7ba;
+  --s-blue:#2563eb;
+  --s-blue-soft:#eaf1fe;
+  --s-green:#16a34a;--s-green-soft:#e8f7ee;
+  --s-red:#dc2626;--s-red-soft:#fdecec;
+  --s-amber:#d97706;--s-amber-soft:#fdf1de;
+  --s-gray-soft:#eef1f6;
+  --s-radius:10px;
+  --s-radius-s:7px;
+  --s-shadow:0 1px 2px rgba(23,35,58,.04);
+}
+
+/* ================= 页头三件套 ================= */
+.s-pagehead{display:flex;align-items:flex-start;gap:16px;margin-bottom:6px}
+.s-pagehead .s-eyebrow{font-size:11px;letter-spacing:.14em;color:var(--s-blue);font-weight:700;margin-bottom:2px}
+.s-pagehead h1{font-size:22px;font-weight:700;letter-spacing:.01em;margin:0}
+.s-pagehead .s-desc{font-size:13px;color:var(--s-sub);margin:3px 0 0}
+.s-pagehead .s-actions{margin-left:auto;display:flex;gap:10px;flex-shrink:0;padding-top:8px}
+
+/* ---- 按钮（加 .workbench-body 前缀压过全局 .workbench-body button 白底规则） ---- */
+/* 铁律：display:inline-flex 会压掉 hidden 属性，必须配这条保险 */
+.workbench-body .s-btn[hidden]{display:none!important}
+.workbench-body .s-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:var(--s-radius-s);font-size:13px;font-weight:600;border:1px solid transparent;cursor:pointer;background:transparent;color:var(--s-ink-2);font-family:inherit}
+.workbench-body .s-btn-primary{background:var(--s-blue);color:#fff;box-shadow:0 1px 2px rgba(37,99,235,.28)}
+.workbench-body .s-btn-primary:hover{background:#1d4fd7}
+.workbench-body .s-btn-ghost{border-color:var(--s-line-strong);background:var(--s-card);color:var(--s-ink-2)}
+.workbench-body .s-btn-ghost:hover{border-color:#b9c6d8;background:var(--s-card-sub)}
+
+/* ================= 状态提示 / tab 切换条 ================= */
+.s-root .s-msg{font-size:13px;color:#b0541e;margin:0 0 10px;min-height:0}
+.s-root .s-msg:empty{margin:0}
+.s-tabs{display:flex;align-items:center;gap:4px;margin:16px 0 14px;padding:4px;background:#eef2f8;border-radius:12px;position:sticky;top:60px;z-index:20;overflow-x:auto}
+.s-tabs button{border:0;background:transparent;padding:8px 16px;border-radius:9px;font:inherit;font-size:13.5px;color:#3c4a63;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.s-tabs button.on{background:#fff;color:#1454c8;font-weight:600;box-shadow:0 1px 2px #14203a14}
+.s-tabs button:focus-visible{outline:2px solid #9dbcf5;outline-offset:1px}
+.s-tab-badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--s-blue-soft);color:#1454c8;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.s-tab-badge[hidden]{display:none}
+
+/* ================= 卡片统一（覆盖旧 .sales-box 观感） ================= */
+.s-root .sales-box{background:var(--s-card);border:1px solid var(--s-line);border-radius:var(--s-radius);box-shadow:var(--s-shadow);padding:20px 22px;margin:0 0 16px}
+.s-root .sales-box>h2{font-size:15px;font-weight:700;margin:0 0 14px;color:var(--s-ink)}
+
+/* ================= KPI 统计卡行 ================= */
+.s-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 14px}
+.s-kpi{background:var(--s-card-sub);border:1px solid var(--s-line);border-radius:var(--s-radius);padding:14px 16px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.s-kpi-label{font-size:12px;color:var(--s-sub);font-weight:600}
+.s-kpi-value{font-size:26px;font-weight:700;color:var(--s-ink);letter-spacing:.01em;line-height:1.2;font-variant-numeric:tabular-nums}
+.s-kpi-value small{font-size:13px;font-weight:600;color:var(--s-faint);margin-left:2px}
+.s-kpi-sub{font-size:12px;color:var(--s-faint);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.s-kpi-progress{flex:1;max-width:90px;height:4px;border-radius:2px;background:var(--s-gray-soft);overflow:hidden}
+.s-kpi-progress i{display:block;height:100%;border-radius:2px;background:var(--s-blue)}
+.s-kpi-progress.tone-green i{background:var(--s-green)}
+.s-kpi-progress.tone-amber i{background:var(--s-amber)}
+.s-kpi-progress.tone-red i{background:var(--s-red)}
+
+/* ================= 缺数据引导条 ================= */
+.s-guide{display:flex;align-items:center;gap:10px;background:var(--s-amber-soft);border:1px solid #f3ddb5;border-radius:var(--s-radius-s);padding:10px 14px;margin:0 0 14px;font-size:13px;color:#8a5a12}
+.s-guide strong{color:#6d4709}
+.s-guide a,.workbench-body button.s-guide-link{margin-left:auto;color:#1454c8;font-weight:600;font-size:13px;background:transparent;border:0;cursor:pointer;font-family:inherit;white-space:nowrap}
+.s-guide[hidden]{display:none}
+
+/* ================= 汇总行 / 口径收纳 ================= */
+.s-root .s-summary{font-size:12.5px;color:var(--s-sub);margin:0 0 10px;white-space:pre-wrap}
+.s-note{font-size:12.5px;color:var(--s-sub);margin:0 0 12px;border:1px dashed var(--s-line-strong);border-radius:var(--s-radius-s);background:var(--s-card-sub)}
+.s-note summary{cursor:pointer;padding:7px 12px;color:var(--s-sub);user-select:none;font-weight:600}
+.s-note[open] summary{border-bottom:1px dashed var(--s-line-strong);color:var(--s-ink-2)}
+.s-note p{padding:8px 12px;margin:0;line-height:1.7}
+.s-note p+p{padding-top:0}
+.s-steps{font-size:13px;color:var(--s-ink-2);background:var(--s-blue-soft);border:1px solid #d6e4fd;border-radius:var(--s-radius-s);padding:9px 14px;margin:0 0 12px}
+.s-steps strong{color:#1454c8}
+
+/* ================= 表格徽章与行状态 ================= */
+.s-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.6;white-space:nowrap}
+.s-badge-green{background:var(--s-green-soft);color:#116a35}
+.s-badge-amber{background:var(--s-amber-soft);color:#8a5a12}
+.s-badge-red{background:var(--s-red-soft);color:#a02020}
+.s-badge-gray{background:var(--s-gray-soft);color:var(--s-sub)}
+.s-badge-blue{background:var(--s-blue-soft);color:#1454c8}
+.s-badge .s-badge-rate{font-variant-numeric:tabular-nums}
+.s-badge-progress{width:34px;height:3px;border-radius:2px;background:rgba(0,0,0,.08);overflow:hidden;flex-shrink:0}
+.s-badge-progress i{display:block;height:100%;background:currentColor;opacity:.55}
+.sales-table tr.s-row-zero td{color:var(--s-faint)}
+.sales-table tr.s-row-zero td .s-badge{background:var(--s-gray-soft);color:var(--s-faint)}
+.sales-table tbody tr:hover td{background:#f7f9fc}
+.sales-table td{vertical-align:middle}
+
+/* ================= 响应式 ================= */
+@media(max-width:1100px){.s-kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){
+  .s-pagehead{flex-wrap:wrap}
+  .s-pagehead .s-actions{width:100%;padding-top:0}
+  .s-kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .s-kpi-value{font-size:21px}
+  .s-tabs{top:56px}
+  .s-guide{flex-wrap:wrap}
+  .s-guide a,.workbench-body button.s-guide-link{margin-left:0}
+}
+
+/* ================= 表头排序（2026-11-02）：点 1 次从高到低、再点从低到高 ================= */
+#report th.s-sortable{cursor:pointer;user-select:none}
+#report th.s-sortable:hover{color:var(--wb-blue,#2f6bff);background:#f4f7fc}
+#report th.s-sorted-desc,#report th.s-sorted-asc{color:var(--wb-blue,#2f6bff)}
+#report th.s-sorted-desc::after{content:' ↓'}
+#report th.s-sorted-asc::after{content:' ↑'}
+
+/* ================= 店铺档案品牌 TAB（2026-11-02）：格力 / 海尔 分页 ================= */
+.s-arc-tabs{display:flex;gap:8px;margin:2px 0 14px;flex-wrap:wrap}
+.s-arc-tab{border:1px solid #e3e9f2;background:#fff;border-radius:999px;padding:6px 16px;font-size:13px;color:#5b6b84;cursor:pointer;font-family:inherit}
+.s-arc-tab:hover{border-color:#c6d2e3;background:#f7fafd}
+.s-arc-tab.on{background:var(--wb-blue,#2f6bff);border-color:var(--wb-blue,#2f6bff);color:#fff;font-weight:600}

@@ -1,1 +1,114 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>功能参数对比 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><style>.compare-grid{display:grid;grid-template-columns:360px minmax(0,1fr);gap:24px;margin-top:24px}.compare-panel{background:white;padding:24px;border:1px solid #e0e6ef;border-radius:16px}.compare-panel label{display:grid;gap:6px;margin:14px 0}.compare-panel input,.compare-panel select,.compare-panel textarea{width:100%;font:inherit}.compare-panel textarea{min-height:100px;padding:10px;border:1px solid #cfd8e4;border-radius:8px}.compare-preview{position:sticky;top:20px;align-self:start}.compare-preview canvas{width:100%;max-height:75vh;object-fit:contain}.product-editor{border-top:1px solid #e0e6ef;margin-top:20px}.compare-note{font-size:12px;color:#66768a}.compare-actions{display:flex;gap:8px;flex-wrap:wrap}@media(max-width:950px){.compare-grid{grid-template-columns:1fr}.compare-preview{position:static}}</style></head><body class="workbench-body"><div id="shell"></div><main class="workbench-main"><div class="workbench-eyebrow">VISUAL STUDIO / COMPARISON</div><h1>功能参数对比</h1><p class="workbench-muted">看清产品差异，帮助顾客选择合适的一款。</p><div class="compare-grid"><section class="compare-panel"><label>海报标题<input id="headline" maxlength="32" value="好产品，一眼看懂"></label><label>商品数量<select id="count"><option value="3">三款商品</option><option value="2">两款商品</option></select></label><label>重点推荐<select id="featured"></select></label><label>导出宽度<select id="resolution"><option>1080</option><option>1440</option><option>2160</option></select></label><div id="products"></div><label>对比参数（每行：项目 | 商品1 | 商品2 | 商品3）<textarea id="parameters" placeholder="能效比 |  |  | &#10;制冷量 |  |  | "></textarea></label><p class="compare-note">最多 10 行，每格最多 40 字；填写实际参数及单位。推荐款由你指定，不自动判断性能优劣。</p><h2>AI 视觉背景</h2><p class="compare-note">AI 只生成背景，商品图和参数永远单独排版。生成后自动铺满画布并压暗，保证文字看得清。</p><label>背景描述<textarea id="artDirection">蓝黑科技风，蓝色霓虹光线，深色产品展台，右侧少量金色光效，顶部与下半部保留干净文字空间，无文字、无标志、无商品。</textarea></label><div class="compare-actions"><button id="aiBackground">AI 生成背景</button><button id="clearBackground">恢复模板背景</button><button id="promptDownload">下载提示词</button></div><label>上传背景图片<input id="backgroundFile" type="file" accept="image/png,image/jpeg,image/webp"></label><p class="compare-note" id="aiStatus" role="status"></p></section><section class="compare-panel compare-preview"><h2>海报预览</h2><p class="compare-note" id="mode">模板预览 · 非 AI 生成</p><canvas id="poster" aria-label="功能参数对比海报"></canvas><p id="message" role="status">商品图片和参数尚未填写，导出时会保留占位提示。</p><button id="exportPoster" class="workbench-primary">下载对比海报 PNG</button></section></div></main><script src="/js/workbench-session.js?v=20261027-roster"></script><script src="/js/workbench-shell.js?v=20261028-pk1"></script><script src="/js/design-ai.js?v=20261020-design1"></script><script src="/js/comparison-provider.js"></script><script src="/js/comparison.js"></script></body></html>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>功能参数对比 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261030-skel2"><style>.compare-grid{display:grid;grid-template-columns:360px minmax(0,1fr);gap:24px;margin-top:24px}.compare-panel{background:white;padding:24px;border:1px solid #e0e6ef;border-radius:16px}.compare-panel label{display:grid;gap:6px;margin:14px 0}.compare-panel input,.compare-panel select,.compare-panel textarea{width:100%;font:inherit}.compare-panel textarea{min-height:100px;padding:10px;border:1px solid #cfd8e4;border-radius:8px}.compare-preview{position:sticky;top:20px;align-self:start}.compare-preview canvas{width:100%;max-height:75vh;object-fit:contain}.product-editor{border-top:1px solid #e0e6ef;margin-top:20px}.compare-note{font-size:12px;color:#66768a}.compare-actions{display:flex;gap:8px;flex-wrap:wrap}
+/* ---- 参数格子编辑器（2026-10-30 替代竖线分隔 textarea） ---- */
+.param-grid{border:1px solid #d9e1ec;border-radius:10px;overflow:hidden;margin:8px 0 10px;background:#fff}
+.pg-row{display:grid;border-top:1px solid #edf1f7;align-items:stretch}
+.pg-row:first-child{border-top:0}
+.pg-head{background:#f4f7fb;font-size:12px;font-weight:600;color:#5a6a80}
+.pg-head div{padding:7px 8px}
+.workbench-body .pg-row input{border:0;border-right:1px dashed #e5eaf2;border-radius:0;width:100%;padding:9px 8px;font-size:13px;min-height:0;background:transparent;color:inherit}
+.workbench-body .pg-row input:focus-visible{outline:2px solid #9dbcf5;outline-offset:-2px;background:#f7faff}
+.pg-del{border:0;background:transparent;color:#9aa7ba;font-size:14px;cursor:pointer;min-width:30px}
+.pg-del:hover{color:#dc2626}
+.pg-toolbar{display:flex;align-items:center;gap:10px;margin:0 0 14px;flex-wrap:wrap}
+.workbench-body .pg-add{font-size:12.5px;padding:6px 12px;border-radius:7px;border:1px dashed #b9c6d8;background:#f7f9fc;color:#3a4a63}
+.workbench-body .pg-add:hover{border-color:#8fa3bd;background:#eef3fa}
+.workbench-body .pg-add:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:950px){.compare-grid{grid-template-columns:1fr}.compare-preview{position:static}}</style>
+</head>
+<body class="workbench-body">
+<div id="shell">
+</div>
+<main class="workbench-main">
+<div class="workbench-eyebrow">VISUAL STUDIO / COMPARISON</div>
+<h1>功能参数对比</h1>
+<p class="workbench-muted">看清产品差异，帮助顾客选择合适的一款。</p>
+<div class="compare-grid">
+<section class="compare-panel">
+<label>海报标题<input id="headline" maxlength="32" value="好产品，一眼看懂">
+</label>
+<label>商品数量<select id="count">
+<option value="3">三款商品</option>
+<option value="2">两款商品</option>
+</select>
+</label>
+<label>重点推荐<select id="featured">
+</select>
+</label>
+<label>导出宽度<select id="resolution">
+<option>1080</option>
+<option>1440</option>
+<option>2160</option>
+</select>
+</label>
+<div id="products">
+</div>
+<label>对比参数</label>
+<div id="paramGrid" class="param-grid" aria-label="参数格子编辑器，每格最多40字">
+</div>
+<div class="pg-toolbar">
+<button type="button" id="paramAdd" class="pg-add">＋ 添加一行</button>
+<span class="compare-note">最多 10 行，每格最多 40 字；填写实际参数及单位。推荐款由你指定，不自动判断性能优劣。</span>
+</div>
+<textarea id="parameters" hidden tabindex="-1" aria-hidden="true"></textarea>
+<h2>AI 视觉背景</h2>
+<p class="compare-note">AI 只生成背景，商品图和参数永远单独排版。生成后自动铺满画布并压暗，保证文字看得清。</p>
+<label>背景描述<textarea id="artDirection">蓝黑科技风，蓝色霓虹光线，深色产品展台，右侧少量金色光效，顶部与下半部保留干净文字空间，无文字、无标志、无商品。</textarea>
+</label>
+<div class="compare-actions">
+<button id="aiBackground">AI 生成背景</button>
+<button id="clearBackground">恢复模板背景</button>
+<button id="promptDownload">下载提示词</button>
+</div>
+<label>上传背景图片<input id="backgroundFile" type="file" accept="image/png,image/jpeg,image/webp">
+</label>
+<p class="compare-note" id="aiStatus" role="status">
+</p>
+</section>
+<section class="compare-panel compare-preview">
+<h2>海报预览</h2>
+<p class="compare-note" id="mode">模板预览 · 非 AI 生成</p>
+<canvas id="poster" aria-label="功能参数对比海报">
+</canvas>
+<p id="message" role="status">商品图片和参数尚未填写，导出时会保留占位提示。</p>
+<button id="exportPoster" class="workbench-primary">下载对比海报 PNG</button>
+</section>
+</div>
+</main>
+<script src="/js/workbench-session.js?v=20261030-px1">
+</script>
+<script src="/js/wb-toast.js?v=20261031-p1"></script>
+<script src="/js/workbench-shell.js?v=20261030-shell2">
+</script>
+<script src="/js/notifications-ui.js?v=20261030-ntf1"></script><script src="/js/command-palette.js?v=20261030-cmdk2"></script>
+<script src="/js/design-ai.js?v=20261020-design1">
+</script>
+<script src="/js/comparison-provider.js">
+</script>
+<script src="/js/comparison.js?v=20261031-p1">
+</script>
+<script>
+/* 参数格子编辑器：格子 ⇄ 隐藏 #parameters 双向同步，海报绘制逻辑（js/comparison.js）零改动 */
+(function(){
+const ta=document.getElementById('parameters'),grid=document.getElementById('paramGrid'),addBtn=document.getElementById('paramAdd');
+let rows=[['','','','']];
+const colCount=()=>Number(document.getElementById('count').value);
+function parseFromTa(){rows=ta.value.split('\n').filter(v=>v.trim()).slice(0,10).map(r=>{const c=r.split('|').map(v=>v.trim().slice(0,40));while(c.length<4)c.push('');return c.slice(0,4);});if(!rows.length)rows=[['','','','']];}
+function syncToTa(){const n=colCount();ta.value=rows.map(r=>r.slice(0,n+1).join(' | ')).join('\n');ta.dispatchEvent(new Event('input',{bubbles:false}));}
+function build(){const n=colCount(),tpl='minmax(0,1.15fr) repeat('+n+',minmax(0,1fr)) 30px';grid.replaceChildren();
+const head=document.createElement('div');head.className='pg-row pg-head';head.style.gridTemplateColumns=tpl;
+['参数项目'].concat(Array.from({length:n},(_,i)=>'商品 '+(i+1))).forEach(t=>{const d=document.createElement('div');d.textContent=t;head.append(d);});
+head.append(document.createElement('div'));grid.append(head);
+rows.forEach((r,ri)=>{const row=document.createElement('div');row.className='pg-row';row.style.gridTemplateColumns=tpl;
+for(let ci=0;ci<=n;ci++){const inp=document.createElement('input');inp.type='text';inp.maxLength=40;inp.value=r[ci]||'';inp.placeholder=ci===0?'如：能效比':'';
+inp.addEventListener('input',()=>{rows[ri][ci]=inp.value;syncToTa();});row.append(inp);}
+const del=document.createElement('button');del.type='button';del.className='pg-del';del.textContent='×';del.title='删除该行';del.setAttribute('aria-label','删除第'+(ri+1)+'行参数');
+del.onclick=()=>{rows.splice(ri,1);if(!rows.length)rows=[['','','','']];syncToTa();build();};
+row.append(del);grid.append(row);});
+addBtn.disabled=rows.length>=10;}
+addBtn.onclick=()=>{if(rows.length>=10)return;rows.push(['','','','']);build();syncToTa();};
+document.getElementById('count').addEventListener('change',()=>{build();syncToTa();});
+parseFromTa();build();syncToTa();
+})();
+</script>
+</body>
+</html>

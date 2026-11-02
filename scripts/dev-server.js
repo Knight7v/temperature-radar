@@ -1,6 +1,10 @@
 // Local development only. Public files are explicitly scoped; secrets/source are never served.
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),port=Number(process.argv[process.argv.indexOf('--port')+1])||4173;
+// 本进程启动时 dev-server.js 自身的时间戳。用来判断「磁盘上的主程序改过了但进程还没重启」——
+// 定时任务、监听参数这类写在主程序里的改动，不重启是不生效的，而这个信号接口代码的 fresh 看不出来。
+const serverFile=path.resolve(__filename);
+const bootServerMtime=(()=>{try{return fs.statSync(serverFile).mtimeMs;}catch(e){return null;}})();
 // 请求体上限：销售订单明细导出常有 4~20MB，太小会返回空 413，前端 r.json() 直接报错。
 const MAX_UPLOAD=32*1024*1024;
 const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml'};
@@ -76,6 +80,37 @@ function loadApi(){
  }
  return require(apiFile);
 }
+// ===== 每日日报定时轮询 =====
+// 每 5 分钟问一次自己的 cron 接口：过了北京 08:30 且昨天的日报还没推，就生成并推企微。
+// 服务几点开机都行——开机后第一轮就会补推当天的日报；幂等在接口里（daily_reports 表一天只推一次）。
+const CRON_SECRET_LOCAL=process.env.CRON_SECRET||'';
+let dailyReportFired=false;
+setInterval(()=>{
+ const bj=new Date(Date.now()+8*3600*1000);
+ const hhmm=bj.toISOString().slice(11,16);
+ if(hhmm<'08:30')return;
+ if(dailyReportFired)return;
+ dailyReportFired=true; // 过点后第一次触发，之后交给接口的幂等；进程重启顶多重查一轮
+ fetch('http://127.0.0.1:'+port+'/api/cron-daily-report',{
+  headers:CRON_SECRET_LOCAL?{authorization:'Bearer '+CRON_SECRET_LOCAL}:{'x-cron-local':'1'}
+ }).then(async r=>{const b=await r.json().catch(()=>({}));console.log('[dev] 日报定时任务:',JSON.stringify(b));})
+  .catch(e=>{dailyReportFired=false;console.log('[dev] 日报定时任务失败,下轮重试:',e.message);});
+},5*60*1000).unref();
+
+// ===== 比价采集定时轮询 =====
+// 每 5 分钟问一次 /api/price/cron：到点（默认 10:00 全量 / 20:00 只跑重点机型）且今天没跑过，
+// 就由接口起一个独立采集进程。开机晚于采样点会自动补采一轮（接口里标 catchup）。
+// 幂等判断在接口里（查 price_runs 今天有没有这个 slot），所以这里多问几次没有副作用。
+function priceCronTick(tag){
+ fetch('http://127.0.0.1:'+port+'/api/price/cron',{headers:{'x-cron-local':'1'}})
+  .then(async r=>{const b=await r.json().catch(()=>({}));const d=(b&&b.data)||{};
+   if(d.started)console.log('[dev] 比价采集已启动:',JSON.stringify(d));
+   else if(tag==='boot')console.log('[dev] 比价采集:',d.skip||JSON.stringify(d));})
+  .catch(e=>console.log('[dev] 比价采集轮询失败:',e.message));
+}
+setInterval(()=>priceCronTick(),5*60*1000).unref();
+setTimeout(()=>priceCronTick('boot'),45*1000).unref();
+
 http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
  if(url.pathname.startsWith('/api/')){
@@ -85,8 +120,11 @@ http.createServer(async(req,res)=>{
     let reloadError=null;
     try{loadApi();}catch(error){reloadError=String((error&&error.message)||error);}
     const disk=codeStamp();
+    let serverDiskMtime=bootServerMtime;
+    try{serverDiskMtime=fs.statSync(serverFile).mtimeMs;}catch(e){}
+    const serverStale=serverDiskMtime!==bootServerMtime;
     res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});
-    return res.end(JSON.stringify({ok:true,pid:process.pid,port,apiLoadedAt,apiMtime:apiLoadedStamp,apiMtimeOnDisk:disk,fresh:disk===apiLoadedStamp,reloads:reloadCount,reloadError}));
+    return res.end(JSON.stringify({ok:true,pid:process.pid,port,apiLoadedAt,apiMtime:apiLoadedStamp,apiMtimeOnDisk:disk,fresh:disk===apiLoadedStamp,serverStale,reloads:reloadCount,reloadError}));
    }
    if(!/^\/api\/[a-z0-9/_-]+$/.test(url.pathname))throw Error('Not found');
    const file=apiFile;

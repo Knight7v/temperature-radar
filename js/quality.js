@@ -68,8 +68,8 @@ function statusChip(status){
 /* ---------------- 视图切换与抽屉 ----------------
    页面从一个长页拆成三个视图：总览（报表）/ 会话（队列）/ 洞察。
    复核与导入都是右侧抽屉，打开时不改变列表位置，关掉回到原处。 */
-const VIEWS=['overview','sessions','insight'];
-const viewScroll={overview:0,sessions:0,insight:0};
+const VIEWS=['overview','sessions','ops','insight'];
+const viewScroll={overview:0,sessions:0,ops:0,insight:0};
 let activeView='overview';
 function switchView(name){
  if(!VIEWS.includes(name))name='overview';
@@ -83,11 +83,13 @@ function switchView(name){
  }
  get('viewOverview').hidden=name!=='overview';
  get('viewSessions').hidden=name!=='sessions';
+ get('viewOps').hidden=name!=='ops';
  get('viewInsight').hidden=name!=='insight';
  window.scrollTo({top:viewScroll[name]||0,behavior:'auto'});
  try{history.replaceState(null,'','#'+name);}catch(error){}
  /* 洞察和总览/会话共用顶部「分析日期」，切过去时才第一次拉数据 */
  if(name==='insight'&&window.QualityInsight)window.QualityInsight.ensure();
+ if(name==='ops')loadOps().catch(()=>{});
 }
 function openDrawer(el){
  if(!el)return;
@@ -336,7 +338,7 @@ async function api(action,{method='GET',body,params={},sampling=false,filename}=
    以及以后新增的任何 tab 都必须跟它走。统一在这里注入 date，不让各个 tab 自己拼参数——
    以前「会话」列表和总览里的「高风险预览」漏传 date，就出现过上面选 10-25、下面还列着
    3 月会话的错位。新增只读接口时，把 action 名加进 DATE_ACTIONS 即可，不要再单独传日期。 */
-const DATE_ACTIONS=new Set(['list','stats','export']);
+const DATE_ACTIONS=new Set(['list','stats','export','agent-metrics']);
 async function aiApi(action,{method='GET',body,params={}}={}){
  const input=get('aiDate');
  const merged={...params};
@@ -632,10 +634,50 @@ function renderSessions(){
  if(level)get('aiSessionsMeta').textContent='仅看 D 级会话，点「全部」取消筛选';
  else get('aiSessionsMeta').textContent='';
 }
+/* ---------------- 运营指标（P0-B）----------------
+   首响/解决率来自京麦会话记录（平台官方口径），没贴记录的会话不计入。
+   只读接口，日期由 aiApi 按 DATE_ACTIONS 自动带上「分析日期」。 */
+function fmtSeconds(value){
+ const n=Number(value);
+ if(!Number.isFinite(n))return '—';
+ if(n<60)return Math.round(n)+' 秒';
+ const m=Math.floor(n/60),s=Math.round(n%60);
+ return m+' 分'+(s?' '+s+' 秒':'');
+}
+async function loadOps(){
+ const box=get('opsAgents');
+ box.replaceChildren(node('p','正在加载…','qc-note'));
+ const data=await aiApi('agent-metrics',{params:{date:get('aiDate').value}});
+ const totals=data.totals||{},agents=data.agents||[];
+ get('opsDateNote').textContent=' · '+data.date;
+ const kpis=[
+  ['会话量',(Number(totals.sessions)||0)+'','通'],
+  ['平均首响',fmtSeconds(totals.first_avg),''],
+  ['首响中位',fmtSeconds(totals.first_median),''],
+  ['解决率',totals.resolved_known?((Number(totals.resolved_yes)||0)/Number(totals.resolved_known)*100).toFixed(0)+'%':'—',totals.resolved_known?totals.resolved_known+' 通有结论':'无会话记录'],
+  ['满意率',totals.sat_good+totals.sat_mid+totals.sat_bad?((Number(totals.sat_good)||0)/(Number(totals.sat_good)+Number(totals.sat_mid)+Number(totals.sat_bad))*100).toFixed(0)+'%':'—','京麦满意度评价'],
+ ];
+ get('opsKpis').innerHTML=kpis.map(item=>'<div class="qc-ops-kpi"><span>'+item[0]+'</span><strong>'+item[1]+'</strong><em>'+item[2]+'</em></div>').join('');
+ if(!agents.length){
+  box.replaceChildren(node('p','该日期没有质检会话。先在「导入记录」里导聊天记录（首响与解决率还需附上京麦「咨询会话查询」xlsx）。','qc-note'));
+  return;
+ }
+ const head=['客服','会话量','首响均值','首响中位','最长首响','已解决/未解决','解决率','满意（好/一般/差）'];
+ const lines=agents.map(a=>{
+  const known=Number(a.resolved_known)||0;
+  const rate=known?((Number(a.resolved_yes)||0)/known*100).toFixed(0)+'%':'—';
+  const sat=(Number(a.sat_good)||0)+'/'+(Number(a.sat_mid)||0)+'/'+(Number(a.sat_bad)||0);
+  return [a.agent||'—',a.sessions,fmtSeconds(a.first_avg)+(a.first_known?'':'*'),fmtSeconds(a.first_median),fmtSeconds(a.first_max),known?(a.resolved_yes+'/'+a.resolved_no):'—',rate,sat];
+ });
+ box.innerHTML='<table class="qc-table"><thead><tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+
+  lines.map(line=>'<tr>'+line.map((cell,i)=>'<td'+(i===0?' style="font-weight:600"':'')+'>'+cell+'</td>').join('')+'</tr>').join('')+'</tbody></table>'+
+  '<p class="qc-note">带 * 表示该客服的部分会话没有响应时间数据（未附京麦会话记录时用 AI 从聊天原文估算）。首响按京东考核时段 8:00–23:00 计算：8 点前咨询从当天 8 点起算、23 点后咨询从次日 8 点起算，跨时段不计超时。解决率只统计京麦记录里有「已解决/未解决」结论的会话（「-」不计入）；满意按京麦满意度评价（非常满意/满意算好）。</p>';
+}
 async function refreshAll(){
  try{await loadStats();}catch(error){setAiStatus(error.message);}
  try{await loadRiskPreview();}catch(error){}
  try{await loadSessions();}catch(error){get('aiSessions').replaceChildren(node('p',error.message,'qc-note'));}
+ if(activeView==='ops'){try{await loadOps();}catch(error){get('opsAgents').replaceChildren(node('p',error.message,'qc-note'));}}
 }
 
 /* 每轮请求 25 条（后端上限 50）。这个数只影响进度更新的粗细，选多选少总耗时一样，
@@ -1041,6 +1083,7 @@ for(const button of get('viewTabs').querySelectorAll('button[data-view]')){
  button.onclick=()=>switchView(button.dataset.view);
 }
 get('ovGoSessions').onclick=()=>switchView('sessions');
+get('opsRefresh').onclick=()=>run(get('opsRefresh'),loadOps);
 get('riskOpen').onclick=()=>{level='d';switchView('sessions');switchTab('all');};
 get('importOpen').onclick=()=>openDrawer(get('importCard'));
 get('importClose').onclick=()=>closeDrawer(get('importCard'));
@@ -1312,6 +1355,8 @@ get('confirm').onclick=()=>run(get('confirm'),async()=>{
  }
 },setStatus);
 
+/* 会话表加列显隐 + 导出（P1-2） */
+if(window.TableTools)TableTools.enhance(get('aiSessions'),{key:'quality-sessions',exportName:'质检会话'});
 await loadAiMeta();
 await refreshAll();
 

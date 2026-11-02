@@ -57,8 +57,8 @@
   renderMetrics(item);if(current==='gree-ac')renderMix(item);renderTable();
  }
  function renderShopOptions(){const select=get('shopFilter'),all=elem('option','全部相关店铺');all.value='';select.replaceChildren(all);
-  const platform=current==='gree-ac'?get('platformFilter').value:null;
-  for(const shop of state.shops.filter(item=>!platform||String(item.data?.platform||'').trim()===platform)){const option=elem('option',shop.data.name+(shop.data.shopId?' · '+shop.data.shopId:''));option.value=shop.id;select.append(option);}
+  const platform=current==='gree-ac'?String(get('platformFilter').value||'').split(',').map(x=>x.trim()).filter(Boolean):null;
+  for(const shop of state.shops.filter(item=>!platform||!platform.length||platform.includes(String(item.data?.platform||'').trim()))){const option=elem('option',shop.data.name+(shop.data.shopId?' · '+shop.data.shopId:''));option.value=shop.id;select.append(option);}
   select.value='';
  }
  function renderSettlementMappings(sources){const section=get('settlementMapping'),box=get('shopMappings');box.replaceChildren();section.hidden=false;
@@ -73,7 +73,7 @@
  try{
   const identity=await session.getIdentity();state.role=identity.user.role;
   WorkbenchShell.mountShell({container:get('shell'),activeModule:'sales-structure-'+current,identity,onLogout:async()=>{await session.logout();location.replace('/login.html');}});
-  get('breadcrumbCategory').textContent=labels[current];get('pageTitle').textContent=labels[current]+'销售结构';document.title=labels[current]+'销售结构 · 观星台';
+  const breadcrumb=get('breadcrumbCategory');if(breadcrumb)breadcrumb.textContent=labels[current];get('pageTitle').textContent=labels[current]+'销售结构';document.title=labels[current]+'销售结构 · 观星台';
   document.querySelectorAll('.ss-category-tabs a').forEach(link=>{if(link.dataset.category===current)link.setAttribute('aria-current','page');});
   get('greePanels').hidden=current!=='gree-ac';get('otherPanel').hidden=current==='gree-ac';
   get('platformControl').hidden=current!=='gree-ac';

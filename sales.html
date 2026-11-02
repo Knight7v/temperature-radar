@@ -1,1 +1,194 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>销售分析 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><style>.sales-box{background:white;border:1px solid #e0e6ef;border-radius:14px;padding:22px;margin:20px 0}.sales-form{display:flex;flex-wrap:wrap;gap:12px;align-items:end}.sales-form label{display:grid;gap:5px}.sales-table{overflow:auto}.sales-table table{width:100%;border-collapse:collapse}.sales-table td,.sales-table th{padding:12px;text-align:left;border-bottom:1px solid #eee;white-space:nowrap}#salesMessage{white-space:pre-wrap}.sales-tabs{display:flex;gap:12px;flex-wrap:wrap}.date-bar{position:relative;display:flex;align-items:center;gap:18px;flex-wrap:wrap;border-top:4px solid #dce7ff;background:#fafbfc;padding:14px;margin-bottom:22px}.date-shortcuts{display:flex;gap:4px;flex-wrap:wrap}.date-shortcuts button{border:0;padding:6px 10px;background:transparent}.date-shortcuts button[aria-pressed=true]{background:white;color:#396aff;box-shadow:0 2px 8px #182b4920}#dateCurrent{font-size:13px;color:#526477}#datePanel{position:absolute;top:100%;left:0;z-index:45;width:330px;max-width:90vw;padding:16px;background:white;box-shadow:0 10px 40px #22335530;border-radius:10px}.date-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.date-head button{padding:3px 8px;border:0;color:#396aff}.date-week{display:grid;grid-template-columns:repeat(8,1fr);align-items:center;text-align:center}.date-week button{border:0;border-radius:4px;padding:8px 0;font-size:13px}.date-week button:first-child{color:#729bff}.date-week .selected{background:#eaf0ff;color:#396aff}.date-week button:disabled{color:#bbb;cursor:default;background:#f8f8f8}.month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.month-grid button{border:0}.date-custom{display:grid;gap:10px}#shopList th,#shopList td{padding:10px 9px;font-size:13px}#shopList td input[type=date],#shopList td select{min-width:120px;min-height:34px;padding:5px 7px;font-size:12px}.shop-auto-dates{margin-left:8px;font-size:13px}</style><link rel="stylesheet" href="/css/sales-layout.css?v=20261020-targetmatrix2"></head><body class="workbench-body"><div id="shell"></div><main class="workbench-main"><div class="workbench-eyebrow">SALES ANALYTICS</div><h1>销售分析</h1><p>支付销售额 · 未扣退款 · 展示单位：万元</p><p id="salesMessage" role="status"></p><section id="overview" class="sales-box"><div class="sales-overview-heading"><h2>销售概况</h2><div id="dateBar" class="date-bar"><span id="dateCurrent"></span><div class="date-shortcuts"><button disabled title="当前通过文件导入，暂不支持实时数据">实时</button><button data-date="yesterday">昨天</button><button data-date="7">近7天</button><button data-date="30">近30天</button><button data-date="day">天</button><button data-date="week">周</button><button data-date="month">月</button><button data-date="custom">自定义</button></div><div id="datePanel" hidden></div></div></div><input id="start" type="hidden"><input id="end" type="hidden"><input id="grain" type="hidden"><div class="sales-form sales-filters"><label>店铺<select id="shopFilter"></select></label><label>店铺状态<select id="shopStatus"><option value="current">当前经营（排除已闭店）</option><option value="all">全部状态（含历史闭店）</option><option>运营中</option><option>闭店中</option><option>已闭店</option><option value="unknown">未填写</option></select></label><label>品牌<select id="brand"></select></label><label>平台<select id="platform"></select></label><label>负责人<select id="owner"></select></label><label>执行人<select id="executor"></select></label><div class="sales-filter-actions"><button id="query" class="workbench-primary">查询</button><button id="resetFilters">重置</button><button id="export">导出 Excel</button></div></div><p id="summary"></p><p>缺失日期不作为零销售；筛选与汇总使用当前店铺档案。已导入区间内没有销售记录的日期按 0 计入（零销售），不计入缺失；未导入的日期才计缺失。未开店 / 已闭店的日期不计入缺失，也不计入目标考核。部分周期的达成率按已导入金额计算，不代表完整周期业绩。</p><div id="yearViewToggle" class="sales-view-toggle" role="group" aria-label="年度数据展示方式" hidden><span>数据展示</span><button type="button" data-year-view="annual" aria-pressed="true">年累计</button><button type="button" data-year-view="monthly" aria-pressed="false">月度明细</button></div><div id="report" class="sales-table"></div></section><section id="shops" class="sales-box" hidden><h2>店铺档案</h2><form id="shopForm" class="sales-form"></form><div id="shopList" class="sales-table"></div></section><section id="import" class="sales-box" hidden><h2>销售报表导入</h2><p>支持两种表格，自动识别：① 京东日报（须含“时间”“成交金额”，金额单位为元；“-”按0元导入，空白金额仍需补齐）；② 喵速达订单明细（须含“订单状态”“订单金额”“规格”“交易订单号”，按下单时间自动按天汇总，<strong>只保留“已签收”订单</strong>，其余状态（已出库、仓库已接单、待下发、关闭、退款等）全部剔除，并剔除“外机”行）。金额单位均为元，自动生成各周期统计。</p><p>文件名以店铺ID开头时自动匹配；无法匹配时请先完善档案。无ID文件可手动选择店铺。</p><p>店铺档案填写了开店日期 / 闭店日期后，经营期外的数据仍允许导入，预览时会提示“早于开店日期 / 晚于闭店日期”，但不会阻断导入。</p><label>导入店铺 <select id="importShop"></select></label><p id="importMatch" role="status"></p><input id="file" type="file" accept=".xlsx"><button id="preview">校验与预览</button><div id="diff" class="sales-table"></div><button id="confirm" hidden>确认导入（覆盖已列出的变更日期）</button></section><section id="targets" class="sales-box" hidden><div class="target-head"><h2>目标管理</h2><span class="target-head-hint">年度目标 = 12 个月度目标合计</span></div><div class="target-actions"><div class="target-actions-main"><button id="openAnnualTargets" type="button" class="workbench-primary">年度／月度目标设置</button><span class="target-actions-hint">一次填 12 个月，年度目标自动合计并全局生效</span></div><form id="targetForm" class="sales-form"><label>店铺<select id="targetShop"></select></label><label>周期<input name="period" placeholder="2026-10 或 2026-Q4" required></label><label>目标（万元）<input name="amount" type="number" min="0" step="0.000001" required></label><button>保存单个周期</button></form></div><div class="target-toolbar"><label>年份<select id="targetYear"></select></label><span id="targetSummary" class="target-summary"></span></div><div id="targetList" class="sales-table target-matrix-wrap"></div><p id="targetNote" class="target-note"></p></section><section id="logs" class="sales-box" hidden><h2>导入记录</h2><div id="logList" class="sales-table"></div></section></main><script src="/js/workbench-session.js?v=20261027-roster"></script><script src="/js/workbench-shell.js?v=20261028-pk1"></script><script src="/js/sales-dates.js"></script><script src="/js/sales-lifecycle.js?v=20261019-shopdates"></script><script src="/js/sales-policy.js?v=20261019-shopdates"></script><script src="/js/sales-targets.js?v=20261020-targets2"></script><script src="/js/sales.js?v=20261026-suning"></script></body></html>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>销售分析 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261030-skel2"><style>.sales-box{background:white;border:1px solid #e0e6ef;border-radius:14px;padding:22px;margin:20px 0}.sales-form{display:flex;flex-wrap:wrap;gap:12px;align-items:end}.sales-form label{display:grid;gap:5px}.sales-table{overflow:auto}.sales-table table{width:100%;border-collapse:collapse}.sales-table td,.sales-table th{padding:12px;text-align:left;border-bottom:1px solid #eee;white-space:nowrap}#salesMessage{white-space:pre-wrap}.date-bar{position:relative;display:flex;align-items:center;gap:18px;flex-wrap:wrap;border-top:4px solid #dce7ff;background:#fafbfc;padding:14px;margin-bottom:22px}.date-shortcuts{display:flex;gap:4px;flex-wrap:wrap}.date-shortcuts button{border:0;padding:6px 10px;background:transparent}.date-shortcuts button[aria-pressed=true]{background:white;color:#396aff;box-shadow:0 2px 8px #182b4920}#dateCurrent{font-size:13px;color:#526477}#datePanel{position:absolute;top:100%;left:0;z-index:45;width:330px;max-width:90vw;padding:16px;background:white;box-shadow:0 10px 40px #22335530;border-radius:10px}.date-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.date-head button{padding:3px 8px;border:0;color:#396aff}.date-week{display:grid;grid-template-columns:repeat(8,1fr);align-items:center;text-align:center}.date-week button{border:0;border-radius:4px;padding:8px 0;font-size:13px}.date-week button:first-child{color:#729bff}.date-week .selected{background:#eaf0ff;color:#396aff}.date-week button:disabled{color:#bbb;cursor:default;background:#f8f8f8}.month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.month-grid button{border:0}.date-custom{display:grid;gap:10px}#shopList th,#shopList td{padding:10px 9px;font-size:13px}#shopList td input[type=date],#shopList td select{min-width:120px;min-height:34px;padding:5px 7px;font-size:12px}.shop-auto-dates{margin-left:8px;font-size:13px}.sales-views{display:inline-flex;align-items:center;gap:6px;margin-right:6px}.sv-label{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#526477}.sv-label select{min-height:32px;padding:4px 8px;font-size:12.5px}#viewSave,#viewDel{padding:6px 10px}</style>
+<link rel="stylesheet" href="/css/sales-layout.css?v=20261030-salesreskin">
+<link rel="stylesheet" href="/css/sales-reskin.css?v=20261102-tabs1">
+</head>
+<body class="workbench-body">
+<div id="shell">
+</div>
+<main class="workbench-main s-root">
+<div class="s-pagehead">
+<div>
+<div class="s-eyebrow">SALES ANALYTICS</div>
+<h1>销售分析</h1>
+<p class="s-desc">支付销售额 · 未扣退款 · 展示单位：万元</p>
+</div>
+<div class="s-actions">
+<button id="gotoImport" type="button" class="s-btn s-btn-primary">导入销售数据</button>
+</div>
+</div>
+<p id="salesMessage" role="status" class="s-msg">
+</p>
+<nav class="s-tabs" aria-label="销售分析视图切换">
+<button type="button" data-tab="overview" class="on">销售概况</button>
+<button type="button" data-tab="shops">店铺档案<span class="s-tab-badge" id="tabShopsCount" hidden></span></button>
+<button type="button" data-tab="import">数据导入</button>
+<button type="button" data-tab="targets">目标管理</button>
+<button type="button" data-tab="logs">导入记录<span class="s-tab-badge" id="tabLogsCount" hidden></span></button>
+</nav>
+<section id="overview" class="sales-box">
+<div id="dateBar" class="date-bar">
+<span id="dateCurrent">
+</span>
+<div class="date-shortcuts">
+<button disabled title="当前通过文件导入，暂不支持实时数据">实时</button>
+<button data-date="yesterday">昨天</button>
+<button data-date="7">近7天</button>
+<button data-date="30">近30天</button>
+<button data-date="day">天</button>
+<button data-date="week">周</button>
+<button data-date="month">月</button>
+<button data-date="custom">自定义</button>
+</div>
+<div id="datePanel" hidden>
+</div>
+</div>
+<input id="start" type="hidden">
+<input id="end" type="hidden">
+<input id="grain" type="hidden">
+<div class="sales-form sales-filters">
+<label>店铺<select id="shopFilter" data-multi>
+</select>
+</label>
+<label>店铺状态<select id="shopStatus">
+<option value="current">当前经营（排除已闭店）</option>
+<option value="all">全部状态（含历史闭店）</option>
+<option>运营中</option>
+<option>闭店中</option>
+<option>已闭店</option>
+<option value="unknown">未填写</option>
+</select>
+</label>
+<label>品牌<select id="brand" data-multi>
+</select>
+</label>
+<label>品类<select id="category" data-multi>
+</select>
+</label>
+<label>平台<select id="platform" data-multi>
+</select>
+</label>
+<label>负责人<select id="owner" data-multi>
+</select>
+</label>
+<label>执行人<select id="executor" data-multi>
+</select>
+</label>
+<div class="sales-filter-actions">
+<span class="sales-views" id="savedViews">
+<label class="sv-label">常用视图<select id="viewSelect"><option value="">选择保存的视图…</option></select></label>
+<button type="button" id="viewSave" title="把当前日期、粒度和全部筛选条件保存成一个常用视图">存为常用</button>
+<button type="button" id="viewDel" title="删除当前选中的常用视图" hidden>删除</button>
+</span>
+<button id="resetFilters">重置</button>
+<button id="export">导出 Excel</button>
+</div>
+</div>
+<div id="kpiRow" class="s-kpis">
+<div class="u-skel-card"><i class="u-skel w40"></i><i class="u-skel big w60"></i><i class="u-skel w80"></i></div>
+<div class="u-skel-card"><i class="u-skel w50"></i><i class="u-skel big w40"></i><i class="u-skel w60"></i></div>
+<div class="u-skel-card"><i class="u-skel w40"></i><i class="u-skel big w60"></i><i class="u-skel w80"></i></div>
+<div class="u-skel-card"><i class="u-skel w50"></i><i class="u-skel big w40"></i><i class="u-skel w60"></i></div>
+</div>
+<div id="importGuide" class="s-guide" hidden>
+</div>
+<p id="summary" class="s-summary">
+</p>
+<details class="s-note">
+<summary>ⓘ 统计口径说明</summary>
+<p>缺失日期不作为零销售；筛选与汇总使用当前店铺档案。已导入区间内没有销售记录的日期按 0 计入（零销售），不计入缺失；未导入的日期才计缺失。未开店 / 已闭店的日期不计入缺失，也不计入目标考核。部分周期的达成率按已导入金额计算，不代表完整周期业绩。达成率徽章的「时间进度」= 已走过天数 ÷ 区间总天数（未来区间按 0、已结束区间按 100% 计算），领先 = 达成率 ≥ 时间进度，落后 = ≥ 进度的 80%，低于则为严重落后。</p>
+</details>
+<div id="yearViewToggle" class="sales-view-toggle" role="group" aria-label="年度数据展示方式" hidden>
+<span>数据展示</span>
+<button type="button" data-year-view="annual" aria-pressed="true">年累计</button>
+<button type="button" data-year-view="monthly" aria-pressed="false">月度明细</button>
+</div>
+<div id="report" class="sales-table">
+<div class="u-skel-lines"><i class="u-skel w80"></i><i class="u-skel w60"></i><i class="u-skel w80"></i><i class="u-skel w50"></i><i class="u-skel w80"></i><i class="u-skel w60"></i></div>
+</div>
+</section>
+<section id="shops" class="sales-box" hidden>
+<h2>店铺档案</h2>
+<div id="shopBrandTabs" class="s-arc-tabs"></div>
+<form id="shopForm" class="sales-form">
+</form>
+<div id="shopList" class="sales-table">
+</div>
+</section>
+<section id="import" class="sales-box" hidden>
+<h2>销售报表导入</h2>
+<p class="s-steps"><strong>① 选店铺、选文件</strong> → <strong>② 校验与预览</strong> → <strong>③ 确认导入</strong>（只覆盖预览里列出的变更日期）</p>
+<details class="s-note">
+<summary>ⓘ 支持哪两种表格？</summary>
+<p>① 京东日报（须含“时间”“成交金额”，金额单位为元；“-”按0元导入，空白金额仍需补齐）；② 喵速达订单明细（须含“订单状态”“订单金额”“规格”“交易订单号”，按下单时间自动按天汇总，<strong>只保留“已签收”订单</strong>，其余状态（已出库、仓库已接单、待下发、关闭、退款等）全部剔除，并剔除“外机”行）。金额单位均为元，自动生成各周期统计。</p>
+<p>文件名以店铺ID开头时自动匹配；无法匹配时请先完善档案。无ID文件可手动选择店铺。</p>
+<p>店铺档案填写了开店日期 / 闭店日期后，经营期外的数据仍允许导入，预览时会提示“早于开店日期 / 晚于闭店日期”，但不会阻断导入。</p>
+</details>
+<label>导入店铺 <select id="importShop">
+</select>
+</label>
+<p id="importMatch" role="status">
+</p>
+<input id="file" type="file" accept=".xlsx">
+<button id="preview">校验与预览</button>
+<div id="diff" class="sales-table">
+</div>
+<button id="confirm" hidden>确认导入（覆盖已列出的变更日期）</button>
+</section>
+<section id="targets" class="sales-box" hidden>
+<div class="target-head">
+<h2>目标管理</h2>
+<span class="target-head-hint">年度目标 = 12 个月度目标合计</span>
+</div>
+<div class="target-actions">
+<div class="target-actions-main">
+<button id="openAnnualTargets" type="button" class="workbench-primary">年度／月度目标设置</button>
+<span class="target-actions-hint">一次填 12 个月，年度目标自动合计并全局生效</span>
+</div>
+<form id="targetForm" class="sales-form">
+<label>店铺<select id="targetShop">
+</select>
+</label>
+<label>周期<input name="period" placeholder="2026-10 或 2026-Q4" required>
+</label>
+<label>目标（万元）<input name="amount" type="number" min="0" step="0.000001" required>
+</label>
+<button>保存单个周期</button>
+</form>
+</div>
+<div class="target-toolbar">
+<label>年份<select id="targetYear">
+</select>
+</label>
+<span id="targetSummary" class="target-summary">
+</span>
+</div>
+<div id="targetList" class="sales-table target-matrix-wrap">
+</div>
+<p id="targetNote" class="target-note">
+</p>
+</section>
+<section id="logs" class="sales-box" hidden>
+<h2>导入记录</h2>
+<div id="logList" class="sales-table">
+</div>
+</section>
+</main>
+<script src="/js/workbench-session.js?v=20261030-px1">
+</script>
+<script src="/js/filter-multi.js?v=20261102-fm5"></script>
+<script src="/js/wb-toast.js?v=20261031-p1"></script><script src="/js/table-tools.js?v=20261031-p1"></script>
+<script src="/js/workbench-shell.js?v=20261030-shell2">
+</script>
+<script src="/js/notifications-ui.js?v=20261030-ntf1"></script><script src="/js/command-palette.js?v=20261030-cmdk2"></script>
+<script src="/js/sales-dates.js">
+</script>
+<script src="/js/sales-lifecycle.js?v=20261019-shopdates">
+</script>
+<script src="/js/sales-policy.js?v=20261019-shopdates">
+</script>
+<script src="/js/sales-targets.js?v=20261020-targets2">
+</script>
+<script src="/js/sales.js?v=20261102-tabs1">
+</script>
+</body>
+</html>

@@ -798,3 +798,22 @@
     width: 100%;
   }
 }
+
+/* ============================================================
+   2026-10-30 P1 视觉对齐：挂 css/wb-theme.css，只压观感
+   ============================================================ */
+.workbench-main > h1{font-size:22px;letter-spacing:0;margin:6px 0 4px}
+.workbench-main > .workbench-eyebrow{font-size:11px;letter-spacing:.14em;color:var(--u-blue);font-weight:700}
+.workbench-main > .workbench-muted{font-size:13px;color:var(--u-sub)}
+.ds-panel{border-radius:var(--u-radius);border-color:var(--u-line);box-shadow:var(--u-shadow)}
+.ds-field input[type="text"],.ds-field input:not([type]),.ds-field select,.ds-field textarea{border-color:var(--u-line-strong);border-radius:var(--u-radius-s);color:var(--u-ink)}
+.ds-field > span{color:var(--u-ink-2)}
+.ds-hint{color:var(--u-faint)}
+.ds-modes{background:var(--u-card-sub);border-radius:var(--u-radius-s)}
+.ds-modes button{color:var(--u-ink-2);font-family:inherit}
+.ds-modes button[aria-pressed="true"]{background:#fff;color:var(--u-blue-deep);box-shadow:0 1px 4px #17243814}
+.ds-switch{border-radius:var(--u-radius-s);background:var(--u-card-sub)}
+.ds-switch span{color:var(--u-ink-2)}
+.ds-switch small{color:var(--u-faint)}
+.ds-stage{border-radius:var(--u-radius-s)}
+.design-heading span{color:var(--u-faint)}

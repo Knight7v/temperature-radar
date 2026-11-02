@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>经营总览 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261020-guanxingtai"><link rel="stylesheet" href="/css/workbench-home.css?v=20261020-guanxingtai"></head><body class="workbench-body"><div id="workbenchShell"></div><main class="workbench-main gh-main"><p id="workbenchStatus" role="status">正在确认登录状态…</p><section id="ghHome" hidden>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/svg+xml" href="/assets/brand/guanxingtai.svg"><title>经营总览 · 观星台</title><link rel="stylesheet" href="/css/workbench.css?v=20261030-skel2"><link rel="stylesheet" href="/css/workbench-home.css?v=20261030-dr2"></head><body class="workbench-body"><div id="workbenchShell"></div><main class="workbench-main gh-main"><p id="workbenchStatus" role="status">正在确认登录状态…</p><div id="ghSkeleton" class="gh-skel" hidden><div class="u-skel-card"><i class="u-skel w40"></i><i class="u-skel big w60"></i><i class="u-skel w80"></i><i class="u-skel big w50"></i><i class="u-skel w40"></i></div><div class="u-skel-card" style="max-width:100%"><i class="u-skel big w30"></i><i class="u-skel w80"></i><i class="u-skel w60"></i></div></div><section id="ghHome" hidden>
 
   <div class="gh-filters">
     <div class="gh-seg" id="ghRange" role="group" aria-label="时间范围"><button type="button" data-range="month">本月</button><button type="button" data-range="7">近7天</button><button type="button" data-range="30">近30天</button><button type="button" data-range="year" class="on">本年</button></div>
@@ -6,6 +6,7 @@
     <label>品牌<select id="ghBrand"><option value="">全部品牌</option></select></label>
     <span class="gh-spacer"></span>
     <span class="gh-hint" id="ghCoverage">正在读取销售数据…</span>
+    <button type="button" class="gh-btn" id="ghDaily">昨日日报</button>
     <button type="button" class="gh-btn" id="ghRefresh">刷新</button>
   </div>
 
@@ -63,4 +64,20 @@
   </div>
 
   <div class="gh-foot"><span>观星台 v1.0 · 数据源：京东日报 / 喵速达订单明细 / 分仓库存 / 客服会话 / 和风天气</span><span class="gh-sep"></span><span id="ghFootFresh">—</span><span class="gh-spacer"></span><span id="ghFootNote">金额单位：万元（支付销售额，未扣退款）</span></div>
-</section></main><script src="/js/workbench-session.js?v=20261027-roster"></script><script src="/js/workbench-shell.js?v=20261028-pk1"></script><script src="/assets/vendor/chart.umd.js"></script><script src="/js/sales-lifecycle.js?v=20261019-shopdates"></script><script src="/js/workbench-metrics.js?v=20261020-guanxingtai"></script><script src="/js/workbench-home.js?v=20261028-nav2"></script></body></html>
+</section></main>
+
+<!-- 每日经营日报：预览昨天经营概况，可一键推企微群（P0-A） -->
+<div class="gh-dr-scrim" id="ghDrScrim" hidden></div>
+<div class="gh-dr" id="ghDailyModal" role="dialog" aria-modal="true" aria-labelledby="ghDrTitle" hidden>
+  <div class="gh-dr-head"><div><h2 id="ghDrTitle">昨日日报</h2><p>每天早上自动推到企业微信群；这里可随时补看、补推。</p></div><button type="button" class="gh-btn" id="ghDrClose">关闭</button></div>
+  <div class="gh-dr-body">
+    <div class="gh-dr-bar">
+      <label>日期<input type="date" id="ghDrDate"></label>
+      <button type="button" class="gh-btn" id="ghDrPush">推送到企业微信</button>
+      <button type="button" class="gh-btn" id="ghDrCopy">复制文本</button>
+      <span class="gh-dr-status" id="ghDrStatus" role="status"></span>
+    </div>
+    <div class="gh-dr-report" id="ghDrReport"><p class="gh-empty">正在生成日报…</p></div>
+  </div>
+</div>
+<script src="/js/workbench-session.js?v=20261030-px1"></script><script src="/js/workbench-shell.js?v=20261030-shell2"></script><script src="/js/command-palette.js?v=20261030-cmdk2"></script><script src="/js/notifications-ui.js?v=20261030-ntf1"></script><script src="/assets/vendor/chart.umd.js"></script><script src="/js/sales-lifecycle.js?v=20261019-shopdates"></script><script src="/js/workbench-metrics.js?v=20261020-guanxingtai"></script><script src="/js/workbench-home.js?v=20261030-skel"></script><script src="/js/daily-report-ui.js?v=20261030-dr2"></script></body></html>

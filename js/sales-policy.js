@@ -30,7 +30,11 @@
   const status=query.status||'current';
   if(!['current','all','运营中','闭店中','已闭店','unknown'].includes(status))reject('店铺状态筛选无效');
   const day=Life.today(),stateOf=shop=>Life.effectiveStatus(shop,day);
-  return shops.filter(s=>(status==='all'||(status==='current'?Life.operatingInRange(s,day,day):status==='unknown'?(!s.data.status&&!s.data.openDate&&!s.data.closeDate):stateOf(s)===status))&&(!query.shop||s.id===query.shop)&&['brand','platform','owner','executor'].every(k=>!query[k]||s.data[k]===query[k]));
+  /* 多值筛选（2026-11-02）：shop/brand/platform/owner/executor 支持逗号分隔多选，单值写法天然兼容 */
+  const toSet=v=>{const arr=String(v==null?'':v).split(',').map(x=>x.trim()).filter(Boolean);return arr.length?new Set(arr):null;};
+  const shopSet=toSet(query.shop),fieldSets={};
+  for(const k of ['brand','category','platform','owner','executor'])fieldSets[k]=toSet(query[k]);
+  return shops.filter(s=>(status==='all'||(status==='current'?Life.operatingInRange(s,day,day):status==='unknown'?(!s.data.status&&!s.data.openDate&&!s.data.closeDate):stateOf(s)===status))&&(!shopSet||shopSet.has(s.id))&&Object.keys(fieldSets).every(k=>!fieldSets[k]||fieldSets[k].has(s.data[k])));
  }
  const api={resolveShop,selectShops,canonicalShopName,findShopByName};if(typeof module==='object')module.exports=api;else root.SalesPolicy=api;
 })(globalThis);

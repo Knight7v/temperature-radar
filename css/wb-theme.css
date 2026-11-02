@@ -1,0 +1,72 @@
+/* ============================================================
+   观星台公共设计变量（2026-10-30 · P1 地基）
+   来源：users.css 变量种子（Tabler 骨架 + shadcn 表格流派）
+   用法：任何页面 <link> 本文件后即可在任意选择器里用 var(--u-*)；
+        页面专属样式仍放各自 css 文件，不要往这里堆组件样式。
+   注意：只放变量与少量原子类；改这里等于改全站观感，需同步
+        引用页面的 ?v= 版本号。
+   ============================================================ */
+:root{
+  /* ---- 色板 ---- */
+  --u-bg:#f4f6fa;
+  --u-card:#ffffff;
+  --u-card-sub:#f8fafd;
+  --u-line:#e5eaf2;
+  --u-line-strong:#d4dce8;
+  --u-ink:#1a2333;
+  --u-ink-2:#3a4a63;
+  --u-sub:#708097;
+  --u-faint:#9aa7ba;
+  --u-blue:#2563eb;
+  --u-blue-soft:#eaf1fe;
+  --u-blue-deep:#1454c8;
+  --u-green:#16a34a;--u-green-soft:#e8f7ee;
+  --u-red:#dc2626;--u-red-soft:#fdecec;
+  --u-amber:#d97706;--u-amber-soft:#fdf1de;
+  --u-violet:#7c3aed;--u-violet-soft:#f1ebfd;
+  --u-teal:#0d9488;--u-teal-soft:#e4f5f3;
+  --u-gray-soft:#eef1f6;
+  /* ---- 形状 ---- */
+  --u-radius:10px;
+  --u-radius-s:7px;
+  --u-shadow:0 1px 2px rgba(23,35,58,.04);
+  --u-shadow-pop:0 14px 40px rgba(34,61,113,.08);
+}
+
+/* ---- 原子类：状态徽章（全站统一 pill） ---- */
+.u-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.6;white-space:nowrap}
+.u-badge-green{background:var(--u-green-soft);color:#116a35}
+.u-badge-red{background:var(--u-red-soft);color:#a02020}
+.u-badge-amber{background:var(--u-amber-soft);color:#8a5a12}
+.u-badge-blue{background:var(--u-blue-soft);color:var(--u-blue-deep)}
+.u-badge-gray{background:var(--u-gray-soft);color:var(--u-sub)}
+
+/* ---- 原子类：页头三件套 ---- */
+.u-pagehead{display:flex;align-items:flex-start;gap:16px;margin-bottom:6px}
+.u-pagehead .u-eyebrow{font-size:11px;letter-spacing:.14em;color:var(--u-blue);font-weight:700;margin-bottom:2px}
+.u-pagehead h1{font-size:22px;font-weight:700;letter-spacing:.01em;margin:0;color:var(--u-ink)}
+.u-pagehead .u-desc{font-size:13px;color:var(--u-sub);margin:3px 0 0}
+.u-pagehead .u-actions{margin-left:auto;display:flex;gap:10px;flex-shrink:0;padding-top:8px}
+
+/* ---- 原子类：按钮（.workbench-body 前缀压过全局白底按钮） ---- */
+/* 铁律：display:inline-flex 会压掉 hidden 属性，必须配这条保险 */
+.workbench-body .u-btn[hidden]{display:none!important}
+.workbench-body .u-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:var(--u-radius-s);font-size:13px;font-weight:600;border:1px solid transparent;cursor:pointer;background:transparent;color:var(--u-ink-2);font-family:inherit}
+.workbench-body .u-btn-primary{background:var(--u-blue);color:#fff;box-shadow:0 1px 2px rgba(37,99,235,.28)}
+.workbench-body .u-btn-primary:hover{background:#1d4fd7}
+.workbench-body .u-btn-ghost{border-color:var(--u-line-strong);background:var(--u-card);color:var(--u-ink-2)}
+.workbench-body .u-btn-ghost:hover{border-color:#b9c6d8;background:var(--u-card-sub)}
+
+/* ---- 原子类：卡片 ---- */
+.u-card{background:var(--u-card);border:1px solid var(--u-line);border-radius:var(--u-radius);box-shadow:var(--u-shadow)}
+
+/* ---- 原子类：KPI 统计卡 ---- */
+.u-kpi{background:var(--u-card-sub);border:1px solid var(--u-line);border-radius:var(--u-radius);padding:14px 16px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.u-kpi-label{font-size:12px;color:var(--u-sub);font-weight:600}
+.u-kpi-value{font-size:26px;font-weight:700;color:var(--u-ink);line-height:1.2;font-variant-numeric:tabular-nums}
+.u-kpi-value small{font-size:13px;font-weight:600;color:var(--u-faint);margin-left:2px}
+.u-kpi-sub{font-size:12px;color:var(--u-faint);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* ---- 主按钮统一：压过 workbench.css 的 .workbench-primary（--wb-blue 旧蓝） ---- */
+.workbench-body .workbench-primary{background:var(--u-blue)!important;border-color:var(--u-blue)!important}
+.workbench-body .workbench-primary:hover{background:#1d4fd7!important;border-color:#1d4fd7!important}

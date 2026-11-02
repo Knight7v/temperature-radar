@@ -197,6 +197,7 @@ function renderPeriodKpi(cur,prev){
    q('ghCoverage').textContent=e.message||'数据加载失败';
   }finally{
    q('ghRefresh').disabled=false;
+   const skel=q('ghSkeleton');if(skel)skel.hidden=true;
   }
  }
 
@@ -490,11 +491,12 @@ async function refreshTrend(){
  try{
   const identity=await session.getIdentity();
   WorkbenchShell.mountShell({container:q('workbenchShell'),activeModule:'home',identity,onLogout:async()=>{await session.logout();location.replace('/login.html');}});
-  statusEl.hidden=true;q('ghHome').hidden=false;
+  statusEl.hidden=true;q('ghHome').hidden=false;q('ghSkeleton').hidden=false;
   bind();
   await loadDashboard();
- }catch(e){
+  }catch(e){
   if(e.code==='SESSION_EXPIRED')location.replace('/login.html?returnTo='+encodeURIComponent(location.pathname));
   else{statusEl.className='workbench-error';statusEl.textContent=(e.message||'加载失败')+'，请刷新重试。';}
+  const skel=q('ghSkeleton');if(skel)skel.hidden=true;
  }
 })();

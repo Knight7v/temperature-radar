@@ -26,22 +26,24 @@ module.exports=apiHandler(async(req,res)=>{
   if(action==='meta')return res.json({data:{category,label:CATEGORIES[category].label,role:user.role,shops:allShops}});
   if(action!=='report')fail('操作不存在',404);
   const shops=filterStructureShops(allShops,category,req.query.platform);
-  const shop=String(req.query.shop||'');if(shop&&!shops.some(item=>item.id===shop))fail('店铺不属于当前类别');
+  /* 店铺支持逗号多选（2026-11-02） */
+  const shopIds=String(req.query.shop||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(shopIds.length&&!shopIds.every(id=>shops.some(item=>item.id===id)))fail('店铺不属于当前类别');
   const start=`${year}-01-01`,end=asOf<`${year}-12-31`?asOf:`${year}-12-31`;
-  const params=[tenant,category,start,end,shop||null,shops.map(item=>item.id)];
+  const params=[tenant,category,start,end,shopIds.length?shopIds:null,shops.map(item=>item.id)];
   const manual=await pool.query(`SELECT d.date::text AS date,d.shop_id AS "shopId",d.sku,m.tier,m.is_cabinet AS cabinet,d.units::text AS units
    FROM sales_structure_daily d LEFT JOIN sales_structure_models m
    ON m.tenant_id=d.tenant_id AND m.category=d.category AND m.sku=d.sku
    WHERE d.tenant_id=$1 AND d.category=$2 AND d.date BETWEEN $3 AND $4
-   AND ($5::uuid IS NULL OR d.shop_id=$5) AND d.shop_id=ANY($6::uuid[])`,params);
+   AND ($5::uuid[] IS NULL OR d.shop_id=ANY($5::uuid[])) AND d.shop_id=ANY($6::uuid[])`,params);
   const settlement=category==='gree-ac'?await pool.query(`SELECT d.date::text AS date,d.shop_id AS "shopId",d.sku,m.tier,m.is_cabinet AS cabinet,d.units::text AS units
    FROM sales_structure_settlement_items d LEFT JOIN sales_structure_models m
    ON m.tenant_id=d.tenant_id AND m.category=d.category AND m.sku=d.sku
    WHERE d.tenant_id=$1 AND d.category=$2 AND d.date BETWEEN $3 AND $4
-   AND ($5::uuid IS NULL OR d.shop_id=$5) AND d.shop_id=ANY($6::uuid[])`,params):{rows:[]};
-  const report=buildStructureReport(combineStructureRows(manual.rows,settlement.rows),year,asOf,shop?1:shops.length);
+   AND ($5::uuid[] IS NULL OR d.shop_id=ANY($5::uuid[])) AND d.shop_id=ANY($6::uuid[])`,params):{rows:[]};
+  const report=buildStructureReport(combineStructureRows(manual.rows,settlement.rows),year,asOf,shopIds.length?shopIds.length:shops.length);
   const imported=(await pool.query('SELECT MAX(imported_at) AS last_import FROM sales_structure_imports WHERE tenant_id=$1 AND category=$2',[tenant,category])).rows[0]?.last_import||null;
-  return res.json({data:{...report,category,label:CATEGORIES[category].label,year,asOf,lastImport:imported,shopCount:shop?1:shops.length}});
+  return res.json({data:{...report,category,label:CATEGORIES[category].label,year,asOf,lastImport:imported,shopCount:shopIds.length?shopIds.length:shops.length}});
  }
  if(req.method!=='POST')fail('不支持此请求',405);
  if(action==='preview'){

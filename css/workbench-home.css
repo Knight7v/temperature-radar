@@ -137,3 +137,28 @@
   .gh-legend-tail{display:none}
   .gh-filters{position:static}
 }
+
+/* ---------- 每日日报弹窗（P0-A） ---------- */
+.gh-dr-scrim{position:fixed;inset:0;background:#0f1a2e59;z-index:60;backdrop-filter:blur(2px)}
+.gh-dr{position:fixed;z-index:61;top:50%;left:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 40px));max-height:82vh;display:flex;flex-direction:column;background:#fff;border:1px solid var(--wb-line);border-radius:12px;box-shadow:0 18px 48px #17233a2e;overflow:hidden}
+.gh-dr-head{display:flex;align-items:flex-start;gap:12px;padding:14px 16px 10px;border-bottom:1px solid var(--wb-line)}
+.gh-dr-head h2{margin:0;font-size:15px;color:#17233a}
+.gh-dr-head p{margin:3px 0 0;font-size:12px;color:#93a1b5}
+.gh-dr-head .gh-btn{margin-left:auto;flex-shrink:0}
+.gh-dr-body{padding:12px 16px 16px;overflow:auto}
+.gh-dr-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.gh-dr-bar label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#708097}
+.gh-dr-bar input[type=date]{border:1px solid var(--wb-line);border-radius:6px;height:28px;padding:0 8px;font-size:12.5px;color:#3a4a63}
+.gh-dr-status{font-size:12px;color:#3a4a63}
+.gh-dr-kpis{display:grid;gap:5px;padding:10px 12px;background:#f8fafd;border-radius:8px;margin-bottom:12px}
+.gh-dr-line{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:#708097}
+.gh-dr-line b{color:#17233a;font-weight:600;font-variant-numeric:tabular-nums}
+.gh-dr h3{margin:12px 0 6px;font-size:12.5px;color:#17233a}
+.gh-dr-shop{display:flex;justify-content:space-between;gap:12px;padding:5px 2px;border-bottom:1px dashed #e8eef6;font-size:12.5px;color:#3a4a63}
+.gh-dr-shop b{font-variant-numeric:tabular-nums;color:#17233a}
+.gh-dr-warn{margin:10px 0 0;font-size:12.5px;color:#b0541e}
+.gh-dr-mute{margin:8px 0 0;font-size:12px;color:#93a1b5}
+.gh-dr-foot{margin:14px 0 0;font-size:12px;color:#93a1b5;display:grid;gap:6px}
+.gh-dr-warn-text{color:#b0541e}
+/* 修复：hidden 属性被 display:flex 压掉，导致弹窗关不掉 */
+.gh-dr[hidden],.gh-dr-scrim[hidden]{display:none!important}

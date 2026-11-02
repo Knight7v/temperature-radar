@@ -2,6 +2,8 @@
 const ADICore = require('../js/adi-core.js');
 const QWeather = require('../lib/qweather.js');
 const WecomMessage = require('../lib/wecom-message.js');
+const { recordTaskRun } = require('../lib/notifications');
+const { getInventoryPool } = require('../lib/db/inventory-client');
 
 function authorized(req) {
     const secret = process.env.CRON_SECRET;
@@ -62,5 +64,9 @@ module.exports = async function handler(req, res) {
 
     const payload = { cities: cityData.length, failed, pushed, errors };
     console.log('cron-push 完成', payload);
+    const okAll = errors.length === 0 && failed === 0 && pushed.heatFocus && pushed.heatRise;
+    await recordTaskRun(getInventoryPool(), 'weather-push', okAll, okAll
+        ? '气温推送完成（' + cityData.length + ' 城）'
+        : '部分完成：推了 ' + Object.keys(pushed).filter(k => pushed[k]).join('/') + (errors.length ? '，错误：' + errors.join('；') : '') + (failed ? ('，抓取失败 ' + failed + ' 城') : ''));
     return res.status(200).json(payload);
 }
